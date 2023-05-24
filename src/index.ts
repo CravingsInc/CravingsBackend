@@ -5,6 +5,7 @@ import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import path from "path";
+import { createConnection } from "typeorm";
 import { TestResolver } from "./resolvers";
 
 const app = express();
@@ -14,6 +15,22 @@ app.use(express.static(path.join(__dirname, "public")));
 const httpServer = http.createServer(app);
 
 async function main() {
+  await createConnection(
+    process.env.CLEARDB_DATABASE_NEW_URL
+      ? {
+          type: "mysql",
+          url: process.env.CLEARDB_DATABASE_NEW_URL,
+          entities: ["src/models/*.ts"],
+          synchronize: true,
+        }
+      : {
+          type: "sqlite",
+          database: "./db.sqlite3",
+          entities: ["src/models/*.ts"],
+          synchronize: true,
+        }
+  );
+
   const schema = await buildSchema({
     resolvers: [TestResolver],
     dateScalarMode: "timestamp",
