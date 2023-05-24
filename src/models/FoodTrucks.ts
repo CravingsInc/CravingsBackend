@@ -1,0 +1,49 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm"
+import { ObjectType, Field, ID } from "type-graphql";
+
+@ObjectType()
+@Entity()
+export class FoodTrucks {
+    @Field( () => ID )
+    @PrimaryGeneratedColumn("uuid")
+    id: string;
+
+    @Field()
+    @Column()
+    truckName: string;
+
+    @Field()
+    @Column()
+    email: string;
+
+    @Column()
+    password: string;
+
+    @Field()
+    @Column({ default: "", nullable: true })
+    profilePicture: string;
+
+    @Field()
+    @Column({ default: "", nullable: true })
+    bannerImage: string;
+
+    @Field()
+    @Column({ default: "", nullable: true })
+    phoneNumber: string;
+
+    @Column({ nullable: true })
+    stripeConnectId: string;
+
+    @Field()
+    @Column({ default: 0, nullable: true })
+    latitude: number;
+
+    @Field()
+    @Column({ default: 0, nullable: true })
+    longitude: number;
+
+    @Field()
+    @CreateDateColumn()
+    dateJoined: Date;
+    
+}
