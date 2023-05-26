@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
+import { UserFavoriteFood } from "./UserFavoriteFood";
 
 @Entity()
 @ObjectType()
@@ -45,6 +46,10 @@ export class Users {
     @Field()
     @Column({ default: 0, nullable: true })
     longitude: number;
+
+    @Field( () => [UserFavoriteFood] )
+    @ManyToOne( () => UserFavoriteFood, favoriteFood => favoriteFood.user )
+    favoriteFoods: UserFavoriteFood[];
 
     @Field()
     @CreateDateColumn()
