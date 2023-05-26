@@ -43,9 +43,9 @@ export class FoodTrucks {
     @Column({ default: 0, nullable: true })
     longitude: number;
 
-    @Field()
+    @Field( () => [FoodTrucksFood] )
     @OneToMany( () => FoodTrucksFood, food => food.owner )
-    foods: FoodTrucks;
+    foods: FoodTrucksFood[];
 
     @Field()
     @CreateDateColumn()
