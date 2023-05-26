@@ -46,7 +46,7 @@ export class FoodTrucks {
 
     @Field( () => [FoodTrucksFood] )
     @OneToMany( () => FoodTrucksFood, food => food.owner )
-    foods: FoodTrucksFood;
+    foods: FoodTrucksFood[];
 
     @Field( () => [FoodTruckRating] )
     @OneToMany( () => FoodTruckRating, ratings => ratings.truck )
