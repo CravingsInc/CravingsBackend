@@ -50,7 +50,7 @@ export class FoodTrucks {
 
     @Field( () => [FoodTruckRating] )
     @OneToMany( () => FoodTruckRating, ratings => ratings.truck )
-    ratings: FoodTruckRating;
+    ratings: FoodTruckRating[];
 
     @Field()
     @CreateDateColumn()
