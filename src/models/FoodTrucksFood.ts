@@ -37,7 +37,7 @@ export class FoodTrucksFood {
     @Column({ default: "", nullable: true })
     tags: string;
 
-    @Field()
+    @Field( () => FoodTrucks )
     @ManyToOne( () => FoodTrucks, truck => truck.foods )
     owner: FoodTrucks;
 

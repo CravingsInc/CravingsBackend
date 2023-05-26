@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
+import { FoodTruckRating } from "./FoodTruckRating";
 
 @Entity()
 @ObjectType()
@@ -45,6 +46,10 @@ export class Users {
     @Field()
     @Column({ default: 0, nullable: true })
     longitude: number;
+
+    @Field( () => [FoodTruckRating] )
+    @OneToMany( () => FoodTruckRating, ratings => ratings.user )
+    ratings: FoodTruckRating;
 
     @Field()
     @CreateDateColumn()
