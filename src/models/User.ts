@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
 import { UserFavoriteFood } from "./UserFavoriteFood";
 import { FoodTruckRating } from "./FoodTruckRating";
+import { UserCart } from "./UserCart";
 
 @Entity()
 @ObjectType()
@@ -53,8 +54,12 @@ export class Users {
     ratings: FoodTruckRating[];
 
     @Field( () => [UserFavoriteFood] )
-    @ManyToOne( () => UserFavoriteFood, favoriteFood => favoriteFood.user )
+    @OneToMany( () => UserFavoriteFood, favoriteFood => favoriteFood.user )
     favoriteFoods: UserFavoriteFood[];
+
+    @Field( () => [UserCart] )
+    @OneToMany( () => UserCart, cart => cart.user )
+    carts: UserCart[];
 
     @Field()
     @CreateDateColumn()
