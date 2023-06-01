@@ -19,11 +19,11 @@ export class FoodTruckRating {
     description: string;
 
     @Field( () => Users )
-    @ManyToOne( () => Users, user => user.ratings )
+    @ManyToOne( () => Users, user => user.ratings, {onDelete: "CASCADE"} )
     user: Users;
 
     @Field( () => FoodTrucks )
-    @ManyToOne( () => FoodTrucks, foodTruck => foodTruck.ratings )
+    @ManyToOne( () => FoodTrucks, foodTruck => foodTruck.ratings, {onDelete: "CASCADE"} )
     truck: FoodTrucks;
 
     @Field()

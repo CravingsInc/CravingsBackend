@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
 import { FoodTrucksFood } from "./FoodTrucksFood";
 import { Users } from "./User";
@@ -11,12 +11,12 @@ export class UserFavoriteFood {
     id: string;
 
     @Field( () => Users )
-    @OneToMany( () => Users, user => user.favoriteFoods )
+    @ManyToOne( () => Users, user => user.favoriteFoods, {onDelete: "CASCADE"} )
     user: Users;
 
-    @Field( () => [FoodTrucksFood] )
-    @OneToMany( () => FoodTrucksFood, food => food.userFavoriteFood )
-    foodTruckFood: FoodTrucksFood[];
+    @Field( () => FoodTrucksFood )
+    @ManyToOne( () => FoodTrucksFood, food => food.userFavoriteFood, {onDelete: "CASCADE"} )
+    foodTruckFood: FoodTrucksFood;
 
     @Field()
     @CreateDateColumn()
