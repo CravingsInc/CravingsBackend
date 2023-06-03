@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, BaseEntity } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
 import { Users } from "./User";
 import { FoodTrucks } from "./FoodTrucks";
@@ -12,7 +12,7 @@ export enum UserCartStatus {
 
 @Entity()
 @ObjectType()
-export class UserCart {
+export class UserCart extends BaseEntity {
     @Field( () => ID )
     @PrimaryGeneratedColumn("uuid")
     id: string;

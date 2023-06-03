@@ -1,4 +1,5 @@
 import "reflect-metadata";
+require('dotenv').config()
 import express from "express";
 import http from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
@@ -6,7 +7,7 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import path from "path";
 import { createConnection } from "typeorm";
-import { TestResolver } from "./resolvers";
+import { TestResolver, UserResolver } from "./resolvers";
 
 const app = express();
 
@@ -32,7 +33,7 @@ async function main() {
   );
 
   const schema = await buildSchema({
-    resolvers: [TestResolver],
+    resolvers: [TestResolver, UserResolver],
     dateScalarMode: "timestamp",
   });
 
