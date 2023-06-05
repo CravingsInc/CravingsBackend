@@ -1,11 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, BaseEntity } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
 import { FoodTrucksFood } from "./FoodTrucksFood";
 import { UserCart } from "./UserCart";
 
 @Entity()
 @ObjectType()
-export class UserCartItems {
+export class UserCartItems extends BaseEntity {
     @Field( () => ID )
     @PrimaryGeneratedColumn("uuid")
     id: string;

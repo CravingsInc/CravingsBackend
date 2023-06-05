@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, BaseEntity } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
 import { UserFavoriteFood } from "./UserFavoriteFood";
 import { FoodTruckRating } from "./FoodTruckRating";
@@ -6,13 +6,13 @@ import { UserCart } from "./UserCart";
 
 @Entity()
 @ObjectType()
-export class Users {
+export class Users extends BaseEntity {
     @Field( () => ID )
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
     @Field()
-    @Column()
+    @Column({ unique: true })
     username: string;
 
     @Field()
