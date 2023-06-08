@@ -7,7 +7,7 @@ import * as models from "../models";
 import { Utils, stripeHandler } from "../utils";
 
 @Resolver()
-export class FOodTruckResolver {
+export class FoodTruckResolver {
     @Mutation( returns => String )
     async CreateFoodTruckAccount( @Arg("foodTruckName") foodTruckName: string, @Arg("email") email: string, @Arg("password") password: string ) {
         let foodTruck : models.FoodTrucks;
