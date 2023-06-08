@@ -1,0 +1,44 @@
+import { Resolver, Mutation, Arg } from "type-graphql";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+import * as models from "../models";
+
+import { Utils, stripeHandler } from "../utils";
+
+@Resolver()
+export class FOodTruckResolver {
+    @Mutation( returns => String )
+    async CreateFoodTruckAccount( @Arg("foodTruckName") foodTruckName: string, @Arg("email") email: string, @Arg("password") password: string ) {
+        let foodTruck : models.FoodTrucks;
+
+        try {
+            foodTruck = await models.FoodTrucks.create({
+                truckName: foodTruckName,
+                email,
+                password: await bcrypt.hash(password, 12)
+            }).save();
+        }catch(e) {
+            console.log(e);
+            throw new Utils.CustomError("Food Truck Name Already Exist");
+        }
+
+        if ( foodTruck ) {
+            try {
+                foodTruck.stripeConnectId = ( await stripeHandler.createConnectAccount(email, foodTruck.id ) ).id;
+                await foodTruck.save();
+            }catch(e) {
+                console.log(e);
+
+                await foodTruck.remove();
+                throw new Utils.CustomError("Problem Creating Food Truck Account");
+            }
+
+            return jwt.sign(
+                await Utils.generateJsWebToken(foodTruck.id),
+                Utils.SECRET_KEY,
+                { expiresIn: "2w" }
+            )
+        }
+    }
+}

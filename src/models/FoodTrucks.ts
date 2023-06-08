@@ -12,7 +12,7 @@ export class FoodTrucks extends BaseEntity {
     id: string;
 
     @Field()
-    @Column()
+    @Column({ unique: true })
     truckName: string;
 
     @Field()
