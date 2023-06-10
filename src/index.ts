@@ -7,7 +7,7 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import path from "path";
 import { createConnection } from "typeorm";
-import { TestResolver, UserResolver } from "./resolvers";
+import { TestResolver, UserResolver, FoodTruckResolver } from "./resolvers";
 
 const app = express();
 
@@ -33,7 +33,7 @@ async function main() {
   );
 
   const schema = await buildSchema({
-    resolvers: [TestResolver, UserResolver],
+    resolvers: [TestResolver, UserResolver, FoodTruckResolver],
     dateScalarMode: "timestamp",
   });
 
