@@ -37,10 +37,35 @@ export class FoodTruckResolver {
             }
 
             return jwt.sign(
-                await Utils.generateJsWebToken(foodTruck.id),
+                {
+                    ...await Utils.generateJsWebToken(foodTruck.id),
+                    type: "foodTruck"
+                },
                 Utils.SECRET_KEY,
                 { expiresIn: "2w" }
             )
         }
+    }
+
+    @Mutation( returns => String ) 
+    async FoodTruckLogIn( @Arg("truckName") truckName: string, @Arg("password") password: string ) {
+        let foodTruck = await models.FoodTrucks.findOne({ where: { truckName } });
+
+        if ( !foodTruck ) foodTruck = await models.FoodTrucks.findOne({ where: { email: truckName }}) // Just incase they are using there email
+
+        if ( foodTruck ) {
+            if ( await bcrypt.compare(password, foodTruck.password) ) {
+                return jwt.sign(
+                    {
+                        ...await Utils.generateJsWebToken(foodTruck.id),
+                        type: "foodTruck"
+                    },
+                    Utils.SECRET_KEY,
+                    { expiresIn: "2w" }
+                );
+            }
+        }
+
+        throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 }
