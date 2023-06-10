@@ -38,7 +38,10 @@ export class UserResolver {
             };
 
             return jwt.sign(
-                await Utils.generateJsWebToken(user.id), 
+                {
+                    ...await Utils.generateJsWebToken(user.id),
+                    type: "user"
+                }, 
                 Utils.SECRET_KEY, 
                 { expiresIn: "2w" }
             );
@@ -54,7 +57,10 @@ export class UserResolver {
         if ( user ) {
             if ( await bcrypt.compare(password, user.password) ) {
                 return jwt.sign(
-                    await Utils.generateJsWebToken(user.id),
+                    {
+                        ...await Utils.generateJsWebToken(user.id),
+                        type: "user"
+                    },
                     Utils.SECRET_KEY,
                     { expiresIn: "2w" }
                 );
