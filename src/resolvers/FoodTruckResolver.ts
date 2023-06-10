@@ -12,6 +12,8 @@ export class FoodTruckResolver {
     async CreateFoodTruckAccount( @Arg("foodTruckName") foodTruckName: string, @Arg("email") email: string, @Arg("password") password: string ) {
         let foodTruck : models.FoodTrucks;
 
+        if ( foodTruckName.length < 1 || email.length < 1 || password.length < 1 || !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/).test(email)) throw new Utils.CustomError("Please fill out form correctly");
+
         try {
             foodTruck = await models.FoodTrucks.create({
                 truckName: foodTruckName,

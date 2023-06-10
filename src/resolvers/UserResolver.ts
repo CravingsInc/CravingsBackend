@@ -11,7 +11,9 @@ export class UserResolver {
     @Mutation( returns => String )
     async CreateUserAccount( @Arg("username") username: string, @Arg("email") email: string, @Arg("password") password: string ) {
         let user : models.Users;
-        
+
+        if ( username.length < 1 || email.length < 1 || password.length < 1 || !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/).test(email)) throw new Utils.CustomError("Please fill out form correctly");
+
         // This will only throw an error if the username is not unique. And if isn't then we want to have a custom error to catch.
         try {
             user = await models.Users.create({
