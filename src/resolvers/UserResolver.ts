@@ -44,4 +44,23 @@ export class UserResolver {
             );
         }
     }
+
+    @Mutation( returns => String ) 
+    async UserLogIn( @Arg("username") username: string, @Arg("password") password: string ) {
+        let user = await models.Users.findOne({ where: { username } });
+
+        if ( !user ) user = await models.Users.findOne({ where: { email: username }}) // Just incase they are using there email
+
+        if ( user ) {
+            if ( await bcrypt.compare(password, user.password) ) {
+                return jwt.sign(
+                    await Utils.generateJsWebToken(user.id),
+                    Utils.SECRET_KEY,
+                    { expiresIn: "2w" }
+                );
+            }
+        }
+
+        throw new Utils.CustomError("Invalid credentials. Please try again")
+    }
 }
