@@ -1,3 +1,6 @@
+import * as models from "../models";
+import jwt from "jsonwebtoken";
+
 export class Utils {
     static SECRET_KEY = process.env.SECRET_KEY || "shhhh";
 
@@ -38,5 +41,39 @@ export class Utils {
             }
         )
         return { token: genKey, id: id };
+    }
+
+    static async getUserFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Users> {
+        let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
+
+        if ( unHashedToken ) {
+            if ( unHashedToken.type === "user" ) {
+                let user = await models.Users.findOne({
+                    where: { id: unHashedToken.id },
+                    relations
+                });
+
+                if ( user ) return user;
+            }
+        }
+
+        throw new Utils.CustomError("User does not exist.");
+    }
+
+    static async getFoodTruckFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.FoodTrucks> {
+        let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
+
+        if ( unHashedToken ) {
+            if ( unHashedToken.type === "foodTruck" ) {
+                let truck = await models.FoodTrucks.findOne({
+                    where: { id: unHashedToken.id },
+                    relations
+                });
+
+                if ( truck ) return truck;
+            }
+        }
+
+        throw new Utils.CustomError("User does not exist.");
     }
 }
