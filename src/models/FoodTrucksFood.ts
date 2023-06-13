@@ -37,7 +37,7 @@ export class FoodTrucksFood extends BaseEntity {
 
     @Field()
     @Column("text", { array: true, nullable: true })
-    tags: string;
+    tags: string[];
 
     @Field( () => FoodTrucks )
     @ManyToOne( () => FoodTrucks, truck => truck.foods, {onDelete: "CASCADE"} )
