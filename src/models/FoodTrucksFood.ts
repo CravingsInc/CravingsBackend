@@ -36,7 +36,7 @@ export class FoodTrucksFood extends BaseEntity {
     description: string;
 
     @Field()
-    @Column({ default: "", nullable: true })
+    @Column("text", { array: true, nullable: true })
     tags: string;
 
     @Field( () => FoodTrucks )
