@@ -7,6 +7,7 @@ import { UserCartItems } from "./UserCartItems";
 export enum UserCartStatus {
     PAY = "PAY",
     PREPARING = "PREPARING",
+    CANCELED = "CANCELED",
     DONE = "DONE",
 };
 
