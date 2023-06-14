@@ -9,6 +9,8 @@ import path from "path";
 import { createConnection } from "typeorm";
 import { TestResolver, UserResolver, FoodTruckResolver } from "./resolvers";
 
+import { IoServer } from "./io";
+
 const app = express();
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -49,6 +51,11 @@ async function main() {
 
   await server.start();
   server.applyMiddleware({ app });
+  IoServer.attach(httpServer, {
+    cors: {
+      origin: "*"
+    }
+  });
 
   await new Promise<void>((resolve) =>
     httpServer.listen(
