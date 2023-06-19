@@ -70,6 +70,57 @@ export class UserResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 
+    @Query( () => [models.FoodSummary])
+    async getUserOrderItAgain(@Arg("token") token: string, @Arg("limit", { defaultValue: 50 }) limit: number ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let orderItAgain: ( { FTLong: number, FTLat: number, ULong: number | null, ULat: number | null } & models.FoodSummary)[] = await models.UserCart.createQueryBuilder("uc")
+        .select(`
+            ftf.id, ftf.foodName as name, ftf.profilePicture, ftf.cost as price,
+            u.id = uff.userId as hearted,
+            0 as miles, "-" as timeToDestination,
+            ft.profilePicture as foodTruckProfilePicture, ft.truckName as foodTruckName,
+            (
+                select sum(quantity) from [user_cart_items] ucil where ucil.foodTruckFoodId = ftf.id
+            ) as orderCount,
+            (
+                select count(id) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
+            ) as foodTruckRatingsCount,
+            (
+            select avg(rating) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
+            ) as foodTruckRatingsAverage,
+            ft.longitude as FtLong, ft.Latitude as FTLat,
+            u.longitude as ULong, u.latitude as ULat
+        `)
+        .leftJoin("food_trucks", "ft", "ft.id = uc.foodTruckId")
+        .leftJoin("user_cart_items", "uci", "uci.cartId = uc.id")
+        .leftJoin("food_trucks_food", "ftf", "ftf.id = uci.foodTruckFoodId")
+        .leftJoin("food_truck_rating", "ftr", "ftr.truckId = ft.id")
+        .leftJoin("user_favorite_food", "uff", "uff.foodTruckFoodId = ftf.id")
+        .leftJoin("users", "u", `u.id = uc.userId and u.id = "${user.id}"`)
+        .orderBy("uci.dateUpdated", "DESC")
+        .limit( limit <= 50 ? limit : 100 )
+        .getRawMany()
+
+        return orderItAgain.map( async ( val ) => {
+            let miles = Math.round(Utils.getMiles({ longitude: val.ULong || 0, latitude: val.ULat || 0 }, { longitude: val.FTLong || 0, latitude: val.FTLat || 0 }))
+            return {
+                id: val.id,
+                name: val.name,
+                profilePicture: val.profilePicture,
+                hearted: Boolean(val.hearted) || false,
+                miles: Utils.shortenNumericStrign(miles),
+                timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
+                orderCount: val.orderCount || 0,
+                price: val.price,
+                foodTruckName: val.foodTruckName,
+                foodTruckProfilePicture: val.foodTruckProfilePicture,
+                foodTruckRatingsCount: val.foodTruckRatingsCount,
+                foodTruckRatingsAverage: val.foodTruckRatingsAverage || 0
+            }
+        })
+    }
+
     @Query( () => [models.FoodSummary] )
     async getUserFavoriteFood( @Arg('token') token: string, @Arg("limit", { defaultValue: 50 }) limit: number ) {
         let user = await Utils.getUserFromJsWebToken(token);
