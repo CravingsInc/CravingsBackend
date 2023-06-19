@@ -97,6 +97,7 @@ export class UserResolver {
         .leftJoin("users", "u", `u.id = uff.userId and u.id='${user.id}'`)
         .leftJoin("user_cart_items", "uci", "uci.foodTruckFoodId = ftf.id")
         .leftJoin("food_truck_rating", "ftr", "ftr.truckId = ft.id")
+        .where(`hearted = 1`)
         .limit( limit <= 50 ? limit : 100 )
         .getRawMany();
 
