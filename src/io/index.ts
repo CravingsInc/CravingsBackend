@@ -7,7 +7,13 @@ import { IoErrorEnums } from "./IoErrorEnums";
 const io = new Server();
 
 io.on("connection", async ( socket: Socket ) => {
-    
+    socket.on("updateUserLocation", async ( customProps: Io_Functions.updateUserLocationProps ) => {
+        Io_Functions.updateUserLocation({ defaultProps: { socket, io }, customProps });
+    });
+
+    socket.on("onHeartFood", async ( customProps: Io_Functions.onHeartFoodProps ) => {
+        Io_Functions.onHeartFood({ defaultProps: { socket, io }, customProps });
+    })
 });
 
 export { io as IoServer };

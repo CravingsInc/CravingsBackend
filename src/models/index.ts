@@ -5,3 +5,4 @@ export * from "./FoodTrucksFood";
 export * from "./UserFavoriteFood";
 export * from "./UserCart";
 export * from "./UserCartItems";
+export * from "./types";

@@ -1,8 +1,11 @@
 import * as models from "../models";
 import jwt from "jsonwebtoken";
+import { getDistance } from 'geolib';
 
 export class Utils {
     static SECRET_KEY = process.env.SECRET_KEY || "shhhh";
+
+    static milesConversion = 0.000621371;
 
     static CustomError = class extends Error {
         constructor( message: string, name= "CustomError" ) {
@@ -75,5 +78,30 @@ export class Utils {
         }
 
         throw new Utils.CustomError("User does not exist.");
+    }
+
+    static getMiles( start: { longitude: number, latitude: number }, end: { longitude: number, latitude: number } ) {
+        return (
+            getDistance(
+                start,
+                end,
+                1
+            ) || 0
+        ) * Utils.milesConversion;
+    }
+
+    static shortenNumericStrign( num: number ) {
+        if ( num < 1000 ) return `${num}`;
+        else if ( num < 1_000_000 ) return `${num/1000}k`;
+        else if ( num < 1_000_000_000 ) return `${num/1_000_000}m`;
+        else return `${num/1_000_000_000}b`;
+    }
+
+    static shortenMinutesToString(minutes: number) {
+        if ( minutes < 1 ) return `${Math.round(minutes)}s`;
+        else if ( minutes / 60 < 1 ) return `${Math.round(minutes/60)}m`;
+        else if ( minutes / ( 60 * 60 ) < 60 ) return `${Math.round(minutes/( 60 * 60 ))}h`;
+        else if ( minutes / ( 60 * 60 * 24 ) < 360 ) return `${Math.round(minutes/( 60 * 60 * 24 ))}d`;
+        else return `${minutes/( 60 * 60 * 24 * 7 )}w`;
     }
 }

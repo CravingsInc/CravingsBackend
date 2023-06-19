@@ -4,7 +4,7 @@ export type IoFunctionProps<T> = {
     defaultProps: {
         socket: Socket;
         io: Server;
-        Clients: { [ key: string ] : Socket }
+        Clients?: { [ key: string ] : Socket }
     },
 
     customProps: {
