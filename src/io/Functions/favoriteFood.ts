@@ -13,7 +13,6 @@ export type onHeartFoodProps = {
 export const onHeartFood = async ({ defaultProps: { io, socket }, customProps }: IoFunctionProps<onHeartFoodProps>) => {
     try {
         let user: models.Users;
-        console.log( customProps );
         try {
             user = await Utils.getUserFromJsWebToken(customProps.token);
         }catch(e: any) {

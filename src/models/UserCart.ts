@@ -35,6 +35,10 @@ export class UserCart extends BaseEntity {
     cartCompleted: boolean; // Is the cart paid for
 
     @Field()
+    @Column({ default: "" })
+    note: string;
+
+    @Field()
     @Column({ default: UserCartStatus.PAY })
     cartStatus: UserCartStatus;
 
