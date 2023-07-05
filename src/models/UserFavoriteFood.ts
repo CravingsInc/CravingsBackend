@@ -40,7 +40,7 @@ export class UserFavoriteFood extends BaseEntity {
             (
                 select avg(rating) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
             ) as foodTruckRatingsAverage,
-            ft.longitude as FtLong, ft.Latitude as FTLat,
+            ft.longitude as FTLong, ft.Latitude as FTLat,
             u.longitude as ULong, u.Latitude as ULat
         `)
         .leftJoin("food_trucks", "ft", "ft.id = ftf.ownerId")
@@ -60,7 +60,7 @@ export class UserFavoriteFood extends BaseEntity {
             name: favoriteFood.name,
             profilePicture: favoriteFood.profilePicture,
             hearted: Boolean(favoriteFood.hearted) || false,
-            miles: Utils.shortenNumericStrign(miles),
+            miles: Utils.shortenMinutesToString(miles),
             timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
             orderCount: favoriteFood.orderCount || 0,
             price: favoriteFood.price,

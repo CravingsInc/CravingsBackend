@@ -89,7 +89,7 @@ export class UserResolver {
             (
             select avg(rating) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
             ) as foodTruckRatingsAverage,
-            ft.longitude as FtLong, ft.Latitude as FTLat,
+            ft.longitude as FTLong, ft.Latitude as FTLat,
             u.longitude as ULong, u.latitude as ULat
         `)
         .leftJoin("food_trucks", "ft", "ft.id = uc.foodTruckId")
@@ -109,7 +109,7 @@ export class UserResolver {
                 name: val.name,
                 profilePicture: val.profilePicture,
                 hearted: Boolean(val.hearted) || false,
-                miles: Utils.shortenNumericStrign(miles),
+                miles: Utils.shortenNumericString(miles),
                 timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
                 orderCount: val.orderCount || 0,
                 price: val.price,
@@ -140,7 +140,7 @@ export class UserResolver {
             (
                 select avg(rating) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
             ) as foodTruckRatingsAverage,
-            ft.longitude as FtLong, ft.Latitude as FTLat,
+            ft.longitude as FTLong, ft.Latitude as FTLat,
             u.longitude as ULong, u.Latitude as ULat
         `)
         .leftJoin("food_trucks", "ft", "ft.id = ftf.ownerId")
@@ -159,7 +159,7 @@ export class UserResolver {
                 name: val.name,
                 profilePicture: val.profilePicture,
                 hearted: Boolean(val.hearted) || false,
-                miles: Utils.shortenNumericStrign(miles),
+                miles: Utils.shortenNumericString(miles),
                 timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
                 orderCount: val.orderCount || 0,
                 price: val.price,
@@ -169,5 +169,68 @@ export class UserResolver {
                 foodTruckRatingsAverage: val.foodTruckRatingsAverage || 0
             }
         })
+    }
+
+    @Query( () => [models.FoodSummary] )
+    async getPopularLocalFood( @Arg('token') token: string, @Arg("limit", { defaultValue: 50 }) limit: number ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let popularLocalFood: ( { FTLong: number, FTLat: number, ULong: number | null, ULat: number | null, radius: number } & models.FoodSummary)[] = await models.FoodTrucksFood.createQueryBuilder("ftf")
+        .select(`
+            ftf.id, ftf.foodName as name, ftf.profilePicture, ftf.cost as price,
+            u.id = uff.userId as hearted,
+            0 as miles, "-" as timeToDestination,
+            ft.profilePicture as foodTruckProfilePicture, ft.truckName as foodTruckName,
+            (
+            select sum(quantity) from [user_cart_items] uci1 where uci1.foodTruckFoodId = ftf.id
+            ) as orderCount,
+            (
+            select count(id) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
+            ) as foodTruckRatingsCount,
+            (
+            select avg(rating) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
+            ) as foodTruckRatingsAverage,
+            ft.longitude as FTLong, ft.Latitude as FTLat,
+            u.longitude as ULong, u.Latitude as ULat
+        `)
+        .leftJoin("food_trucks", "ft", "ft.id = ftf.ownerId")
+        .leftJoin("user_favorite_food", "uff", "ftf.id = uff.foodTruckFoodId")
+        .leftJoin("users", "u", `u.id = uff.userId and u.id='${user.id}'`)
+        .leftJoin("user_cart_items", "uci", "uci.foodTruckFoodId = ftf.id")
+        .leftJoin("food_truck_rating", "ftr", "ftr.truckId = ft.id")
+        .where(`
+            (
+                ( u.searchMilesRadius * u.searchMilesRadius ) - (
+                    (
+                        ( u.longitude - ft.longitude ) * ( u.longitude - ft.longitude )
+                    ) + 
+                    (
+                        ( u.Latitude - ft.Latitude ) * ( u.Latitude - ft.Latitude )
+                    )
+                )
+            ) >= 0
+        `).orderBy(`orderCount`, "DESC")
+        .limit( limit <= 50 ? limit : 100 )
+        .getRawMany();
+
+
+        return popularLocalFood.map( ( val ) => {
+            let miles = Math.round(Utils.getMiles({ longitude: val.ULong || 0, latitude: val.ULat || 0 }, { longitude: val.FTLong || 0, latitude: val.FTLat || 0 }))
+            return {
+                id: val.id,
+                name: val.name,
+                profilePicture: val.profilePicture,
+                hearted: Boolean(val.hearted) || false,
+                miles: Utils.shortenNumericString(miles),
+                timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
+                orderCount: val.orderCount || 0,
+                price: val.price,
+                foodTruckName: val.foodTruckName,
+                foodTruckProfilePicture: val.foodTruckProfilePicture,
+                foodTruckRatingsCount: val.foodTruckRatingsCount,
+                foodTruckRatingsAverage: val.foodTruckRatingsAverage || 0,
+                milesNum: miles
+            }
+        }).filter( val => val.milesNum <= user.searchMilesRadius + 2 );
     }
 }

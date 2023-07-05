@@ -4,10 +4,10 @@ import express from "express";
 import http from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { ApolloServer } from "apollo-server-express";
-import { buildSchema } from "type-graphql";
+import { NonEmptyArray, buildSchema } from "type-graphql";
 import path from "path";
 import { createConnection } from "typeorm";
-import { TestResolver, UserResolver, FoodTruckResolver } from "./resolvers";
+import * as resolvers from "./resolvers";
 
 import { IoServer } from "./io";
 
@@ -35,7 +35,7 @@ async function main() {
   );
 
   const schema = await buildSchema({
-    resolvers: [TestResolver, UserResolver, FoodTruckResolver],
+    resolvers: [ ...( Object.values(resolvers) ) ] as [any],
     dateScalarMode: "timestamp",
   });
 

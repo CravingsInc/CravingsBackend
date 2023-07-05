@@ -49,6 +49,10 @@ export class Users extends BaseEntity {
     @Column({ default: 0, nullable: true })
     longitude: number;
 
+    @Field()
+    @Column({ default: 12, nullable: true })
+    searchMilesRadius: number;
+
     @Field( () => [FoodTruckRating] )
     @OneToMany( () => FoodTruckRating, ratings => ratings.user )
     ratings: FoodTruckRating[];

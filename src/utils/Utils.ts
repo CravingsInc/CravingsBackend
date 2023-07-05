@@ -1,11 +1,11 @@
 import * as models from "../models";
 import jwt from "jsonwebtoken";
-import { getDistance } from 'geolib';
+import { Mailer } from "./Emails";
 
 export class Utils {
     static SECRET_KEY = process.env.SECRET_KEY || "shhhh";
 
-    static milesConversion = 0.000621371;
+    static KmTomilesConversion = 0.621371;
 
     static CustomError = class extends Error {
         constructor( message: string, name= "CustomError" ) {
@@ -13,6 +13,8 @@ export class Utils {
             this.name = name;
         }
     }
+
+    static Mailer = Mailer;
 
     /**
      * Generates a primary key for a given table.
@@ -81,16 +83,14 @@ export class Utils {
     }
 
     static getMiles( start: { longitude: number, latitude: number }, end: { longitude: number, latitude: number } ) {
-        return (
-            getDistance(
-                start,
-                end,
-                1
-            ) || 0
-        ) * Utils.milesConversion;
+        let km  = Math.acos(
+            Math.sin(start.latitude) * Math.sin(end.latitude) + Math.cos(start.latitude) * Math.cos(end.latitude) * Math.cos(end.longitude - start.longitude)
+        ) * 6371;
+
+        return km*Utils.KmTomilesConversion;
     }
 
-    static shortenNumericStrign( num: number ) {
+    static shortenNumericString( num: number ) {
         if ( num < 1000 ) return `${num}`;
         else if ( num < 1_000_000 ) return `${num/1000}k`;
         else if ( num < 1_000_000_000 ) return `${num/1_000_000}m`;
@@ -99,9 +99,23 @@ export class Utils {
 
     static shortenMinutesToString(minutes: number) {
         if ( minutes < 1 ) return `${Math.round(minutes)}s`;
-        else if ( minutes / 60 < 1 ) return `${Math.round(minutes/60)}m`;
-        else if ( minutes / ( 60 * 60 ) < 60 ) return `${Math.round(minutes/( 60 * 60 ))}h`;
-        else if ( minutes / ( 60 * 60 * 24 ) < 360 ) return `${Math.round(minutes/( 60 * 60 * 24 ))}d`;
-        else return `${minutes/( 60 * 60 * 24 * 7 )}w`;
+        else if ( minutes / 60 < 1 ) {
+            let div = Math.round(minutes/60);
+            return `${div > 1 ? div : 1}m`;
+        }
+        else if ( minutes / ( 60 * 60 ) < 60 ) {
+            let div = Math.round(minutes/( 60 * 60 ));
+            return `${div > 1 ? div : 1}h`;
+        }
+        else if ( minutes / ( 60 * 60 * 24 ) < 360 ) {
+            let div = Math.round(minutes/( 60 * 60 * 24 ));
+
+            return `${div > 1 ? div : 1}d`;
+        }
+        else {
+            let div = Math.round(minutes/( 60 * 60 * 24 * 7 ))
+
+            return `${div > 1 ? div : 1}w`;
+        }
     }
 }
