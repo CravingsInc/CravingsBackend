@@ -10,4 +10,11 @@ export class ContactResolver {
 
         return "Email Sent"
     }
+
+    @Query( () => String )
+    async makeContact( @Arg("contactInput", () => models.ContactInput) opt : models.ContactInput ) {
+        Utils.Mailer.sendContactEmail(opt);
+
+        return "Contact Sent";
+    }
 }

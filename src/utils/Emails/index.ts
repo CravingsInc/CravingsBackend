@@ -1,11 +1,12 @@
-import { reservation, ReservationProps } from "./email-templates";
+import { reservation, ReservationProps, contact, ContactProps } from "./email-templates";
 import nodemailer from "nodemailer";
 
 export enum EmailTemplates {
-    RESERVATION
+    RESERVATION,
+    CONTACT
 }
 
-type EmailTemplatesOpt = ReservationProps;
+type EmailTemplatesOpt = ReservationProps | ContactProps ;
 
 const formatMail = ( mail: string, opt : { [ key: string ]: string | number } ) => {
     for ( let key in opt ) mail = mail.replaceAll(`{{${key}}}`, opt[key] + "" )
@@ -15,7 +16,9 @@ const formatMail = ( mail: string, opt : { [ key: string ]: string | number } ) 
 const getEmailTemplates = ( template: EmailTemplates, opt: EmailTemplatesOpt ) => {
     switch ( template ) {
         case EmailTemplates.RESERVATION:
-            return formatMail( reservation, opt ); 
+            return formatMail( reservation, opt );
+        case EmailTemplates.CONTACT:
+            return formatMail( contact, opt );
         default: return "";
     }
 }
@@ -39,6 +42,15 @@ export class Mailer {
         }catch(e) {
             console.log(e);
         }
+    }
+
+    static sendContactEmail( opt: ContactProps ) {
+        this.sendEmail( 
+            `${opt.email}, outreach@cravingsinc.us`,
+            `CravingsInc Contact by ${opt.first_name}`,
+            undefined, 
+            getEmailTemplates(EmailTemplates.CONTACT, opt)
+        )
     }
 
     static sendReservationEmail( opt: ReservationProps) {

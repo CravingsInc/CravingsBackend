@@ -1,7 +1,7 @@
 import { InputType, Field } from "type-graphql";
 
 @InputType()
-export class ReservationInput {
+export class ContactInput {
     @Field()
     first_name: string;
 
@@ -9,13 +9,7 @@ export class ReservationInput {
     last_name: string;
 
     @Field()
-    date: string;
-
-    @Field()
-    time: string;
-
-    @Field()
-    event_name: string;
+    message: string;
 
     @Field()
     email: string;
