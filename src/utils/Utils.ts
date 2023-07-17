@@ -7,6 +7,8 @@ export class Utils {
 
     static KmTomilesConversion = 0.621371;
 
+    static milesFilterLeway = 2;
+
     static CustomError = class extends Error {
         constructor( message: string, name= "CustomError" ) {
             super(message);
@@ -98,9 +100,8 @@ export class Utils {
     }
 
     static shortenMinutesToString(minutes: number) {
-        if ( minutes < 1 ) return `${Math.round(minutes)}s`;
-        else if ( minutes / 60 < 1 ) {
-            let div = Math.round(minutes/60);
+        if ( minutes / 60 < 1 ) {
+            let div = Math.round(minutes);
             return `${div > 1 ? div : 1}m`;
         }
         else if ( minutes / ( 60 * 60 ) < 60 ) {
