@@ -18,6 +18,10 @@ export class Utils {
 
     static Mailer = Mailer;
 
+    static getCravingsWebUrl = () => {
+        return process.env.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
+    }
+
     /**
      * Generates a primary key for a given table.
      * @param checkID - Function to check whether or not the ID is valid.
@@ -51,20 +55,38 @@ export class Utils {
     }
 
     static async getUserFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Users> {
-        let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
+        try {
+            let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
-        if ( unHashedToken ) {
-            if ( unHashedToken.type === "user" ) {
-                let user = await models.Users.findOne({
-                    where: { id: unHashedToken.id },
-                    relations
-                });
-
-                if ( user ) return user;
-            }
-        }
+            if ( unHashedToken ) {
+                if ( unHashedToken.type === "user" ) {
+                    let user = await models.Users.findOne({
+                        where: { id: unHashedToken.id },
+                        relations
+                    });
+    
+                    if ( user ) return user;
+                }
+            }    
+        }catch( e ) {}
 
         throw new Utils.CustomError("User does not exist.");
+    }
+
+    static async verifyPasswordChangeToken( token: string ) {
+        try {
+            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+        
+            if ( unHashedToken ) {
+                if ( unHashedToken.type === "user" && unHashedToken.command === 'change-password' ) {
+                    let pwc = await models.UserPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: [ "user" ] })
+                    
+                    if ( pwc ) return pwc;
+                }  
+            }
+        }catch( e ) {} 
+
+        throw new Utils.CustomError("Token is not valid");
     }
 
     static async getFoodTruckFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.FoodTrucks> {

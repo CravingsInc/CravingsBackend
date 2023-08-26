@@ -3,6 +3,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { UserFavoriteFood } from "./UserFavoriteFood";
 import { FoodTruckRating } from "./FoodTruckRating";
 import { UserCart } from "./UserCart";
+import { UserPasswordChange } from "./UserPasswordChange";
 
 @Entity()
 @ObjectType()
@@ -64,6 +65,9 @@ export class Users extends BaseEntity {
     @Field( () => [UserCart] )
     @OneToMany( () => UserCart, cart => cart.user )
     carts: UserCart[];
+
+    @OneToMany( () => UserPasswordChange, pwc => pwc.user )
+    passwordChangeHistory: UserPasswordChange[];
 
     @Field()
     @CreateDateColumn()

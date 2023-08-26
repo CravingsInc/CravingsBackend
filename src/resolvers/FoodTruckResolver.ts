@@ -1,4 +1,4 @@
-import { Resolver, Mutation, Arg } from "type-graphql";
+import { Resolver, Mutation, Query, Arg } from "type-graphql";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -67,5 +67,47 @@ export class FoodTruckResolver {
         }
 
         throw new Utils.CustomError("Invalid credentials. Please try again")
+    }
+
+    
+    @Query( () => models.FoodTruckPageDetails )
+    async userGetFoodTruckPageDetails( @Arg('token') token: string, @Arg('truckId') truckId: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let foodTruck = await models.FoodTrucks.createQueryBuilder("ft")
+        .select(`
+          ft.id, ft.truckName as name, ft.profilePicture, ft.bannerImage,
+          count(uc.id) as salesCount,
+          count(ftr.id) as ratingsCount, avg(ftr.rating) as ratingsAverage
+        `)
+        .leftJoin("food_truck_rating", "ftr", 'ftr.truckId = ft.id')
+        .leftJoin("user_cart", "uc", "uc.foodTruckId = ft.id and uc.cartStatus is 'DONE' " )
+        .where(`ft.id = "${truckId}"`)
+        .getRawOne() as ( { id: string, name: string, profilePicture: string, bannerImage: string, salesCount: number, ratingsCount: number, ratingsAverage: number } | null )
+
+        if ( !foodTruck ) throw new Utils.CustomError("Food Truck does not exist");
+
+
+        let foodTruckFood = await models.FoodTrucksFood.createQueryBuilder('ftf')
+        .select(`
+            ftf.id, ftf.foodName as name, ftf.profilePicture, ftf.calories, ftf.cost, ftf.description, 
+            "${user.id}" is uff.userId as hearted
+        `)
+        .leftJoin("user_favorite_food", "uff", `uff.foodTruckFoodId = ftf.id and uff.userId is "${user.id}"`)
+        .getRawMany() as ( { id: string, name: string, profilePicture: string, cost: number, calories: number, description: string, hearted: boolean }[] | null )
+
+        let foodTruckRating = await models.FoodTruckRating.createQueryBuilder('ftr')
+        .select(`
+            ftr.id, u.username as name, u.profilePicture, ftr.rating, ftr.description as comment
+        `)
+        .leftJoin("users", "u", "u.id = ftr.userId")
+        .getRawMany() as ( { id: string, name: string, profilePicture: string, comment: string, rating: number }[] | null )
+
+        return {
+            ...foodTruck,
+            ratingsAverage: foodTruck.ratingsAverage || 0,
+            foods: foodTruckFood,
+            ratings: foodTruckRating
+        }
     }
 }

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import * as models from "../models";
 
 import { Utils, stripeHandler } from "../utils";
+import { Like } from "typeorm";
 
 @Resolver()
 export class UserResolver {
@@ -284,5 +285,196 @@ export class UserResolver {
                 milesNum: miles
             }
         }).filter( val => val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway );
+    }
+
+    @Query( () => [models.UserSearchResult] ) 
+    async userSearch( @Arg("token") token: string, @Arg("searchTerm") searchTerm: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let trucks = await models.FoodTrucks.createQueryBuilder('ft')
+        .select(`
+            ft.id, ft.truckName  as name, ft.profilePicture, ft.longitude as FLong, ft.latitude as FLat,
+            (
+                select count(*) from food_trucks_food ftf where ftf.ownerId = ft.id
+            ) as itemsCount,
+            (
+                select count(id) from food_truck_rating ftr where ftr.truckId = ft.id
+            ) as ratingsCount,
+            (
+                select avg(rating) from food_truck_rating ftr where ftr.truckId = ft.id
+            ) as ratingsAverage,
+            u.latitude as ULat, u.longitude as ULong
+        `)
+        .leftJoin("users", 'u', `u.id='${user.id}'`)
+        .where( { truckName: Like(`%${searchTerm}%`) } )
+        .limit( 50 ).getRawMany();
+    
+        let foods = await models.FoodTrucksFood.createQueryBuilder("ftf")
+        .select(`
+            ftf.id, ftf.foodName as name, ftf.profilePicture, ftf.cost as price,
+            u.id = uff.userId as hearted,
+            0 as miles, "-" as timeToDestination,
+            ft.profilePicture as foodTruckProfilePicture, ft.truckName as foodTruckName,
+            (
+                select sum(quantity) from [user_cart_items] uci1 where uci1.foodTruckFoodId = ftf.id
+            ) as orderCount,
+            (
+                select count(id) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
+            ) as foodTruckRatingsCount,
+            (
+                select avg(rating) from [food_truck_rating] ftr1 where ftr1.truckId = ftr.id
+            ) as foodTruckRatingsAverage,
+            ft.longitude as FTLong, ft.Latitude as FTLat,
+            u.longitude as ULong, u.Latitude as ULat
+        `)
+        .leftJoin("food_trucks", "ft", "ft.id = ftf.ownerId")
+        .leftJoin("user_favorite_food", "uff", "ftf.id = uff.foodTruckFoodId")
+        .leftJoin("users", "u", `u.id = uff.userId and u.id='${user.id}'`)
+        .leftJoin("user_cart_items", "uci", "uci.foodTruckFoodId = ftf.id")
+        .leftJoin("food_truck_rating", "ftr", "ftr.truckId = ft.id")
+        .where([
+            { foodName: Like(`%${searchTerm}%`) },
+            { description: Like(`%${searchTerm}%`) },
+            { tags: Like(`%${searchTerm}%`) }
+        ]).orWhere(`ft.truckname like "%${searchTerm}%"`)
+        .limit(50).getRawMany();
+
+        let results = [
+            ...(
+                trucks.map( t => {
+                    let miles = Math.round(Utils.getMiles({ longitude: t.ULong || 0, latitude: t.ULat || 0 }, { longitude: t.FLong || 0, latitude: t.FLat || 0 }))
+    
+                    return { 
+                        truck: {
+                            id: t.id,
+                            name: t.name,
+                            profilePicture: t.profilePicture,
+                            miles: Utils.shortenNumericString(miles),
+                            timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
+                            itemsCount: t.itemsCount,
+                            ratingsAverage: t.ratingsAverage || 0,
+                            ratingsCount: t.ratingsCount,
+                            milesNum: miles
+                        }, 
+                        type: "truck" 
+                    }
+                })
+            ),
+
+            ...(
+                foods.map( f => {
+                    let miles = Math.round(Utils.getMiles({ longitude: f.ULong || 0, latitude: f.ULat || 0 }, { longitude: f.FTLong || 0, latitude: f.FTLat || 0 }))
+                    
+                    return { 
+                        food: {
+                            id: f.id,
+                            name: f.name,
+                            profilePicture: f.profilePicture,
+                            hearted: Boolean(f.hearted) || false,
+                            miles: Utils.shortenNumericString(miles),
+                            timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
+                            orderCount: f.orderCount || 0,
+                            price: f.price,
+                            foodTruckName: f.foodTruckName,
+                            foodTruckProfilePicture: f.foodTruckProfilePicture,
+                            foodTruckRatingsCount: f.foodTruckRatingsCount,
+                            foodTruckRatingsAverage: f.foodTruckRatingsAverage || 0,
+                            milesNum: miles
+                        }, 
+                        type: "food" 
+                    }
+                })
+            )
+        ];
+
+        return results;
+    }
+    
+    @Query( () => models.UserProfileInformation ) 
+    async getUserProfileInformation( @Arg('token') token: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        return {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            phoneNumber: user.phoneNumber,
+            email: user.email
+        }
+    }
+
+    @Mutation( () => String )
+    async modifyUserProfileInformation( @Arg('token') token: string, @Arg('arg', () => models.UserProfileInformationInput ) arg : models.UserProfileInformationInput ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        user.firstName = arg.firstName
+        user.lastName = arg.lastName
+        user.username = arg.username
+        user.phoneNumber = arg.phoneNumber
+        user.email = arg.email
+
+        await user.save();
+
+        return "Modified Properly";
+    }
+
+    @Mutation( () => String )
+    async changePassword( @Arg("token") token: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let passwordChange = await models.UserPasswordChange.create({
+            user
+        }).save();
+
+        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/${
+            jwt.sign(
+                {
+                    ...await Utils.generateJsWebToken(user.id),
+                    type: "user",
+                    command: "change-password",
+                    pwc: passwordChange.id
+                }, 
+                Utils.SECRET_KEY, 
+                { expiresIn: 10 * 60 } // Expires in 10 minutes
+            )
+        }`;
+
+        await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: user.email, username: user.username });
+
+        return link_to_open;
+    }
+
+    @Query( () => String )
+    async verifyPasswordChangeToken( @Arg('token') token: string ) {
+        let pwc = await Utils.verifyPasswordChangeToken(token);
+
+        if ( pwc.tokenUsed ) return "Token is not valid";
+
+        return "Token is valid";
+    }
+
+    @Mutation( () => String )
+    async confirmUserPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
+        
+        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return "Can't change your password";
+
+        if ( newPassword !== confirmNewPassword ) return "Can't change your password";
+        
+        let pwc = await Utils.verifyPasswordChangeToken(token);
+
+        if ( pwc.tokenUsed ) return "Can't change password";
+
+        let user = await models.Users.findOne({ where: { id: pwc.user.id } });
+
+        if ( !user ) return "Problem changing your password";
+
+        user.password = await bcrypt.hash(newPassword, 12);
+
+        pwc.tokenUsed = true;
+
+        await pwc.save();
+        await user.save();
+
+        return "Successfully changed your password";
     }
 }
