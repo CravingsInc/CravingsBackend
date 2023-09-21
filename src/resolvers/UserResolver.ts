@@ -419,14 +419,14 @@ export class UserResolver {
     }
 
     @Mutation( () => String )
-    async changePassword( @Arg("token") token: string ) {
+    async changeUserPassword( @Arg("token") token: string ) {
         let user = await Utils.getUserFromJsWebToken(token);
 
         let passwordChange = await models.UserPasswordChange.create({
             user
         }).save();
 
-        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/${
+        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/user/${
             jwt.sign(
                 {
                     ...await Utils.generateJsWebToken(user.id),
@@ -445,7 +445,7 @@ export class UserResolver {
     }
 
     @Query( () => String )
-    async verifyPasswordChangeToken( @Arg('token') token: string ) {
+    async verifyUserPasswordChangeToken( @Arg('token') token: string ) {
         let pwc = await Utils.verifyPasswordChangeToken(token);
 
         if ( pwc.tokenUsed ) return "Token is not valid";
