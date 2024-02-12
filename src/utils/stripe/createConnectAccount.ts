@@ -7,6 +7,7 @@ export const createConnectAccount = async ( email: string, userId: string ) => {
         metadata: {
             email,
             userId,
+            type: "organizer",
             dateJoined: ( new Date() ).getTime() 
         }
     })

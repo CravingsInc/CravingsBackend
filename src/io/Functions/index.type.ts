@@ -12,4 +12,4 @@ export type IoFunctionProps<T> = {
     };
 };
 
-export type TokenType = "user" | "foodTruck";
+export type TokenType = "user" | "organizer";

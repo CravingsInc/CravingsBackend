@@ -7,16 +7,16 @@ import * as models from "../models";
 import { Utils, stripeHandler } from "../utils";
 
 @Resolver()
-export class FoodTruckResolver {
+export class OrganizerResolver {
     @Mutation( returns => String )
-    async CreateFoodTruckAccount( @Arg("foodTruckName") foodTruckName: string, @Arg("email") email: string, @Arg("password") password: string ) {
-        let foodTruck : models.FoodTrucks;
+    async CreateOrganizerAccount( @Arg("orgName") orgName: string, @Arg("email") email: string, @Arg("password") password: string ) {
+        let organizer : models.Organizers;
 
-        if ( foodTruckName.length < 1 || email.length < 1 || password.length < 1 || !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/).test(email)) throw new Utils.CustomError("Please fill out form correctly");
+        if ( orgName.length < 1 || email.length < 1 || password.length < 1 || !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/).test(email)) throw new Utils.CustomError("Please fill out form correctly");
 
         try {
-            foodTruck = await models.FoodTrucks.create({
-                truckName: foodTruckName,
+            organizer = await models.Organizers.create({
+                orgName: orgName,
                 email,
                 password: await bcrypt.hash(password, 12)
             }).save();
@@ -25,21 +25,21 @@ export class FoodTruckResolver {
             throw new Utils.CustomError("Food Truck Name Already Exist");
         }
 
-        if ( foodTruck ) {
+        if ( organizer ) {
             try {
-                foodTruck.stripeConnectId = ( await stripeHandler.createConnectAccount(email, foodTruck.id ) ).id;
-                await foodTruck.save();
+                organizer.stripeConnectId = ( await stripeHandler.createConnectAccount(email, organizer.id ) ).id;
+                await organizer.save();
             }catch(e) {
                 console.log(e);
 
-                await foodTruck.remove();
+                await organizer.remove();
                 throw new Utils.CustomError("Problem Creating Food Truck Account");
             }
 
             return jwt.sign(
                 {
-                    ...await Utils.generateJsWebToken(foodTruck.id),
-                    type: "foodTruck"
+                    ...await Utils.generateJsWebToken(organizer.id),
+                    type: "organizer"
                 },
                 Utils.SECRET_KEY,
                 { expiresIn: "2w" }
@@ -48,17 +48,17 @@ export class FoodTruckResolver {
     }
 
     @Mutation( returns => String ) 
-    async FoodTruckLogIn( @Arg("truckName") truckName: string, @Arg("password") password: string ) {
-        let foodTruck = await models.FoodTrucks.findOne({ where: { truckName } });
+    async OrganizerLogIn( @Arg("orgName") orgName: string, @Arg("password") password: string ) {
+        let organizer = await models.Organizers.findOne({ where: { orgName } });
 
-        if ( !foodTruck ) foodTruck = await models.FoodTrucks.findOne({ where: { email: truckName }}) // Just incase they are using there email
+        if ( !organizer ) organizer = await models.Organizers.findOne({ where: { email: orgName }}) // Just incase they are using there email
 
-        if ( foodTruck ) {
-            if ( await bcrypt.compare(password, foodTruck.password) ) {
+        if ( organizer ) {
+            if ( await bcrypt.compare(password, organizer.password) ) {
                 return jwt.sign(
                     {
-                        ...await Utils.generateJsWebToken(foodTruck.id),
-                        type: "foodTruck"
+                        ...await Utils.generateJsWebToken(organizer.id),
+                        type: "organizer"
                     },
                     Utils.SECRET_KEY,
                     { expiresIn: "2w" }
@@ -69,12 +69,13 @@ export class FoodTruckResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 
-    
+    // TODO: FIX THIS
+    /*
     @Query( () => models.FoodTruckPageDetails )
-    async userGetFoodTruckPageDetails( @Arg('token') token: string, @Arg('truckId') truckId: string ) {
+    async userGetOrganizerPageDetails( @Arg('token') token: string, @Arg('truckId') truckId: string ) {
         let user = await Utils.getUserFromJsWebToken(token);
 
-        let foodTruck = await models.FoodTrucks.createQueryBuilder("ft")
+        let foodTruck = await models.Organizers.createQueryBuilder("ft")
         .select(`
           ft.id, ft.truckName as name, ft.profilePicture, ft.bannerImage,
           count(uc.id) as salesCount,
@@ -88,7 +89,7 @@ export class FoodTruckResolver {
         if ( !foodTruck ) throw new Utils.CustomError("Food Truck does not exist");
 
 
-        let foodTruckFood = await models.FoodTrucksFood.createQueryBuilder('ftf')
+        let foodTruckFood = await models.Organizers.createQueryBuilder('ftf')
         .select(`
             ftf.id, ftf.foodName as name, ftf.profilePicture, ftf.calories, ftf.cost, ftf.description, 
             "${user.id}" is uff.userId as hearted
@@ -96,7 +97,7 @@ export class FoodTruckResolver {
         .leftJoin("user_favorite_food", "uff", `uff.foodTruckFoodId = ftf.id and uff.userId is "${user.id}"`)
         .getRawMany() as ( { id: string, name: string, profilePicture: string, cost: number, calories: number, description: string, hearted: boolean }[] | null )
 
-        let foodTruckRating = await models.FoodTruckRating.createQueryBuilder('ftr')
+        let foodTruckRating = await models.Organizers.createQueryBuilder('ftr')
         .select(`
             ftr.id, u.username as name, u.profilePicture, ftr.rating, ftr.description as comment
         `)
@@ -109,5 +110,5 @@ export class FoodTruckResolver {
             foods: foodTruckFood,
             ratings: foodTruckRating
         }
-    }
+    }*/
 }

@@ -5,7 +5,6 @@ import jwt from "jsonwebtoken";
 import * as models from "../models";
 
 import { Utils, stripeHandler } from "../utils";
-import { Like } from "typeorm";
 
 @Resolver()
 export class UserResolver {
@@ -71,6 +70,7 @@ export class UserResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 
+    /*
     @Query( () => [models.FoodSummary])
     async getUserOrderItAgain(@Arg("token") token: string, @Arg("limit", { defaultValue: 50 }) limit: number ) {
         let user = await Utils.getUserFromJsWebToken(token);
@@ -122,6 +122,7 @@ export class UserResolver {
         })
     }
 
+    /*
     @Query( () => [models.FoodSummary] )
     async getUserFavoriteFood( @Arg('token') token: string, @Arg("limit", { defaultValue: 50 }) limit: number ) {
         let user = await Utils.getUserFromJsWebToken(token);
@@ -172,6 +173,7 @@ export class UserResolver {
         })
     }
 
+    /*
     @Query( () => [ models.FoodTruckSummary ])
     async getPopularLocalFoodTruck( @Arg('token') token: string, @Arg("limit", { defaultValue: 50 } ) limit: number ) {
         let user = await Utils.getUserFromJsWebToken(token);
@@ -224,6 +226,7 @@ export class UserResolver {
         }).filter( val => val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway );
     } 
 
+    /*
     @Query( () => [models.FoodSummary] )
     async getPopularLocalFood( @Arg('token') token: string, @Arg("limit", { defaultValue: 50 }) limit: number ) {
         let user = await Utils.getUserFromJsWebToken(token);
@@ -287,6 +290,7 @@ export class UserResolver {
         }).filter( val => val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway );
     }
 
+    
     @Query( () => [models.UserSearchResult] ) 
     async userSearch( @Arg("token") token: string, @Arg("searchTerm") searchTerm: string ) {
         let user = await Utils.getUserFromJsWebToken(token);
@@ -388,7 +392,7 @@ export class UserResolver {
         ];
 
         return results;
-    }
+    }*/
     
     @Query( () => models.UserProfileInformation ) 
     async getUserProfileInformation( @Arg('token') token: string ) {

@@ -89,17 +89,17 @@ export class Utils {
         throw new Utils.CustomError("Token is not valid");
     }
 
-    static async getFoodTruckFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.FoodTrucks> {
+    static async getOrganizerFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Organizers> {
         let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
         if ( unHashedToken ) {
-            if ( unHashedToken.type === "foodTruck" ) {
-                let truck = await models.FoodTrucks.findOne({
+            if ( unHashedToken.type === "organizer" ) {
+                let organizer = await models.Organizers.findOne({
                     where: { id: unHashedToken.id },
                     relations
                 });
 
-                if ( truck ) return truck;
+                if ( organizer ) return organizer;
             }
         }
 

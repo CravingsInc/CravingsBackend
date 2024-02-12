@@ -1,9 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, BaseEntity } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, BaseEntity, UpdateDateColumn } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
-import { UserFavoriteFood } from "./UserFavoriteFood";
-import { FoodTruckRating } from "./FoodTruckRating";
-import { UserCart } from "./UserCart";
 import { UserPasswordChange } from "./UserPasswordChange";
+import { EventTicketBuys } from "../organizers";
 
 @Entity()
 @ObjectType()
@@ -54,23 +52,19 @@ export class Users extends BaseEntity {
     @Column({ default: 12, nullable: true })
     searchMilesRadius: number;
 
-    @Field( () => [FoodTruckRating] )
-    @OneToMany( () => FoodTruckRating, ratings => ratings.user )
-    ratings: FoodTruckRating[];
-
-    @Field( () => [UserFavoriteFood] )
-    @OneToMany( () => UserFavoriteFood, favoriteFood => favoriteFood.user )
-    favoriteFoods: UserFavoriteFood[];
-
-    @Field( () => [UserCart] )
-    @OneToMany( () => UserCart, cart => cart.user )
-    carts: UserCart[];
-
     @OneToMany( () => UserPasswordChange, pwc => pwc.user )
     passwordChangeHistory: UserPasswordChange[];
+
+    @Field( () => [ EventTicketBuys ])
+    @OneToMany( () => EventTicketBuys, eTB => eTB.user )
+    eventTickets: EventTicketBuys[];
 
     @Field()
     @CreateDateColumn()
     dateJoined: Date;
+
+    @Field()
+    @UpdateDateColumn()
+    dateUpdated: Date;
 
 }
