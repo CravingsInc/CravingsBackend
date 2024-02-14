@@ -70,6 +70,94 @@ export class UserResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 
+    @Query( () => models.UserProfileInformation ) 
+    async getUserProfileInformation( @Arg('token') token: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        return {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            phoneNumber: user.phoneNumber,
+            email: user.email
+        }
+    }
+
+    @Mutation( () => String )
+    async modifyUserProfileInformation( @Arg('token') token: string, @Arg('arg', () => models.UserProfileInformationInput ) arg : models.UserProfileInformationInput ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        user.firstName = arg.firstName
+        user.lastName = arg.lastName
+        user.username = arg.username
+        user.phoneNumber = arg.phoneNumber
+        user.email = arg.email
+
+        await user.save();
+
+        return "Modified Properly";
+    }
+
+    @Mutation( () => String )
+    async changeUserPassword( @Arg("token") token: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let passwordChange = await models.UserPasswordChange.create({
+            user
+        }).save();
+
+        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/user/${
+            jwt.sign(
+                {
+                    ...await Utils.generateJsWebToken(user.id),
+                    type: "user",
+                    command: "change-password",
+                    pwc: passwordChange.id
+                }, 
+                Utils.SECRET_KEY, 
+                { expiresIn: 10 * 60 } // Expires in 10 minutes
+            )
+        }`;
+
+        await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: user.email, username: user.username });
+
+        return link_to_open;
+    }
+
+    @Query( () => String )
+    async verifyUserPasswordChangeToken( @Arg('token') token: string ) {
+        let pwc = await Utils.verifyPasswordChangeToken(token);
+
+        if ( pwc.tokenUsed ) return "Token is not valid";
+
+        return "Token is valid";
+    }
+
+    @Mutation( () => String )
+    async confirmUserPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
+        
+        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return "Can't change your password";
+
+        if ( newPassword !== confirmNewPassword ) return "Can't change your password";
+        
+        let pwc = await Utils.verifyPasswordChangeToken(token);
+
+        if ( pwc.tokenUsed ) return "Can't change password";
+
+        let user = await models.Users.findOne({ where: { id: pwc.user.id } });
+
+        if ( !user ) return "Problem changing your password";
+
+        user.password = await bcrypt.hash(newPassword, 12);
+
+        pwc.tokenUsed = true;
+
+        await pwc.save();
+        await user.save();
+
+        return "Successfully changed your password";
+    }
+
     /*
     @Query( () => [models.FoodSummary])
     async getUserOrderItAgain(@Arg("token") token: string, @Arg("limit", { defaultValue: 50 }) limit: number ) {
@@ -394,91 +482,5 @@ export class UserResolver {
         return results;
     }*/
     
-    @Query( () => models.UserProfileInformation ) 
-    async getUserProfileInformation( @Arg('token') token: string ) {
-        let user = await Utils.getUserFromJsWebToken(token);
-
-        return {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
-            phoneNumber: user.phoneNumber,
-            email: user.email
-        }
-    }
-
-    @Mutation( () => String )
-    async modifyUserProfileInformation( @Arg('token') token: string, @Arg('arg', () => models.UserProfileInformationInput ) arg : models.UserProfileInformationInput ) {
-        let user = await Utils.getUserFromJsWebToken(token);
-
-        user.firstName = arg.firstName
-        user.lastName = arg.lastName
-        user.username = arg.username
-        user.phoneNumber = arg.phoneNumber
-        user.email = arg.email
-
-        await user.save();
-
-        return "Modified Properly";
-    }
-
-    @Mutation( () => String )
-    async changeUserPassword( @Arg("token") token: string ) {
-        let user = await Utils.getUserFromJsWebToken(token);
-
-        let passwordChange = await models.UserPasswordChange.create({
-            user
-        }).save();
-
-        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/user/${
-            jwt.sign(
-                {
-                    ...await Utils.generateJsWebToken(user.id),
-                    type: "user",
-                    command: "change-password",
-                    pwc: passwordChange.id
-                }, 
-                Utils.SECRET_KEY, 
-                { expiresIn: 10 * 60 } // Expires in 10 minutes
-            )
-        }`;
-
-        await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: user.email, username: user.username });
-
-        return link_to_open;
-    }
-
-    @Query( () => String )
-    async verifyUserPasswordChangeToken( @Arg('token') token: string ) {
-        let pwc = await Utils.verifyPasswordChangeToken(token);
-
-        if ( pwc.tokenUsed ) return "Token is not valid";
-
-        return "Token is valid";
-    }
-
-    @Mutation( () => String )
-    async confirmUserPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
-        
-        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return "Can't change your password";
-
-        if ( newPassword !== confirmNewPassword ) return "Can't change your password";
-        
-        let pwc = await Utils.verifyPasswordChangeToken(token);
-
-        if ( pwc.tokenUsed ) return "Can't change password";
-
-        let user = await models.Users.findOne({ where: { id: pwc.user.id } });
-
-        if ( !user ) return "Problem changing your password";
-
-        user.password = await bcrypt.hash(newPassword, 12);
-
-        pwc.tokenUsed = true;
-
-        await pwc.save();
-        await user.save();
-
-        return "Successfully changed your password";
-    }
+    
 }
