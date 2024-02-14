@@ -158,6 +158,26 @@ export class UserResolver {
         return "Successfully changed your password";
     }
 
+    @Mutation( () => String )
+    async followUser( @Arg('token') token: string, @Arg('userId') userId: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let toFollow = await models.Users.findOne({ where: { id: userId }});
+
+        if ( !toFollow ) return new Utils.CustomError('User does not exist')
+
+        let alreadyFollowing = await models.UserFollowers.findOne({ where: { user: { id: user.id }, following: { id: toFollow.id } }})
+    
+        if ( alreadyFollowing ) return alreadyFollowing.id;
+
+        return (
+            await models.UserFollowers.create({
+                user,
+                following: toFollow
+            }).save()
+        ).id
+    }
+
     /*
     @Query( () => [models.FoodSummary])
     async getUserOrderItAgain(@Arg("token") token: string, @Arg("limit", { defaultValue: 50 }) limit: number ) {
