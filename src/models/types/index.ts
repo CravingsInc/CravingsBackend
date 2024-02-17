@@ -1,3 +1,4 @@
 export * from "./ReservationInput";
 export * from "./ContactInput";
 export * from "./UserProfileInformation";
+export * from './organizer';
