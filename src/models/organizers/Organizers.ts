@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, Ba
 import { ObjectType, Field, ID } from "type-graphql";
 import { Events } from "./events";
 import { OrganizerPasswordChange } from "./OrganizerPasswordChange";
+import { OrganizersFollowers } from "./OrganizersFollowers";
 
 
 @Entity()
@@ -47,6 +48,10 @@ export class Organizers extends BaseEntity {
 
     @OneToMany( () => OrganizerPasswordChange, pwc => pwc.organizer )
     passwordChangeHistory: OrganizerPasswordChange[];
+
+    @Field( () => [ OrganizersFollowers ])
+    @OneToMany( () => OrganizersFollowers, oF => oF.organizer)
+    followers: OrganizersFollowers[];
 
     @Field( () => [Events] )
     @OneToMany( () => Events, e => e.organizer )

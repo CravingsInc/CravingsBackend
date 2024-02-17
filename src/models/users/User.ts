@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, BaseEntity, UpdateDateColumn } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
 import { UserPasswordChange } from "./UserPasswordChange";
-import { EventTicketBuys } from "../organizers";
+import { EventTicketBuys, OrganizersFollowers } from "../organizers";
 import { UserFollowers } from "./UserFollowers";
 
 @Entity()
@@ -67,6 +67,10 @@ export class Users extends BaseEntity {
     @Field( () => [UserFollowers])
     @OneToMany( () => UserFollowers, uF => uF.user )
     following: UserFollowers[];
+
+    @Field( () => [ OrganizersFollowers ])
+    @OneToMany( () => OrganizersFollowers, oF => oF.user)
+    organizerFollowing: OrganizersFollowers[];
 
     @Field()
     @CreateDateColumn()

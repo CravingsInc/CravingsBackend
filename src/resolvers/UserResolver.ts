@@ -160,7 +160,7 @@ export class UserResolver {
 
     @Mutation( () => String )
     async followUser( @Arg('token') token: string, @Arg('userId') userId: string ) {
-        let user = await Utils.getUserFromJsWebToken(token);
+        let user = await Utils.getUserFromJsWebToken( token );
 
         let toFollow = await models.Users.findOne({ where: { id: userId }});
 
@@ -176,6 +176,39 @@ export class UserResolver {
                 following: toFollow
             }).save()
         ).id
+    }
+
+    @Mutation( () => String )
+    async unFollowerUser( @Arg('token') token: string, @Arg('userId') userId: string ) {
+        let user = await Utils.getUserFromJsWebToken( token );
+
+        let alreadyFollowing = await models.UserFollowers.findOne({ where: { user: { id: user.id }, following: { id: userId } } });
+
+        if ( !alreadyFollowing ) return 'Not following';
+
+        await alreadyFollowing.remove();
+
+        return 'No Longer Following';
+    }
+
+    @Mutation( () => String )
+    async followOrganizer( @Arg('token') token: string, @Arg('organizerId') organizerId: string ) {
+        let user = await Utils.getUserFromJsWebToken( token );
+
+        let organizer = await models.Organizers.findOne({ where: { id: organizerId }});
+
+        if ( !organizer ) return new Utils.CustomError('Organizer does not exist');
+
+        let alreadyFollowing = await models.OrganizersFollowers.findOne({ where: { user: { id: user.id }, organizer: { id: organizer.id } } });
+
+        if ( alreadyFollowing ) return alreadyFollowing.id;
+
+        return (
+            await models.OrganizersFollowers.create({
+                user,
+                organizer
+            }).save()
+        ).id;
     }
 
     /*
