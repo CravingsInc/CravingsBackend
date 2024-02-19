@@ -275,5 +275,62 @@ export class UserResolver {
         )).filter( val => val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway );
     }
     
-    
+    @Query( () => [ models.EventRecommendationResponse ])
+    async getFriendsEvents( @Arg('token') token: string, @Arg('limit', { defaultValue: 50 }) limit: number ) {
+        let user = await Utils.getUserFromJsWebToken( token );
+
+        let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
+        .select(`
+            e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.latitude as eLat, e.longitude as eLong,
+            o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
+            u.latitude as uLat, u.longitude as uLong,
+            count(etb.id) as ticketSold
+        `)
+        .leftJoin('users', 'u', `u.id = ${user.id}`)
+        .leftJoin('user_followers', 'uF', 'uF.userId = u.id')
+        .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
+        .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
+        .leftJoin('organizers', 'o', 'e.organizerId = o.id')
+        .where(`
+            etb.userId = uF.followingId
+        `).orderBy('ticketSold', 'DESC')
+        .getRawMany();
+
+        return (await Promise.all(
+            events.map(async (val) => {
+                let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
+
+                let prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
+
+                let maxPrice, minPrice = 0;
+
+                if (prices && prices.length > 0) {
+                    maxPrice = Math.max(...prices as number[]);
+                    minPrice = Math.min(...prices as number[]);
+                }
+
+                return {
+                    id: val.id,
+                    title: val.title,
+                    description: val.description,
+                    banner: val.banner,
+                    costRange: `$${maxPrice}-${minPrice}`,
+                    location: {
+                        lat: val.eLat,
+                        long: val.eLong
+                    },
+                    miles: Utils.shortenNumericString(miles),
+                    timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
+                    ticketSold: val.ticketSold || 0,
+                    organizer: {
+                        id: val.orgId,
+                        name: val.orgName,
+                        profilePicture: val.orgProfilePicture
+                    },
+                    milesNum: miles
+                };
+            })
+        )).filter( val => val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway );
+    }
+
 }
