@@ -276,7 +276,7 @@ export class UserResolver {
     }
     
     @Query( () => [ models.EventRecommendationResponse ])
-    async getFriendsEvents( @Arg('token') token: string, @Arg('limit', { defaultValue: 50 }) limit: number ) {
+    async getFriendsFollowingEvents( @Arg('token') token: string, @Arg('limit', { defaultValue: 50 }) limit: number ) {
         let user = await Utils.getUserFromJsWebToken( token );
 
         let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
