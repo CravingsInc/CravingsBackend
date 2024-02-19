@@ -215,7 +215,7 @@ export class UserResolver {
     async getLocalEventRecommendation( @Arg('token') token: string, @Arg('limit', { defaultValue: 50 }) limit: number ) {
         let user = await Utils.getUserFromJsWebToken( token );
 
-        let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e')
+        let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
         .select(`
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.latitude as eLat, e.longitude as eLong,
             o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
