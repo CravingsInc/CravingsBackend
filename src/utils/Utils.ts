@@ -9,6 +9,11 @@ export class Utils {
 
     static milesFilterLeway = 2;
 
+    static LOGIN_TOKEN_TYPE = {
+        USER: "USER",
+        ORGANIZER: "ORGANIZER"
+    } as const;
+
     static CustomError = class extends Error {
         constructor( message: string, name= "CustomError" ) {
             super(message);
@@ -59,7 +64,7 @@ export class Utils {
             let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
             if ( unHashedToken ) {
-                if ( unHashedToken.type === "user" ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER ) {
                     let user = await models.Users.findOne({
                         where: { id: unHashedToken.id },
                         relations
@@ -78,7 +83,7 @@ export class Utils {
             let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
         
             if ( unHashedToken ) {
-                if ( unHashedToken.type === "user" && unHashedToken.command === 'change-password' ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER && unHashedToken.command === 'change-password' ) {
                     let pwc = await models.UserPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: [ "user" ] })
                     
                     if ( pwc ) return pwc;
@@ -93,7 +98,7 @@ export class Utils {
         let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
         if ( unHashedToken ) {
-            if ( unHashedToken.type === "organizer" ) {
+            if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER ) {
                 let organizer = await models.Organizers.findOne({
                     where: { id: unHashedToken.id },
                     relations
