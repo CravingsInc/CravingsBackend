@@ -42,13 +42,15 @@ export class Mailer {
     static async sendEmail( to: string, subject: string, text: string | undefined, html: string | undefined, sender?: string ) {
         try {
             await this.#mailer.sendMail({ from: "Cravings Inc", to, subject, text, html, sender });
+            return true;
         }catch(e) {
             console.log(e);
+            return false;
         }
     }
 
     static async sendContactEmail( opt: ContactProps ) {
-        await this.sendEmail( 
+        return await this.sendEmail( 
             `${opt.email}, outreach@cravingsinc.us`,
             `CravingsInc Contact by ${opt.first_name}`,
             undefined, 
@@ -57,7 +59,7 @@ export class Mailer {
     }
 
     static async sendReservationEmail( opt: ReservationProps) {
-        await this.sendEmail( 
+        return await this.sendEmail( 
             `${opt.email}, outreach@cravingsinc.us`,
             `CravingsInc Event Reservation by ${opt.first_name}`,
             undefined, 
@@ -66,7 +68,7 @@ export class Mailer {
     }
 
     static async sendPasswordChangeEmail( opt: PasswordChangeProps ) {
-        await this.sendEmail( 
+        return await this.sendEmail( 
             `${opt.email}`,
             `${opt.username} you requested a password change on CravingsInc`,
             undefined, 

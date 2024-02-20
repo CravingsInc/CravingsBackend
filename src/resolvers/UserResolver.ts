@@ -75,6 +75,7 @@ export class UserResolver {
         let user = await Utils.getUserFromJsWebToken(token);
 
         return {
+            id: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
             username: user.username,
@@ -119,9 +120,11 @@ export class UserResolver {
             )
         }`;
 
-        await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: user.email, username: user.username });
+        let sentSuccessfully = await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: user.email, username: user.username });
 
-        return link_to_open;
+        if ( !sentSuccessfully ) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
+
+        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
     }
 
     @Query( () => String )
@@ -179,7 +182,7 @@ export class UserResolver {
     }
 
     @Mutation( () => String )
-    async unFollowerUser( @Arg('token') token: string, @Arg('userId') userId: string ) {
+    async unFollowUser( @Arg('token') token: string, @Arg('userId') userId: string ) {
         let user = await Utils.getUserFromJsWebToken( token );
 
         let alreadyFollowing = await models.UserFollowers.findOne({ where: { user: { id: user.id }, following: { id: userId } } });
@@ -209,6 +212,19 @@ export class UserResolver {
                 organizer
             }).save()
         ).id;
+    }
+
+    @Mutation( () => String )
+    async unFollowOrganizer( @Arg('token') token: string, @Arg('organizerId') userId: string ) {
+        let user = await Utils.getUserFromJsWebToken( token );
+
+        let alreadyFollowing = await models.OrganizersFollowers.findOne({ where: { user: { id: user.id }, organizer: { id: userId } } });
+
+        if ( !alreadyFollowing ) return 'Not following';
+
+        await alreadyFollowing.remove();
+
+        return 'No Longer Following';
     }
 
     @Query( () => [ models.EventRecommendationResponse ])

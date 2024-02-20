@@ -1,7 +1,9 @@
-import { ObjectType, InputType, Field } from "type-graphql";
+import { ObjectType, InputType, Field, ID } from "type-graphql";
 
 @ObjectType()
 export class UserProfileInformation {
+    @Field( () => ID ) id: string;
+    
     @Field() firstName: string;
 
     @Field() lastName: string;
