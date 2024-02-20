@@ -78,7 +78,7 @@ export class Utils {
         throw new Utils.CustomError("User does not exist.");
     }
 
-    static async verifyPasswordChangeToken( token: string ) {
+    static async verifyUserPasswordChangeToken( token: string ) {
         try {
             let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
         
@@ -90,6 +90,22 @@ export class Utils {
                 }  
             }
         }catch( e ) {} 
+
+        throw new Utils.CustomError("Token is not valid");
+    }
+
+    static async verifyOrgPasswordChangeToken( token: string ) {
+        try {
+            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+
+            if ( unHashedToken ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER && unHashedToken.command === 'change-password' ) {
+                    let pwc = await models.OrganizerPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: ['organizer'] });
+
+                    if ( pwc ) return pwc;
+                }
+            }
+        }catch( e ) {}
 
         throw new Utils.CustomError("Token is not valid");
     }
