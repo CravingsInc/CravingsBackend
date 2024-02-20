@@ -40,7 +40,7 @@ export class UserResolver {
             return jwt.sign(
                 {
                     ...await Utils.generateJsWebToken(user.id),
-                    type: "user"
+                    type: Utils.LOGIN_TOKEN_TYPE.USER
                 }, 
                 Utils.SECRET_KEY, 
                 { expiresIn: "2w" }
@@ -59,7 +59,7 @@ export class UserResolver {
                 return jwt.sign(
                     {
                         ...await Utils.generateJsWebToken(user.id),
-                        type: "user"
+                        type: Utils.LOGIN_TOKEN_TYPE.USER
                     },
                     Utils.SECRET_KEY,
                     { expiresIn: "2w" }
@@ -111,7 +111,7 @@ export class UserResolver {
             jwt.sign(
                 {
                     ...await Utils.generateJsWebToken(user.id),
-                    type: "user",
+                    type: Utils.LOGIN_TOKEN_TYPE.USER,
                     command: "change-password",
                     pwc: passwordChange.id
                 }, 

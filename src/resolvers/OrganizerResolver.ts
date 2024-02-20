@@ -39,7 +39,7 @@ export class OrganizerResolver {
             return jwt.sign(
                 {
                     ...await Utils.generateJsWebToken(organizer.id),
-                    type: "organizer"
+                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER
                 },
                 Utils.SECRET_KEY,
                 { expiresIn: "2w" }
@@ -58,7 +58,7 @@ export class OrganizerResolver {
                 return jwt.sign(
                     {
                         ...await Utils.generateJsWebToken(organizer.id),
-                        type: "organizer"
+                        type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER
                     },
                     Utils.SECRET_KEY,
                     { expiresIn: "2w" }
@@ -67,6 +67,61 @@ export class OrganizerResolver {
         }
 
         throw new Utils.CustomError("Invalid credentials. Please try again")
+    }
+
+    @Mutation( returns => String )
+    async getOrganizerProfile( @Arg("token") token: string ) {
+        return await Utils.getOrganizerFromJsWebToken(token);
+    }
+
+    @Mutation( returns => String )
+    async getOrganizerPage( @Arg('organizerId') organizerId: string, @Arg("userToken", { nullable: true }) userToken?: string ) {
+        let user = userToken ? await Utils.getUserFromJsWebToken(userToken) : null;
+
+        let organizer = await models.Organizers.findOneBy({ id: organizerId });
+
+        if ( !organizer ) throw new Utils.CustomError("Invalid organizer. Please try again.")
+
+        await models.OrganizerPageVisit.create({
+            guest: user == null,
+            user,
+            organizer
+        }).save();
+
+        return {
+            id: organizer.id,
+            orgName: organizer.orgName,
+            profilePicture: organizer.profilePicture,
+            banner: organizer.banner,
+            followers: await models.OrganizersFollowers.count({ where: { organizer: { id: organizer.id } } }),
+            events: await Promise.all(
+                (
+                    await models.Events.find({ where: { organizer: { id: organizer.id } } })
+                ).map( async e => {
+                    let prices = (await stripeHandler.getEventTicketPrices(e.productId))?.data.map(v => v.unit_amount);
+    
+                    let maxPrice, minPrice = 0;
+    
+                    if (prices && prices.length > 0) {
+                        maxPrice = Math.max(...prices as number[]);
+                        minPrice = Math.min(...prices as number[]);
+                    }
+    
+                    return {
+                        id: e.id,
+                        name: e.title,
+                        description: e.description,
+                        banner: e.banner,
+                        costRange: `$${minPrice}-${maxPrice}`,
+                        location: {
+                            lat: e.latitude,
+                            long: e.longitude
+                        }
+                    }
+                })
+            )
+        }
+
     }
 
     // TODO: FIX THIS
