@@ -27,6 +27,14 @@ export class Events extends BaseEntity {
     @Column()
     productId: string;
 
+    @Field()
+    @Column({ default: 0, nullable: true })
+    latitude: number;
+
+    @Field()
+    @Column({ default: 0, nullable: true })
+    longitude: number;
+
     @Field( () => [EventTickets] )
     @OneToMany( () => EventTickets, eT => eT.event )
     prices: EventTickets[];
