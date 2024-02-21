@@ -124,6 +124,62 @@ export class OrganizerResolver {
 
     }
 
+    @Mutation( () => String )
+    async changeOrganizerPassword( @Arg('token') token: string ) {
+        let organizer = await Utils.getOrganizerFromJsWebToken(token);
+
+        let passwordChange = await models.OrganizerPasswordChange.create({
+            organizer
+        }).save();
+
+        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/org/${
+            jwt.sign(
+                {
+                    ...await Utils.generateJsWebToken(organizer.id),
+                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER,
+                    pwc: passwordChange.id
+                },
+                Utils.SECRET_KEY,
+                { expiresIn: 10 * 60 } // Expires in 10 minutes
+            )
+        }`;
+
+        let sentSuccessfully = await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: organizer.email, username: organizer.orgName });
+
+        if ( !sentSuccessfully ) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
+
+        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
+    }
+
+    @Query( () => String )
+    async verifyOrganizerPasswordChangeToken( @Arg('token') token: string ) {
+        let pwc = await Utils.verifyOrgPasswordChangeToken(token);
+
+        if ( pwc.tokenUsed ) return "Token is not valid";
+
+        return "Token is valid"
+    }
+
+    @Query( () => String )
+    async confirmOrgPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
+        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return new Utils.CustomError("Can't change your password");
+
+        if ( newPassword !== confirmNewPassword ) return new Utils.CustomError("Can't change your password");
+
+        let pwc = await Utils.verifyOrgPasswordChangeToken(token);
+
+        if ( pwc.tokenUsed ) return new Utils.CustomError("Can't change password");
+
+        let org = pwc.organizer;
+
+        org.password = await bcrypt.hash(newPassword, 12);
+
+        pwc.tokenUsed = true;
+
+        await pwc.save();
+        await org.save();
+    }
+
     // TODO: FIX THIS
     /*
     @Query( () => models.FoodTruckPageDetails )

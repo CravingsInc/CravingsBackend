@@ -129,7 +129,7 @@ export class UserResolver {
 
     @Query( () => String )
     async verifyUserPasswordChangeToken( @Arg('token') token: string ) {
-        let pwc = await Utils.verifyPasswordChangeToken(token);
+        let pwc = await Utils.verifyUserPasswordChangeToken(token);
 
         if ( pwc.tokenUsed ) return "Token is not valid";
 
@@ -139,17 +139,15 @@ export class UserResolver {
     @Mutation( () => String )
     async confirmUserPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
         
-        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return "Can't change your password";
+        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return new Utils.CustomError("Can't change your password");
 
-        if ( newPassword !== confirmNewPassword ) return "Can't change your password";
+        if ( newPassword !== confirmNewPassword ) return new Utils.CustomError("Can't change your password");
         
-        let pwc = await Utils.verifyPasswordChangeToken(token);
+        let pwc = await Utils.verifyUserPasswordChangeToken(token);
 
-        if ( pwc.tokenUsed ) return "Can't change password";
+        if ( pwc.tokenUsed ) return new Utils.CustomError("Can't change password");
 
-        let user = await models.Users.findOne({ where: { id: pwc.user.id } });
-
-        if ( !user ) return "Problem changing your password";
+        let user = pwc.user;
 
         user.password = await bcrypt.hash(newPassword, 12);
 
