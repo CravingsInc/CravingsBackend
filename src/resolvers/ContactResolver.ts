@@ -6,14 +6,14 @@ import { Utils } from "../utils";
 export class ContactResolver {
     @Query( () => String )
     async makeReservation( @Arg("reservationInput", () => models.ReservationInput) opt: models.ReservationInput ) {
-        await Utils.Mailer.sendReservationEmail(opt)
+        Utils.Mailer.sendReservationEmail(opt)
 
         return "Email Sent"
     }
 
     @Query( () => String )
     async makeContact( @Arg("contactInput", () => models.ContactInput) opt : models.ContactInput ) {
-        await Utils.Mailer.sendContactEmail(opt);
+        Utils.Mailer.sendContactEmail(opt);
 
         return "Contact Sent";
     }

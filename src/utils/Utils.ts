@@ -7,13 +7,6 @@ export class Utils {
 
     static KmTomilesConversion = 0.621371;
 
-    static milesFilterLeway = 2;
-
-    static LOGIN_TOKEN_TYPE = {
-        USER: "USER",
-        ORGANIZER: "ORGANIZER"
-    } as const;
-
     static CustomError = class extends Error {
         constructor( message: string, name= "CustomError" ) {
             super(message);
@@ -22,10 +15,6 @@ export class Utils {
     }
 
     static Mailer = Mailer;
-
-    static getCravingsWebUrl = () => {
-        return process.env.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
-    }
 
     /**
      * Generates a primary key for a given table.
@@ -60,67 +49,33 @@ export class Utils {
     }
 
     static async getUserFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Users> {
-        try {
-            let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
-
-            if ( unHashedToken ) {
-                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER ) {
-                    let user = await models.Users.findOne({
-                        where: { id: unHashedToken.id },
-                        relations
-                    });
-    
-                    if ( user ) return user;
-                }
-            }    
-        }catch( e ) {}
-
-        throw new Utils.CustomError("User does not exist.");
-    }
-
-    static async verifyUserPasswordChangeToken( token: string ) {
-        try {
-            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
-        
-            if ( unHashedToken ) {
-                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER && unHashedToken.command === 'change-password' ) {
-                    let pwc = await models.UserPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: [ "user" ] })
-                    
-                    if ( pwc ) return pwc;
-                }  
-            }
-        }catch( e ) {} 
-
-        throw new Utils.CustomError("Token is not valid");
-    }
-
-    static async verifyOrgPasswordChangeToken( token: string ) {
-        try {
-            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
-
-            if ( unHashedToken ) {
-                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER && unHashedToken.command === 'change-password' ) {
-                    let pwc = await models.OrganizerPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: ['organizer'] });
-
-                    if ( pwc ) return pwc;
-                }
-            }
-        }catch( e ) {}
-
-        throw new Utils.CustomError("Token is not valid");
-    }
-
-    static async getOrganizerFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Organizers> {
         let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
         if ( unHashedToken ) {
-            if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER ) {
-                let organizer = await models.Organizers.findOne({
+            if ( unHashedToken.type === "user" ) {
+                let user = await models.Users.findOne({
                     where: { id: unHashedToken.id },
                     relations
                 });
 
-                if ( organizer ) return organizer;
+                if ( user ) return user;
+            }
+        }
+
+        throw new Utils.CustomError("User does not exist.");
+    }
+
+    static async getFoodTruckFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.FoodTrucks> {
+        let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
+
+        if ( unHashedToken ) {
+            if ( unHashedToken.type === "foodTruck" ) {
+                let truck = await models.FoodTrucks.findOne({
+                    where: { id: unHashedToken.id },
+                    relations
+                });
+
+                if ( truck ) return truck;
             }
         }
 
@@ -143,8 +98,9 @@ export class Utils {
     }
 
     static shortenMinutesToString(minutes: number) {
-        if ( minutes / 60 < 1 ) {
-            let div = Math.round(minutes);
+        if ( minutes < 1 ) return `${Math.round(minutes)}s`;
+        else if ( minutes / 60 < 1 ) {
+            let div = Math.round(minutes/60);
             return `${div > 1 ? div : 1}m`;
         }
         else if ( minutes / ( 60 * 60 ) < 60 ) {
