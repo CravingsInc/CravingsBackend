@@ -8,6 +8,7 @@ export const createCustomer = async ( email: string, userId : string ) => {
         metadata: {
             userId,
             email,
+            type: 'user',
             dateJoined: ( new Date() ).getTime()
         }
     });

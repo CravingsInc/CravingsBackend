@@ -1,12 +1,13 @@
-import { reservation, ReservationProps, contact, ContactProps } from "./email-templates";
+import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
 import nodemailer from "nodemailer";
 
 export enum EmailTemplates {
     RESERVATION,
-    CONTACT
+    CONTACT,
+    PASSWORD_CHANGE
 }
 
-type EmailTemplatesOpt = ReservationProps | ContactProps ;
+type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps;
 
 const formatMail = ( mail: string, opt : { [ key: string ]: string | number } ) => {
     for ( let key in opt ) mail = mail.replaceAll(`{{${key}}}`, opt[key] + "" )
@@ -19,6 +20,8 @@ const getEmailTemplates = ( template: EmailTemplates, opt: EmailTemplatesOpt ) =
             return formatMail( reservation, opt );
         case EmailTemplates.CONTACT:
             return formatMail( contact, opt );
+        case EmailTemplates.PASSWORD_CHANGE:
+            return formatMail( passwordChange, opt );
         default: return "";
     }
 }
@@ -36,16 +39,18 @@ export class Mailer {
         }
     }
 
-    static sendEmail( to: string, subject: string, text: string | undefined, html: string | undefined ) {
+    static async sendEmail( to: string, subject: string, text: string | undefined, html: string | undefined, sender?: string ) {
         try {
-            this.#mailer.sendMail({ from: "Cravings Inc", to, subject, text, html });
+            await this.#mailer.sendMail({ from: "Cravings Inc", to, subject, text, html, sender });
+            return true;
         }catch(e) {
             console.log(e);
+            return false;
         }
     }
 
-    static sendContactEmail( opt: ContactProps ) {
-        this.sendEmail( 
+    static async sendContactEmail( opt: ContactProps ) {
+        return await this.sendEmail( 
             `${opt.email}, outreach@cravingsinc.us`,
             `CravingsInc Contact by ${opt.first_name}`,
             undefined, 
@@ -53,12 +58,22 @@ export class Mailer {
         )
     }
 
-    static sendReservationEmail( opt: ReservationProps) {
-        this.sendEmail( 
+    static async sendReservationEmail( opt: ReservationProps) {
+        return await this.sendEmail( 
             `${opt.email}, outreach@cravingsinc.us`,
             `CravingsInc Event Reservation by ${opt.first_name}`,
             undefined, 
             getEmailTemplates(EmailTemplates.RESERVATION, opt)
+        )
+    }
+
+    static async sendPasswordChangeEmail( opt: PasswordChangeProps ) {
+        return await this.sendEmail( 
+            `${opt.email}`,
+            `${opt.username} you requested a password change on CravingsInc`,
+            undefined, 
+            getEmailTemplates(EmailTemplates.PASSWORD_CHANGE, opt),
+            "dont-reply@cravingsinc.us"
         )
     }
 }
