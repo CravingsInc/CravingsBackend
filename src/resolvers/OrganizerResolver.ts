@@ -180,6 +180,25 @@ export class OrganizerResolver {
         await org.save();
     }
 
+    @Mutation( () => String )
+    async createEvent( @Arg('token') token: string, @Arg('title') title: string, @Arg('description') description: string ) {
+        let org = await Utils.getOrganizerFromJsWebToken(token);
+
+        let event = await models.Events.create({
+            title,
+            description,
+            banner: "",
+        }).save();
+
+        let stripeEvent = await stripeHandler.createEvent(org.stripeConnectId, org.id, event.id, title );
+
+        event.productId = stripeEvent.id;
+
+        await event.save();
+
+        return event;
+    }
+
     // TODO: FIX THIS
     /*
     @Query( () => models.FoodTruckPageDetails )

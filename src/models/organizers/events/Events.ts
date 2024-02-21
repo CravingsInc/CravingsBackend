@@ -24,7 +24,11 @@ export class Events extends BaseEntity {
     banner: string;
 
     @Field()
-    @Column()
+    @Column({ default: false })
+    visible: boolean;
+
+    @Field()
+    @Column({ default: "" })
     productId: string;
 
     @Field()
