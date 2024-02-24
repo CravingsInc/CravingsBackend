@@ -88,11 +88,11 @@ export class UserResolver {
     async modifyUserProfileInformation( @Arg('token') token: string, @Arg('arg', () => models.UserProfileInformationInput ) arg : models.UserProfileInformationInput ) {
         let user = await Utils.getUserFromJsWebToken(token);
 
-        user.firstName = arg.firstName
-        user.lastName = arg.lastName
-        user.username = arg.username
-        user.phoneNumber = arg.phoneNumber
-        user.email = arg.email
+        if ( arg.firstName ) user.firstName = arg.firstName
+        if ( arg.lastName ) user.lastName = arg.lastName
+        if ( arg.username ) user.username = arg.username
+        if ( arg.phoneNumber ) user.phoneNumber = arg.phoneNumber
+        if ( arg.email ) user.email = arg.email
 
         await user.save();
 
@@ -249,7 +249,7 @@ export class UserResolver {
                     ( u.latitude - e.latitude ) * ( u.latitude - e.latitude )
                 )
             ) >= 0
-        `).orderBy('ticketSold', 'DESC')
+        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
         .getRawMany();
 
         return (await Promise.all(
@@ -307,7 +307,7 @@ export class UserResolver {
         .leftJoin('organizers', 'o', 'e.organizerId = o.id')
         .where(`
             etb.userId = uF.followingId
-        `).orderBy('ticketSold', 'DESC')
+        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
         .getRawMany();
 
         return (await Promise.all(
@@ -365,7 +365,7 @@ export class UserResolver {
         .leftJoin('organizers', 'o', 'e.organizerId = o.id')
         .where(`
             o.id = oF.followingId
-        `).orderBy('ticketSold', 'DESC')
+        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
         .getRawMany();
 
         return (await Promise.all(

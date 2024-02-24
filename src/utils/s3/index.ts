@@ -33,12 +33,13 @@ export type UploadFileType = {
 
 export async function uploadImage(
   file: UploadFileType,
-  uploadType: uploadType
+  uploadType: uploadType,
+  folder?: string
 ) {
-  const key = `${uploadType}/${uuid()}.${mime.extension(file.mimetype)}`;
+  const key = `${ folder ? folder + '/' : '' }${uploadType}/${uuid()}.${mime.extension(file.mimetype)}`;
 
   const params = {
-    Bucket: "lifters-media",
+    Bucket: Utils.AppConfig.SpaceKeysConfig.imageBucket,
     Key: key,
     Body: file.buffer,
     ACL: "public-read",
@@ -46,5 +47,5 @@ export async function uploadImage(
 
   await s3Client.send(new PutObjectCommand( params as any ));
 
-  return `https://lifters-media.nyc3.digitaloceanspaces.com/${key}`;
+  return `${Utils.AppConfig.SpaceKeysConfig.uploadImageUrl}/${key}`;
 }

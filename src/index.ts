@@ -8,13 +8,13 @@ import { buildSchema } from "type-graphql";
 import path from "path";
 import { createConnection } from "typeorm";
 import * as resolvers from "./resolvers";
-import * as models from "./models"; 
+import * as models from "./models";
 
 const multer = require("multer");
 const bodyParser = require("body-parser");
 
 import { IoServer } from "./io";
-import { Utils } from "./utils";
+import { Utils, s3 } from "./utils";
 
 const app = express();
 
@@ -36,7 +36,38 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const httpServer = http.createServer(app);
 
-app.post("/upload/image", (req: any, res: any) => {
+app.post('event/upload/banner', ( req: any, res: any ) => {
+  const upload = multer().single("banner");
+
+  upload( req, res, async function ( err: any ) {
+    if ( req.fileValidationError ) return res.send(req.fileValidationError);
+
+    else if ( !req.file ) return res.json({ error: "Please select an image to upload" });
+
+    else if ( err ) return res.send(err);
+
+    try {
+      let organizer: models.Organizers;
+      let event: models.Events | null;
+
+      organizer = await Utils.getOrganizerFromJsWebToken(req.body.token);
+      event = await models.Events.findOne({ where: { id: req.body.eventId, organizer: { id: organizer.id } } });
+
+      if ( !event ) return res.json({ error: "Event not found" });
+
+      let url = await s3.uploadImage(req.file, req.file.mimetype, "events");
+      event.banner = url;
+      await event.save();
+
+      return res.json({ response: url });
+    }catch( err ) {
+      res.json({ error: "Problem changing event banner" });
+    }
+  
+  })
+})
+
+app.post("user/upload/image", (req: any, res: any) => {
   const upload = multer().single("image");
   upload(req, res, async function (err: any) {
     if (req.fileValidationError) return res.send(req.fileValidationError);
@@ -55,7 +86,7 @@ app.post("/upload/image", (req: any, res: any) => {
         user = (await Utils.getUserFromJsWebToken(req.body.token));
       }
 
-      let url = await uploadImage(req.file, req.file.mimetype);
+      let url = await s3.uploadImage(req.file, req.file.mimetype);
       user.profilePicture = url;
       await user.save();
       return res.json({ url });

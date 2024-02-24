@@ -31,15 +31,15 @@ export class EventRecommendationResponse {
 export class ModifyEventInputType {
     @Field() id: string;
 
-    @Field() title: string;
+    @Field({ nullable: true }) title?: string;
 
-    @Field() description: string;
+    @Field({ nullable: true }) description?: string;
 
-    @Field() visible: boolean;
+    @Field({ nullable: true }) visible?: boolean;
 
-    @Field() location: string;
+    @Field({ nullable: true }) location?: string;
 
-    @Field() banner: string;
+    @Field({ nullable: true }) banner?: string;
 }
 
 export type EventRecommendationDatabaseResponse = {

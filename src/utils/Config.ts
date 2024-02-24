@@ -14,13 +14,17 @@ interface GmailEmailServiceKey {
 interface SpaceKeys {
     endpoint: string;
     accessKey: string;
-    secretKey: string
+    secretKey: string;
+    imageBucket: string;
+    uploadImageUrl: string;
 }
 
-let SpaceKeysConfig: SpaceKeys = !process.env.production ? require("../../../SpaceKeysConfig.json") : {
+let SpaceKeysConfig: SpaceKeys = !process.env.production ? require("../../SpaceKeysConfig.json") : {
     endpoint: process.env.space_keys_endpoint,
     accessKey: process.env.space_keys_accessKey,
-    secretKey: process.env.space_keys_secretKey
+    secretKey: process.env.space_keys_secretKey,
+    imageBucket: process.env.space_keys_imageBucket,
+    uploadImageUrl: process.env.space_keys_uploadImageUrl
 }
 
 interface BasicAppConfig {
@@ -50,25 +54,11 @@ const BasicConfig: BasicAppConfig = {
 }
 
 interface AppConfig  {
-    gmailEmailService: GmailEmailServiceKey;
     BasicConfig: BasicAppConfig;
     SpaceKeysConfig: SpaceKeys;
 }
 
 export const AppConfig: AppConfig = {
-    gmailEmailService: !process.env.production ? require("../../../google-email-service.json") : {
-        type: process.env.GMAIL_EMAIL_SERVICE_TYPE,
-        project_id: process.env.GMAIL_EMAIL_SERVICE_PROJECT_ID,
-        private_key_id: process.env.GMAIL_EMAIL_SERVICE_PRIVATE_KEY_ID,
-        private_key: process.env.GMAIL_EMAIL_SERVICE_PRIVATE_KEY,
-        client_email: process.env.GMAIL_EMAIL_SERVICE_CLIENT_EMAIL,
-        client_id: process.env.GMAIL_EMAIL_SERVICE_CLIENT_ID,
-        auth_uri: process.env.GMAIL_EMAIL_SERVICE_AUTH_URI,
-        token_uri: process.env.GMAIL_EMAIL_SERVICE_TOKEN_URI,
-        auth_provider_x509_cert_url: process.env.GMAIL_EMAIL_SERVICE_AUTH_PROVIDER_X509_CERT_URL,
-        client_x509_cert_url: process.env.GMAIL_EMAIL_SERVICE_CLIENT_X509_CERT_URL
-    },
-
     SpaceKeysConfig,
 
     BasicConfig

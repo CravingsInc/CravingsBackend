@@ -28,7 +28,7 @@ export class Utils {
         }
     }
 
-    static Mailer = Mailer;
+    static Mailer = Mailer.getMailer();
 
     static getCravingsWebUrl = () => {
         return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
