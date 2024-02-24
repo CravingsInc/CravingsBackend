@@ -3,6 +3,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { Events } from "./events";
 import { OrganizerPasswordChange } from "./OrganizerPasswordChange";
 import { OrganizersFollowers } from "./OrganizersFollowers";
+import { OrganizerPageVisit } from "./analystics/OrganizerPageVisit";
 
 
 @Entity()
@@ -52,6 +53,10 @@ export class Organizers extends BaseEntity {
     @Field( () => [ OrganizersFollowers ])
     @OneToMany( () => OrganizersFollowers, oF => oF.organizer)
     followers: OrganizersFollowers[];
+
+    @Field( () => [ OrganizerPageVisit ])
+    @OneToMany( () => OrganizerPageVisit, oPV => oPV.organizer )
+    pageVisitors: OrganizerPageVisit[]; 
 
     @Field( () => [Events] )
     @OneToMany( () => Events, e => e.organizer )

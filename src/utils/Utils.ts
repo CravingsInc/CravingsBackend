@@ -1,13 +1,25 @@
 import * as models from "../models";
 import jwt from "jsonwebtoken";
 import { Mailer } from "./Emails";
+import { GoogleMapsUtils } from "./GoogleMapsUtils";
+import { AppConfig } from "./Config";
 
 export class Utils {
-    static SECRET_KEY = process.env.SECRET_KEY || "shhhh";
 
     static KmTomilesConversion = 0.621371;
 
     static milesFilterLeway = 2;
+
+    static AppConfig = AppConfig;
+
+    static SECRET_KEY = Utils.AppConfig.BasicConfig.SeceretKey;
+
+    static googleMapsService = GoogleMapsUtils.getMaps( Utils.AppConfig.BasicConfig.GoogleMapsApiKey );
+
+    static LOGIN_TOKEN_TYPE = {
+        USER: "USER",
+        ORGANIZER: "ORGANIZER"
+    } as const;
 
     static CustomError = class extends Error {
         constructor( message: string, name= "CustomError" ) {
@@ -16,10 +28,10 @@ export class Utils {
         }
     }
 
-    static Mailer = Mailer;
+    static Mailer = Mailer.getMailer();
 
     static getCravingsWebUrl = () => {
-        return process.env.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
+        return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
     }
 
     /**
@@ -59,7 +71,7 @@ export class Utils {
             let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
             if ( unHashedToken ) {
-                if ( unHashedToken.type === "user" ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER ) {
                     let user = await models.Users.findOne({
                         where: { id: unHashedToken.id },
                         relations
@@ -73,12 +85,12 @@ export class Utils {
         throw new Utils.CustomError("User does not exist.");
     }
 
-    static async verifyPasswordChangeToken( token: string ) {
+    static async verifyUserPasswordChangeToken( token: string ) {
         try {
             let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
         
             if ( unHashedToken ) {
-                if ( unHashedToken.type === "user" && unHashedToken.command === 'change-password' ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER && unHashedToken.command === 'change-password' ) {
                     let pwc = await models.UserPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: [ "user" ] })
                     
                     if ( pwc ) return pwc;
@@ -89,11 +101,27 @@ export class Utils {
         throw new Utils.CustomError("Token is not valid");
     }
 
+    static async verifyOrgPasswordChangeToken( token: string ) {
+        try {
+            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+
+            if ( unHashedToken ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER && unHashedToken.command === 'change-password' ) {
+                    let pwc = await models.OrganizerPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: ['organizer'] });
+
+                    if ( pwc ) return pwc;
+                }
+            }
+        }catch( e ) {}
+
+        throw new Utils.CustomError("Token is not valid");
+    }
+
     static async getOrganizerFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Organizers> {
         let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
         if ( unHashedToken ) {
-            if ( unHashedToken.type === "organizer" ) {
+            if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER ) {
                 let organizer = await models.Organizers.findOne({
                     where: { id: unHashedToken.id },
                     relations

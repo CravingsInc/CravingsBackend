@@ -127,3 +127,5 @@ dist
 .pnp.*
 
 db.sqlite3
+
+SpaceKeysConfig.json

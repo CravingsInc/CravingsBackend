@@ -27,6 +27,39 @@ export class EventRecommendationResponse {
     @Field( () => EventOrganizerResponse ) organizer: EventOrganizerResponse;
 }
 
+@InputType()
+export class ModifyEventInputType {
+    @Field() id: string;
+
+    @Field({ nullable: true }) title?: string;
+
+    @Field({ nullable: true }) description?: string;
+
+    @Field({ nullable: true }) visible?: boolean;
+
+    @Field({ nullable: true }) location?: string;
+
+    @Field({ nullable: true }) banner?: string;
+}
+
+@InputType()
+export class ModifyEventTicketInputType {
+    @Field() id: string;
+
+    @Field({ nullable: true }) title?: string;
+
+    @Field({ nullable: true }) description?: string;
+}
+
+@InputType()
+export class ModifyEventTicketPriceInputType {
+    @Field() id: string;
+
+    @Field() amount: number;
+
+    @Field({ nullable: true, defaultValue: "us" }) currency?: string;
+}
+
 export type EventRecommendationDatabaseResponse = {
     id: string;
     title: string;

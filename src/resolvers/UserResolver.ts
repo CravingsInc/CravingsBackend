@@ -40,7 +40,7 @@ export class UserResolver {
             return jwt.sign(
                 {
                     ...await Utils.generateJsWebToken(user.id),
-                    type: "user"
+                    type: Utils.LOGIN_TOKEN_TYPE.USER
                 }, 
                 Utils.SECRET_KEY, 
                 { expiresIn: "2w" }
@@ -59,7 +59,7 @@ export class UserResolver {
                 return jwt.sign(
                     {
                         ...await Utils.generateJsWebToken(user.id),
-                        type: "user"
+                        type: Utils.LOGIN_TOKEN_TYPE.USER
                     },
                     Utils.SECRET_KEY,
                     { expiresIn: "2w" }
@@ -88,11 +88,11 @@ export class UserResolver {
     async modifyUserProfileInformation( @Arg('token') token: string, @Arg('arg', () => models.UserProfileInformationInput ) arg : models.UserProfileInformationInput ) {
         let user = await Utils.getUserFromJsWebToken(token);
 
-        user.firstName = arg.firstName
-        user.lastName = arg.lastName
-        user.username = arg.username
-        user.phoneNumber = arg.phoneNumber
-        user.email = arg.email
+        if ( arg.firstName ) user.firstName = arg.firstName
+        if ( arg.lastName ) user.lastName = arg.lastName
+        if ( arg.username ) user.username = arg.username
+        if ( arg.phoneNumber ) user.phoneNumber = arg.phoneNumber
+        if ( arg.email ) user.email = arg.email
 
         await user.save();
 
@@ -111,7 +111,7 @@ export class UserResolver {
             jwt.sign(
                 {
                     ...await Utils.generateJsWebToken(user.id),
-                    type: "user",
+                    type: Utils.LOGIN_TOKEN_TYPE.USER,
                     command: "change-password",
                     pwc: passwordChange.id
                 }, 
@@ -129,7 +129,7 @@ export class UserResolver {
 
     @Query( () => String )
     async verifyUserPasswordChangeToken( @Arg('token') token: string ) {
-        let pwc = await Utils.verifyPasswordChangeToken(token);
+        let pwc = await Utils.verifyUserPasswordChangeToken(token);
 
         if ( pwc.tokenUsed ) return "Token is not valid";
 
@@ -139,17 +139,15 @@ export class UserResolver {
     @Mutation( () => String )
     async confirmUserPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
         
-        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return "Can't change your password";
+        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return new Utils.CustomError("Can't change your password");
 
-        if ( newPassword !== confirmNewPassword ) return "Can't change your password";
+        if ( newPassword !== confirmNewPassword ) return new Utils.CustomError("Can't change your password");
         
-        let pwc = await Utils.verifyPasswordChangeToken(token);
+        let pwc = await Utils.verifyUserPasswordChangeToken(token);
 
-        if ( pwc.tokenUsed ) return "Can't change password";
+        if ( pwc.tokenUsed ) return new Utils.CustomError("Can't change password");
 
-        let user = await models.Users.findOne({ where: { id: pwc.user.id } });
-
-        if ( !user ) return "Problem changing your password";
+        let user = pwc.user;
 
         user.password = await bcrypt.hash(newPassword, 12);
 
@@ -251,7 +249,7 @@ export class UserResolver {
                     ( u.latitude - e.latitude ) * ( u.latitude - e.latitude )
                 )
             ) >= 0
-        `).orderBy('ticketSold', 'DESC')
+        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
         .getRawMany();
 
         return (await Promise.all(
@@ -309,7 +307,7 @@ export class UserResolver {
         .leftJoin('organizers', 'o', 'e.organizerId = o.id')
         .where(`
             etb.userId = uF.followingId
-        `).orderBy('ticketSold', 'DESC')
+        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
         .getRawMany();
 
         return (await Promise.all(
@@ -367,7 +365,7 @@ export class UserResolver {
         .leftJoin('organizers', 'o', 'e.organizerId = o.id')
         .where(`
             o.id = oF.followingId
-        `).orderBy('ticketSold', 'DESC')
+        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
         .getRawMany();
 
         return (await Promise.all(

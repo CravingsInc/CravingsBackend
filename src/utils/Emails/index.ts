@@ -1,5 +1,8 @@
+import SMTPTransport from "nodemailer/lib/smtp-transport";
+import nodemailer, { Transporter } from "nodemailer";
+
+import { Utils } from "../Utils";
 import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
-import nodemailer from "nodemailer";
 
 export enum EmailTemplates {
     RESERVATION,
@@ -27,21 +30,36 @@ const getEmailTemplates = ( template: EmailTemplates, opt: EmailTemplatesOpt ) =
 }
 
 export class Mailer {
-    static #mailer = nodemailer.createTransport({
-        service: "gmail",
-        auth: Mailer.getGmailCredentials()
-    });
+    
+    private static _mailer: Mailer;
 
-    static getGmailCredentials() {
+    private mailer: Transporter<SMTPTransport.SentMessageInfo>;;
+
+    private Constructor() {
+        this.mailer = nodemailer.createTransport({
+            service: "gmail",
+            auth: this.getGmailCredentials()
+        });
+    }
+
+    static getMailer() {
+        if ( Mailer._mailer ) return Mailer._mailer;
+
+        Mailer._mailer = new Mailer();
+
+        return Mailer._mailer;
+    }
+
+    getGmailCredentials() {
         return {
             user: "outreach@cravingsinc.us",
-            pass: process.env.gmailPWD || ""
+            pass: Utils.AppConfig.BasicConfig.GmailServicePassword
         }
     }
 
-    static async sendEmail( to: string, subject: string, text: string | undefined, html: string | undefined, sender?: string ) {
+    async sendEmail( to: string, subject: string, text: string | undefined, html: string | undefined, sender?: string ) {
         try {
-            await this.#mailer.sendMail({ from: "Cravings Inc", to, subject, text, html, sender });
+            await this.mailer.sendMail({ from: "Cravings Inc", to, subject, text, html, sender });
             return true;
         }catch(e) {
             console.log(e);
@@ -49,7 +67,7 @@ export class Mailer {
         }
     }
 
-    static async sendContactEmail( opt: ContactProps ) {
+    async sendContactEmail( opt: ContactProps ) {
         return await this.sendEmail( 
             `${opt.email}, outreach@cravingsinc.us`,
             `CravingsInc Contact by ${opt.first_name}`,
@@ -58,7 +76,7 @@ export class Mailer {
         )
     }
 
-    static async sendReservationEmail( opt: ReservationProps) {
+    async sendReservationEmail( opt: ReservationProps) {
         return await this.sendEmail( 
             `${opt.email}, outreach@cravingsinc.us`,
             `CravingsInc Event Reservation by ${opt.first_name}`,
@@ -67,7 +85,7 @@ export class Mailer {
         )
     }
 
-    static async sendPasswordChangeEmail( opt: PasswordChangeProps ) {
+    async sendPasswordChangeEmail( opt: PasswordChangeProps ) {
         return await this.sendEmail( 
             `${opt.email}`,
             `${opt.username} you requested a password change on CravingsInc`,
