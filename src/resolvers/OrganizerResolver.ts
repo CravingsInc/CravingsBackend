@@ -199,46 +199,31 @@ export class OrganizerResolver {
         return event;
     }
 
-    // TODO: FIX THIS
-    /*
-    @Query( () => models.FoodTruckPageDetails )
-    async userGetOrganizerPageDetails( @Arg('token') token: string, @Arg('truckId') truckId: string ) {
-        let user = await Utils.getUserFromJsWebToken(token);
+    @Mutation( () => String )
+    async modifyEvent( @Arg('token') token: string, @Arg('args', () =>  models.ModifyEventInputType ) args: models.ModifyEventInputType ) {
+        let organizer = await Utils.getOrganizerFromJsWebToken( token );
 
-        let foodTruck = await models.Organizers.createQueryBuilder("ft")
-        .select(`
-          ft.id, ft.truckName as name, ft.profilePicture, ft.bannerImage,
-          count(uc.id) as salesCount,
-          count(ftr.id) as ratingsCount, avg(ftr.rating) as ratingsAverage
-        `)
-        .leftJoin("food_truck_rating", "ftr", 'ftr.truckId = ft.id')
-        .leftJoin("user_cart", "uc", "uc.foodTruckId = ft.id and uc.cartStatus is 'DONE' " )
-        .where(`ft.id = "${truckId}"`)
-        .getRawOne() as ( { id: string, name: string, profilePicture: string, bannerImage: string, salesCount: number, ratingsCount: number, ratingsAverage: number } | null )
+        let event = await models.Events.findOne({ where: { id: args.id, organizer: { id: organizer.id } } });
 
-        if ( !foodTruck ) throw new Utils.CustomError("Food Truck does not exist");
+        if ( !event ) return new Utils.CustomError("Event does not exist");
 
+        if ( args.title ) event.title = args.title;
 
-        let foodTruckFood = await models.Organizers.createQueryBuilder('ftf')
-        .select(`
-            ftf.id, ftf.foodName as name, ftf.profilePicture, ftf.calories, ftf.cost, ftf.description, 
-            "${user.id}" is uff.userId as hearted
-        `)
-        .leftJoin("user_favorite_food", "uff", `uff.foodTruckFoodId = ftf.id and uff.userId is "${user.id}"`)
-        .getRawMany() as ( { id: string, name: string, profilePicture: string, cost: number, calories: number, description: string, hearted: boolean }[] | null )
+        if ( args.description ) event.description = args.description;
 
-        let foodTruckRating = await models.Organizers.createQueryBuilder('ftr')
-        .select(`
-            ftr.id, u.username as name, u.profilePicture, ftr.rating, ftr.description as comment
-        `)
-        .leftJoin("users", "u", "u.id = ftr.userId")
-        .getRawMany() as ( { id: string, name: string, profilePicture: string, comment: string, rating: number }[] | null )
+        if ( args.visible ) event.visible = args.visible;
 
-        return {
-            ...foodTruck,
-            ratingsAverage: foodTruck.ratingsAverage || 0,
-            foods: foodTruckFood,
-            ratings: foodTruckRating
+        if ( args.location ) {
+            let loc = await Utils.googleMapsService.getLatitudeLongitude(args.location);
+
+            event.latitude = loc.lat;
+            event.longitude = loc.lng;
         }
-    }*/
+
+        if ( args.banner ) event.banner = args.banner;
+
+        await event.save();
+
+        return "Modified Properly";
+    }
 }

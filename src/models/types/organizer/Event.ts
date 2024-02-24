@@ -27,6 +27,21 @@ export class EventRecommendationResponse {
     @Field( () => EventOrganizerResponse ) organizer: EventOrganizerResponse;
 }
 
+@InputType()
+export class ModifyEventInputType {
+    @Field() id: string;
+
+    @Field({ nullable: true }) title?: string;
+
+    @Field({ nullable: true }) description?: string;
+
+    @Field({ nullable: true }) visible?: boolean;
+
+    @Field({ nullable: true }) location?: string;
+
+    @Field({ nullable: true }) banner?: string;
+}
+
 export type EventRecommendationDatabaseResponse = {
     id: string;
     title: string;

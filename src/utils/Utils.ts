@@ -1,13 +1,20 @@
 import * as models from "../models";
 import jwt from "jsonwebtoken";
 import { Mailer } from "./Emails";
+import { GoogleMapsUtils } from "./GoogleMapsUtils";
+import { AppConfig } from "./Config";
 
 export class Utils {
-    static SECRET_KEY = process.env.SECRET_KEY || "shhhh";
 
     static KmTomilesConversion = 0.621371;
 
     static milesFilterLeway = 2;
+
+    static AppConfig = AppConfig;
+
+    static SECRET_KEY = Utils.AppConfig.BasicConfig.SeceretKey;
+
+    static googleMapsService = GoogleMapsUtils.getMaps( Utils.AppConfig.BasicConfig.GoogleMapsApiKey );
 
     static LOGIN_TOKEN_TYPE = {
         USER: "USER",
@@ -21,10 +28,10 @@ export class Utils {
         }
     }
 
-    static Mailer = Mailer;
+    static Mailer = Mailer.getMailer();
 
     static getCravingsWebUrl = () => {
-        return process.env.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
+        return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
     }
 
     /**
