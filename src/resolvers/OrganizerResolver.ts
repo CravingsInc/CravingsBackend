@@ -199,6 +199,9 @@ export class OrganizerResolver {
         return event;
     }
 
+    @Mutation( () => String )
+    async modifyEvent( @Arg('token') token: string, )
+
     // TODO: FIX THIS
     /*
     @Query( () => models.FoodTruckPageDetails )

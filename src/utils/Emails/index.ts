@@ -1,3 +1,4 @@
+import { Utils } from "../Utils";
 import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
 import nodemailer from "nodemailer";
 
@@ -35,7 +36,7 @@ export class Mailer {
     static getGmailCredentials() {
         return {
             user: "outreach@cravingsinc.us",
-            pass: process.env.gmailPWD || ""
+            pass: Utils.AppConfig.BasicConfig.GmailServicePassword
         }
     }
 
