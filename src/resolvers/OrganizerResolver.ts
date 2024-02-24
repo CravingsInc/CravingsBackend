@@ -98,13 +98,13 @@ export class OrganizerResolver {
                 (
                     await models.Events.find({ where: { organizer: { id: organizer.id } } })
                 ).map( async e => {
-                    let prices = (await stripeHandler.getEventTicketPrices(e.productId))?.data.map(v => v.unit_amount);
+                    let prices = (await stripeHandler.getEventTicketPrices(e.productId))?.data.map(v => v.unit_amount );
     
                     let maxPrice, minPrice = 0;
     
                     if (prices && prices.length > 0) {
-                        maxPrice = Math.max(...prices as number[]);
-                        minPrice = Math.min(...prices as number[]);
+                        maxPrice = Math.max(...prices as number[]) * 100;
+                        minPrice = Math.min(...prices as number[]) * 100;
                     }
     
                     return {
@@ -238,7 +238,8 @@ export class OrganizerResolver {
         let eventTicket = await models.EventTickets.create({
             title,
             description,
-            event
+            event,
+            amount
         }).save();
 
         try {
@@ -271,7 +272,8 @@ export class OrganizerResolver {
         try {
             let newStripeTicket = await stripeHandler.modifyEventPrice( org.stripeConnectId, org.id, eventId, event.productId, eventTicket.priceId, args.amount, args.currency );
 
-            eventTicket.priceId = newStripeTicket.id,
+            eventTicket.priceId = newStripeTicket.id;
+            eventTicket.amount = args.amount;
             await eventTicket.save();
         }catch( err ) {
             return new Utils.CustomError("Problem Creating event ticket");

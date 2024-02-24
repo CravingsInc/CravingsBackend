@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, Ba
 import { ObjectType, Field, ID } from "type-graphql";
 import { Organizers } from "../Organizers";
 import { EventTickets } from "./eventTickets";
+import { EventsPageVisit } from "../analystics";
 
 
 @Entity()
@@ -42,6 +43,10 @@ export class Events extends BaseEntity {
     @Field( () => [EventTickets] )
     @OneToMany( () => EventTickets, eT => eT.event )
     prices: EventTickets[];
+
+    @Field( () => [ EventsPageVisit ])
+    @OneToMany( () => EventsPageVisit, ePV => ePV.event )
+    pageVisitors: EventsPageVisit[]; 
     
     @Field( () => Organizers )
     @ManyToOne( () => Organizers, o => o.events, { onDelete: "CASCADE" })
