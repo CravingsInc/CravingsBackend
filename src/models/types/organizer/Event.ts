@@ -42,6 +42,24 @@ export class ModifyEventInputType {
     @Field({ nullable: true }) banner?: string;
 }
 
+@InputType()
+export class ModifyEventTicketInputType {
+    @Field() id: string;
+
+    @Field({ nullable: true }) title?: string;
+
+    @Field({ nullable: true }) description?: string;
+}
+
+@InputType()
+export class ModifyEventTicketPriceInputType {
+    @Field() id: string;
+
+    @Field() amount: number;
+
+    @Field({ nullable: true, defaultValue: "us" }) currency?: string;
+}
+
 export type EventRecommendationDatabaseResponse = {
     id: string;
     title: string;

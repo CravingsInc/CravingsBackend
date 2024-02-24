@@ -228,7 +228,7 @@ export class OrganizerResolver {
     }
 
     @Mutation( () => String )
-    async createEventTicket( @Arg('token') token: string, @Arg('event') eventId: string, @Arg('title') title: string, @Arg('amount') amount: number, @Arg('currency', { nullable: true, defaultValue: 'usd' }) currency: string, @Arg('description', { nullable: true }) description: string ) {
+    async createEventTicket( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('title') title: string, @Arg('amount') amount: number, @Arg('currency', { nullable: true, defaultValue: 'usd' }) currency: string, @Arg('description', { nullable: true }) description: string ) {
         let org = await Utils.getOrganizerFromJsWebToken( token );
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
@@ -253,6 +253,51 @@ export class OrganizerResolver {
             return new Utils.CustomError("Problem creating event ticket")
         }
 
-        return "Ticket created successfully";
+        return "Event Ticket created successfully";
+    }
+
+    @Mutation( () => String ) 
+    async modifyEventTicketPrice( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketPriceInputType ) args: models.ModifyEventTicketPriceInputType ) {
+        let org = await Utils.getOrganizerFromJsWebToken( token );
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
+
+        if ( !event ) return new Utils.CustomError("Event does not exist");
+
+        let eventTicket = await models.EventTickets.findOne({ where: { id: args.id, event: { id: eventId }} });
+
+        if ( !eventTicket ) return new Utils.CustomError("Problem changing event ticket");
+
+        try {
+            let newStripeTicket = await stripeHandler.modifyEventPrice( org.stripeConnectId, org.id, eventId, event.productId, eventTicket.priceId, args.amount, args.currency );
+
+            eventTicket.priceId = newStripeTicket.id,
+            await eventTicket.save();
+        }catch( err ) {
+            return new Utils.CustomError("Problem Creating event ticket");
+        }
+
+        return "Event Ticket Price modified successfully";
+    }
+
+    @Mutation( () => String )
+    async modifyEventTicket( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketInputType ) args: models.ModifyEventTicketInputType ) {
+        let org = await Utils.getOrganizerFromJsWebToken( token );
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
+
+        if ( !event ) return new Utils.CustomError("Event does not exist");
+
+        let eventTicket = await models.EventTickets.findOne({ where: { id: args.id, event: { id: eventId }} });
+
+        if ( !eventTicket ) return new Utils.CustomError("Problem changing event ticket");
+
+        if ( args.title ) event.title = args.title;
+
+        if ( args.description ) event.description = args.description;
+
+        await event.save();
+
+        return "Event Ticket updated successfully";
     }
 }
