@@ -9,7 +9,7 @@ import { Utils, stripeHandler } from "../utils";
 @Resolver()
 export class EventResolver {
 
-    @Query( () => models.EventRecommendationResponse )
+    @Query( () => models.EventsPage )
     async getEventsPage( @Arg('eventId') eventId: string, @Arg("userToken", { nullable: true }) userToken?: string ) {
         let user = userToken ? await Utils.getUserFromJsWebToken(userToken) : null;
 
@@ -31,7 +31,7 @@ export class EventResolver {
             max = Math.max(...prices as number[] ) * 100;
             min = Math.min(...prices as number[] ) * 100;
         }
-        
+
         return {
             id: event.id,
             name: event.title,

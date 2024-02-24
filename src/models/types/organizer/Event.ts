@@ -79,3 +79,43 @@ export type EventRecommendationDatabaseResponse = {
     ticketSold: number;
     milesNum: number;
 }
+
+@ObjectType()
+export class EventsPageOrganizer {
+    @Field( () => ID ) id: string;
+
+    @Field() name: string;
+
+    @Field() profilePicture: string;
+
+}
+
+@ObjectType()
+export class EventsPagePrices {
+    @Field( () => ID ) id: string;
+
+    @Field() title: string;
+
+    @Field() description: string;
+
+    @Field() amount: number;
+}
+
+@ObjectType()
+export class EventsPage {
+    @Field( () => ID ) id: string;
+
+    @Field() name: string;
+
+    @Field() description: string;
+
+    @Field() banner: string;
+
+    @Field() costRange: string;
+
+    @Field( () => Location ) location: Location;
+
+    @Field( () => EventsPageOrganizer ) organizer: EventsPageOrganizer;
+
+    @Field( () => [EventsPagePrices] ) prices: EventsPagePrices[];
+}
