@@ -226,4 +226,33 @@ export class OrganizerResolver {
 
         return "Modified Properly";
     }
+
+    @Mutation( () => String )
+    async createEventTicket( @Arg('token') token: string, @Arg('event') eventId: string, @Arg('title') title: string, @Arg('amount') amount: number, @Arg('currency', { nullable: true, defaultValue: 'usd' }) currency: string, @Arg('description', { nullable: true }) description: string ) {
+        let org = await Utils.getOrganizerFromJsWebToken( token );
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
+
+        if ( !event ) return new Utils.CustomError("Event does not exist");
+
+        let eventTicket = await models.EventTickets.create({
+            title,
+            description,
+            event
+        }).save();
+
+        try {
+            let stripeTicket = await stripeHandler.createEventPrice( org.stripeConnectId, org.id, event.id, event.productId, amount, currency );
+            
+            eventTicket.priceId = stripeTicket.id;
+
+            await eventTicket.save();
+        }catch(err) {
+            await eventTicket.remove(); // want to self clean database
+
+            return new Utils.CustomError("Problem creating event ticket")
+        }
+
+        return "Ticket created successfully";
+    }
 }
