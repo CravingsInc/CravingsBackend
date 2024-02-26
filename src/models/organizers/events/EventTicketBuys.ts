@@ -22,6 +22,10 @@ export class EventTicketBuys extends BaseEntity {
     @Column()
     email: string;
 
+    @Field()
+    @Column()
+    checkIn: boolean;
+
     @Column({ nullable: false })
     stripeTransactionId: string;
 
