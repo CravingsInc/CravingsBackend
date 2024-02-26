@@ -50,4 +50,22 @@ export class EventResolver {
             prices: event.prices.map( prices => ({ id: prices.id, title: prices.title, description: prices.description, amount: prices.amount }))
         }
     }
+
+    @Query( () => models.EventTicketBuys )
+    async getTicketBuy( @Arg('id') id: string ) {
+        return await models.EventTicketBuys.findOne({ where: { id: id }, relations: ['user'] });
+    }
+
+    @Mutation( () => String ) 
+    async confirmTicketCheckIn( @Arg('id') id: string ) {
+        let ticket = await models.EventTicketBuys.findOne({ where: { id: id } });
+
+        if ( !ticket ) return new Utils.CustomError("Ticket not found.");
+
+        ticket.checkIn = true;
+
+        await ticket.save();
+
+        return "Checked in successfully.";
+    }
 }
