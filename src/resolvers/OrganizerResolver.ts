@@ -48,7 +48,7 @@ export class OrganizerResolver {
     }
 
     @Mutation( returns => String ) 
-    async OrganizerLogIn( @Arg("orgName") orgName: string, @Arg("password") password: string ) {
+    async OrganizerLogIn( @Arg("username") orgName: string, @Arg("password") password: string ) {
         let organizer = await models.Organizers.findOne({ where: { orgName } });
 
         if ( !organizer ) organizer = await models.Organizers.findOne({ where: { email: orgName }}) // Just incase they are using there email
@@ -69,7 +69,7 @@ export class OrganizerResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 
-    @Mutation( returns => String )
+    @Mutation( returns => models.Organizers )
     async getOrganizerProfile( @Arg("token") token: string ) {
         return await Utils.getOrganizerFromJsWebToken(token);
     }
@@ -98,7 +98,11 @@ export class OrganizerResolver {
                 (
                     await models.Events.find({ where: { organizer: { id: organizer.id } } })
                 ).map( async e => {
-                    let prices = (await stripeHandler.getEventTicketPrices(e.productId))?.data.map(v => v.unit_amount );
+                    let prices: ( number | null )[] = [];
+
+                    try {
+                        prices = (await stripeHandler.getEventTicketPrices(e.productId))?.data.map(v => v.unit_amount);
+                    }catch(e) { prices = [0]; }
     
                     let maxPrice, minPrice = 0;
     
@@ -113,9 +117,11 @@ export class OrganizerResolver {
                         description: e.description,
                         banner: e.banner,
                         costRange: `$${minPrice}-${maxPrice}`,
+                        eventDate: e.eventDate,
                         location: {
-                            lat: e.latitude,
-                            long: e.longitude
+                            latitude: e.latitude,
+                            longitude: e.longitude,
+                            location: e.location
                         }
                     }
                 })
@@ -211,11 +217,14 @@ export class OrganizerResolver {
 
         if ( args.description ) event.description = args.description;
 
+        if ( args.eventDate ) event.eventDate = args.eventDate;
+
         if ( args.visible ) event.visible = args.visible;
 
         if ( args.location ) {
             let loc = await Utils.googleMapsService.getLatitudeLongitude(args.location);
 
+            event.location = args.location;
             event.latitude = loc.lat;
             event.longitude = loc.lng;
         }

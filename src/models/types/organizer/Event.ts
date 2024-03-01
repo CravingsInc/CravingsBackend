@@ -22,6 +22,8 @@ export class EventRecommendationResponse {
 
     @Field() costRange: string;
 
+    @Field() eventDate: Date;
+
     @Field( () => Location ) location: Location; 
 
     @Field( () => EventOrganizerResponse ) organizer: EventOrganizerResponse;
@@ -40,6 +42,8 @@ export class ModifyEventInputType {
     @Field({ nullable: true }) location?: string;
 
     @Field({ nullable: true }) banner?: string;
+
+    @Field({ nullable: true }) eventDate?: Date;
 }
 
 @InputType()
@@ -69,8 +73,10 @@ export type EventRecommendationDatabaseResponse = {
     createdAt: string;
     updatedAt: string;
     organizerId: string;
+    eventDate: string;
     eLat: number;
     eLong: number;
+    location: string;
     uLat: number;
     uLong: number;
     orgId: string;
@@ -112,6 +118,8 @@ export class EventsPage {
     @Field() banner: string;
 
     @Field() costRange: string;
+
+    @Field() eventDate: Date;
 
     @Field( () => Location ) location: Location;
 

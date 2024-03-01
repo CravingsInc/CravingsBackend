@@ -84,6 +84,24 @@ export class Utils {
 
         throw new Utils.CustomError("User does not exist.");
     }
+    
+    static getRegenToken( token: string ) {
+        try {
+            const decoded = jwt.decode( token ) as jwt.JwtPayload;
+
+            const secondsInWeek = 604_800;
+
+            const currentTime = Math.floor( Date.now() / 1000 );
+
+            const expiresIn = ( decoded.exp || 0 ) - currentTime;
+
+            return expiresIn > secondsInWeek ? token : jwt.sign( { ...decoded, exp: ( decoded.exp || 0 ) + ( secondsInWeek * 2) }, this.SECRET_KEY);
+        } catch( e ) {
+            console.log( e );
+        }
+
+        return new Utils.CustomError('Problem retrieving token');
+    }
 
     static async verifyUserPasswordChangeToken( token: string ) {
         try {

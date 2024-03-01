@@ -34,8 +34,6 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const httpServer = http.createServer(app);
-
 app.post('event/upload/banner', ( req: any, res: any ) => {
   const upload = multer().single("banner");
 
@@ -99,6 +97,8 @@ app.post("user/upload/image", (req: any, res: any) => {
     }
   })
 });
+
+const httpServer = http.createServer(app);
 
 async function main() {
   await createConnection(

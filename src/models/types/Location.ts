@@ -5,4 +5,6 @@ export class Location {
     @Field() latitude: number;
 
     @Field() longitude: number;
+
+    @Field() location: string;
 }

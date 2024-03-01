@@ -47,6 +47,10 @@ export class Organizers extends BaseEntity {
     @Column({ default: 0, nullable: true })
     longitude: number;
 
+    @Field()
+    @Column({ default: '' })
+    location: string;
+
     @OneToMany( () => OrganizerPasswordChange, pwc => pwc.organizer )
     passwordChangeHistory: OrganizerPasswordChange[];
 
