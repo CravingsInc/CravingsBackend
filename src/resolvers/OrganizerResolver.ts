@@ -69,7 +69,7 @@ export class OrganizerResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 
-    @Mutation( returns => models.Organizers )
+    @Query( returns => models.Organizers )
     async getOrganizerProfile( @Arg("token") token: string ) {
         return await Utils.getOrganizerFromJsWebToken(token);
     }
@@ -116,7 +116,7 @@ export class OrganizerResolver {
                         name: e.title,
                         description: e.description,
                         banner: e.banner,
-                        costRange: `$${minPrice}-${maxPrice}`,
+                        costRange: `$${minPrice}-$${maxPrice}`,
                         eventDate: e.eventDate,
                         location: {
                             latitude: e.latitude,

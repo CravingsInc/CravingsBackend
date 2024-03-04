@@ -94,6 +94,10 @@ export class EventsPageOrganizer {
 
     @Field() profilePicture: string;
 
+    @Field() events: number;
+
+    @Field() followers: number;
+
 }
 
 @ObjectType()
@@ -118,6 +122,8 @@ export class EventsPage {
     @Field() banner: string;
 
     @Field() costRange: string;
+
+    @Field() ticketSold: number;
 
     @Field() eventDate: Date;
 

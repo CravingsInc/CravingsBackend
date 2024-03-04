@@ -71,7 +71,7 @@ export class UserResolver {
     }
 
     @Query( returns => String )
-    async relogin( @Arg('token') token: string ) {
+    async relogin( @Arg('token', { nullable: true, defaultValue: '' }) token: string ) {
         return Utils.getRegenToken( token );
     }
 
@@ -85,7 +85,8 @@ export class UserResolver {
             lastName: user.lastName,
             username: user.username,
             phoneNumber: user.phoneNumber,
-            email: user.email
+            email: user.email,
+            profilePicture: user.profilePicture
         }
     }
 
@@ -249,6 +250,7 @@ export class UserResolver {
         .where(`
             etb.userId = uF.followingId
         `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
+        .limit( limit )
         .getRawMany();
 
         return (await Promise.all(
@@ -273,7 +275,7 @@ export class UserResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${maxPrice}-${minPrice}`,
+                    costRange: `$${maxPrice}-$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -313,6 +315,7 @@ export class UserResolver {
         .where(`
             o.id = oF.followingId
         `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
+        .limit(limit)
         .getRawMany();
 
         return (await Promise.all(
@@ -337,7 +340,7 @@ export class UserResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${maxPrice}-${minPrice}`,
+                    costRange: `$${maxPrice}-$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
