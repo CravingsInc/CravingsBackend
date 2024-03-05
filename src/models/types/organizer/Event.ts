@@ -1,4 +1,4 @@
-import { ObjectType, InputType, Field, ID } from "type-graphql";
+import { ObjectType, InputType, Field, ID, InputType } from "type-graphql";
 import { Location } from "../Location";
 
 @ObjectType()
@@ -123,7 +123,7 @@ export class EventsPage {
 
     @Field() costRange: string;
 
-    @Field() ticketSold: number;
+    @Field() ticketSold: string;
 
     @Field() eventDate: Date;
 
@@ -132,4 +132,12 @@ export class EventsPage {
     @Field( () => EventsPageOrganizer ) organizer: EventsPageOrganizer;
 
     @Field( () => [EventsPagePrices] ) prices: EventsPagePrices[];
+}
+
+@InputType()
+export class TicketBuyClientSecretUpdate {
+    // Price ID
+    @Field( () => ID ) id: string;
+
+    @Field() quantity: number;
 }

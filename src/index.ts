@@ -119,7 +119,7 @@ async function main() {
 
   const schema = await buildSchema({
     resolvers: [ ...( Object.values(resolvers) ) ] as [any],
-    dateScalarMode: "timestamp",
+    //dateScalarMode: "timestamp",
   });
 
   const server = new ApolloServer({

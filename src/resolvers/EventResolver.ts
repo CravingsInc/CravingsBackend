@@ -358,7 +358,7 @@ export class EventResolver {
             name: event.title,
             description: event.description,
             banner: event.banner,
-            eventDate: event.eventDate,
+            eventDate: new Date( event.eventDate ),
             costRange: `$${min}-$${max}`,
             ticketSold: await models.EventTicketBuys.countBy({ eventTicket: { event: { id: event.id } } }),
             location: {
@@ -373,7 +373,8 @@ export class EventResolver {
                 events: await models.Events.countBy({ organizer: { id: event.organizer.id } }),
                 followers: await models.OrganizersFollowers.countBy({ organizer: { id: event.organizer.id } })
             },
-            prices: event.prices.map( prices => ({ id: prices.id, title: prices.title, description: prices.description, amount: prices.amount }))
+            prices: event.prices.map( prices => ({ id: prices.id, title: prices.title, description: prices.description, amount: prices.amount })),
+            clientSecret: ""
         }
     }
 

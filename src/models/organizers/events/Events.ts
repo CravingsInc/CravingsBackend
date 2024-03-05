@@ -45,7 +45,7 @@ export class Events extends BaseEntity {
     location: string;
 
     @Field()
-    @Column()
+    @Column({ default: () => "CURRENT_TIMESTAMP" })
     eventDate: Date;
 
     @Field( () => [EventTickets] )

@@ -186,7 +186,7 @@ export class OrganizerResolver {
         await org.save();
     }
 
-    @Mutation( () => String )
+    @Mutation( () =>  models.Events )
     async createEvent( @Arg('token') token: string, @Arg('title') title: string, @Arg('description') description: string ) {
         let org = await Utils.getOrganizerFromJsWebToken(token);
 
@@ -194,6 +194,7 @@ export class OrganizerResolver {
             title,
             description,
             banner: "",
+            organizer: { id: org.id }
         }).save();
 
         let stripeEvent = await stripeHandler.createEvent(org.stripeConnectId, org.id, event.id, title );
