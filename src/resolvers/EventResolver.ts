@@ -373,8 +373,7 @@ export class EventResolver {
                 events: await models.Events.countBy({ organizer: { id: event.organizer.id } }),
                 followers: await models.OrganizersFollowers.countBy({ organizer: { id: event.organizer.id } })
             },
-            prices: event.prices.map( prices => ({ id: prices.id, title: prices.title, description: prices.description, amount: prices.amount })),
-            clientSecret: ""
+            prices: event.prices.map( prices => ({ id: prices.priceId, title: prices.title, description: prices.description, amount: prices.amount }))
         }
     }
 
@@ -394,5 +393,35 @@ export class EventResolver {
         await ticket.save();
 
         return "Checked in successfully.";
+    }
+
+    @Mutation( () => String )
+    async createTicketSellClientSecret( @Arg('eventId') eventId: string, @Arg('userToken', { nullable: true } ) userToken?: string ) {
+        let user: models.Users | null = null;
+
+        try {
+            user = await Utils.getUserFromJsWebToken( userToken || "" );
+        }catch (e) { console.log(e); }
+
+        let event = await models.Events.findOne({ where: { id: eventId }, relations: [ 'organizer' ] });
+
+        if ( !event ) return new Utils.CustomError("Event not found.");
+
+        if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
+
+        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId ) ).client_secret
+    }
+
+    @Mutation( ( ) => String )
+    async updateTicketSellClientSecret( @Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] } ) prices: models.TicketBuyClientSecretUpdate[] ) {
+        const event = await models.Events.findOne({ where: { id : eventId }, relations: [ 'organizer' ] });
+
+        if ( !event ) return new Utils.CustomError("Event not found.");
+
+        if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
+        
+        const intent = await stripeHandler.updatePaymentIntent( id, prices, event.organizer.stripeConnectId );
+
+        return intent.status;
     }
 }

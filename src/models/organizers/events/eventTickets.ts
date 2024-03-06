@@ -19,7 +19,7 @@ export class EventTickets extends BaseEntity {
     description: string;
 
     @Field()
-    @Column()
+    @Column({ nullable: true })
     priceId: string;
 
     @Field()

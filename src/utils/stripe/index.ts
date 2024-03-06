@@ -6,3 +6,4 @@ export * from './createEvent';
 export * from "./createEventPrice";
 export * from "./deactivateEventPrice";
 export * from "./modifyEventPrice";
+export * from './ticketClientSecerets';

@@ -1,4 +1,4 @@
-import { ObjectType, InputType, Field, ID, InputType } from "type-graphql";
+import { ObjectType, InputType, Field, ID } from "type-graphql";
 import { Location } from "../Location";
 
 @ObjectType()
@@ -137,7 +137,7 @@ export class EventsPage {
 @InputType()
 export class TicketBuyClientSecretUpdate {
     // Price ID
-    @Field( () => ID ) id: string;
+    @Field() id: string;
 
     @Field() quantity: number;
 }

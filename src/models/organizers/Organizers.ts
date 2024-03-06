@@ -39,6 +39,9 @@ export class Organizers extends BaseEntity {
     @Column({ nullable: true })
     stripeConnectId: string;
 
+    @Column({ default: false })
+    stripeAccountVerified: boolean;
+
     @Field()
     @Column({ default: 0, nullable: true })
     latitude: number;
