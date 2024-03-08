@@ -19,8 +19,12 @@ export class EventTickets extends BaseEntity {
     description: string;
 
     @Field()
-    @Column()
+    @Column({ nullable: true })
     priceId: string;
+
+    @Field()
+    @Column()
+    amount: number;
 
     @Field( () => [EventTicketBuys] )
     @OneToMany( () => EventTicketBuys, eTB => eTB.eventTicket )

@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, BaseEntity, ManyToOne, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, BaseEntity, ManyToOne, UpdateDateColumn, BeforeInsert } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
 import { Organizers } from "../Organizers";
 import { EventTickets } from "./eventTickets";
+import { EventsPageVisit } from "../analystics";
 
 
 @Entity()
@@ -39,9 +40,21 @@ export class Events extends BaseEntity {
     @Column({ default: 0, nullable: true })
     longitude: number;
 
+    @Field()
+    @Column({ default: '' })
+    location: string;
+
+    @Field()
+    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    eventDate: Date;
+
     @Field( () => [EventTickets] )
     @OneToMany( () => EventTickets, eT => eT.event )
     prices: EventTickets[];
+
+    @Field( () => [ EventsPageVisit ])
+    @OneToMany( () => EventsPageVisit, ePV => ePV.event )
+    pageVisitors: EventsPageVisit[]; 
     
     @Field( () => Organizers )
     @ManyToOne( () => Organizers, o => o.events, { onDelete: "CASCADE" })
@@ -55,4 +68,8 @@ export class Events extends BaseEntity {
     @Field()
     updatedAt: Date;
 
+    @BeforeInsert()
+    private setEventDate() {
+        if ( !this.eventDate ) this.eventDate = new Date();
+    }
 }

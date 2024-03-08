@@ -13,6 +13,8 @@ export class UserProfileInformation {
     @Field() phoneNumber: string;
 
     @Field() username: string;
+
+    @Field() profilePicture: string;
 }
 
 @InputType()

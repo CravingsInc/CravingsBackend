@@ -39,6 +39,9 @@ export class Organizers extends BaseEntity {
     @Column({ nullable: true })
     stripeConnectId: string;
 
+    @Column({ default: false })
+    stripeAccountVerified: boolean;
+
     @Field()
     @Column({ default: 0, nullable: true })
     latitude: number;
@@ -46,6 +49,10 @@ export class Organizers extends BaseEntity {
     @Field()
     @Column({ default: 0, nullable: true })
     longitude: number;
+
+    @Field()
+    @Column({ default: '' })
+    location: string;
 
     @OneToMany( () => OrganizerPasswordChange, pwc => pwc.organizer )
     passwordChangeHistory: OrganizerPasswordChange[];

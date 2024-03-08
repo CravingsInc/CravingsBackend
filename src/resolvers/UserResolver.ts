@@ -70,6 +70,11 @@ export class UserResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 
+    @Query( returns => String )
+    async relogin( @Arg('token', { nullable: true, defaultValue: '' }) token: string ) {
+        return Utils.getRegenToken( token );
+    }
+
     @Query( () => models.UserProfileInformation ) 
     async getUserProfileInformation( @Arg('token') token: string ) {
         let user = await Utils.getUserFromJsWebToken(token);
@@ -80,7 +85,8 @@ export class UserResolver {
             lastName: user.lastName,
             username: user.username,
             phoneNumber: user.phoneNumber,
-            email: user.email
+            email: user.email,
+            profilePicture: user.profilePicture
         }
     }
 
@@ -224,70 +230,6 @@ export class UserResolver {
 
         return 'No Longer Following';
     }
-
-    @Query( () => [ models.EventRecommendationResponse ])
-    async getLocalEventRecommendation( @Arg('token') token: string, @Arg('limit', { defaultValue: 50 }) limit: number ) {
-        let user = await Utils.getUserFromJsWebToken( token );
-
-        let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
-        .select(`
-            e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.latitude as eLat, e.longitude as eLong,
-            o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
-            u.latitude as uLat, u.longitude as uLong,
-            count(etb.id) as ticketSold
-        `)
-        .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
-        .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
-        .leftJoin('organizers', 'o', 'e.organizerId = o.id')
-        .leftJoin('users', 'u', `u.id = ${user.id}`)
-        .where(`
-            ( u.searchMilesRadius * u.searchMilesRadius ) - (
-                (
-                    ( u.longitude - e.longitude ) * ( u.longitude - e.longitude )
-                ) + 
-                (
-                    ( u.latitude - e.latitude ) * ( u.latitude - e.latitude )
-                )
-            ) >= 0
-        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
-        .getRawMany();
-
-        return (await Promise.all(
-            events.map(async (val) => {
-                let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
-
-                let prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
-
-                let maxPrice, minPrice = 0;
-
-                if (prices && prices.length > 0) {
-                    maxPrice = Math.max(...prices as number[]);
-                    minPrice = Math.min(...prices as number[]);
-                }
-
-                return {
-                    id: val.id,
-                    title: val.title,
-                    description: val.description,
-                    banner: val.banner,
-                    costRange: `$${maxPrice}-${minPrice}`,
-                    location: {
-                        lat: val.eLat,
-                        long: val.eLong
-                    },
-                    miles: Utils.shortenNumericString(miles),
-                    timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
-                    ticketSold: val.ticketSold || 0,
-                    organizer: {
-                        id: val.orgId,
-                        name: val.orgName,
-                        profilePicture: val.orgProfilePicture
-                    },
-                    milesNum: miles
-                };
-            })
-        )).filter( val => val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway );
-    }
     
     @Query( () => [ models.EventRecommendationResponse ])
     async getFriendsFollowingEvents( @Arg('token') token: string, @Arg('limit', { defaultValue: 50 }) limit: number ) {
@@ -295,8 +237,8 @@ export class UserResolver {
 
         let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
         .select(`
-            e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.latitude as eLat, e.longitude as eLong,
-            o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
+            e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
+            o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
             u.latitude as uLat, u.longitude as uLong,
             count(etb.id) as ticketSold
         `)
@@ -308,19 +250,24 @@ export class UserResolver {
         .where(`
             etb.userId = uF.followingId
         `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
+        .limit( limit )
         .getRawMany();
 
         return (await Promise.all(
             events.map(async (val) => {
                 let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
 
-                let prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
+                let prices: ( number | null )[] = [];
+
+                try {
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
+                }catch(e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
                 if (prices && prices.length > 0) {
-                    maxPrice = Math.max(...prices as number[]);
-                    minPrice = Math.min(...prices as number[]);
+                    maxPrice = Math.max(...prices as number[]) / 100;
+                    minPrice = Math.min(...prices as number[]) / 100;
                 }
 
                 return {
@@ -328,11 +275,13 @@ export class UserResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${maxPrice}-${minPrice}`,
+                    costRange: `$${maxPrice}-$${minPrice}`,
                     location: {
-                        lat: val.eLat,
-                        long: val.eLong
+                        latitude: val.eLat,
+                        longitude: val.eLong,
+                        location: val.location
                     },
+                    eventDate: new Date( val.eventDate ),
                     miles: Utils.shortenNumericString(miles),
                     timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
                     ticketSold: val.ticketSold || 0,
@@ -344,7 +293,7 @@ export class UserResolver {
                     milesNum: miles
                 };
             })
-        )).filter( val => val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway );
+        )).filter( val => ( val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway )|| val.id !== null );
     }
 
     @Query( () => [ models.EventRecommendationResponse ])
@@ -353,8 +302,8 @@ export class UserResolver {
 
         let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
         .select(`
-            e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.latitude as eLat, e.longitude as eLong,
-            o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
+            e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
+            o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
             u.latitude as uLat, u.longitude as uLong,
             count(etb.id) as ticketSold
         `)
@@ -366,19 +315,24 @@ export class UserResolver {
         .where(`
             o.id = oF.followingId
         `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
+        .limit(limit)
         .getRawMany();
 
         return (await Promise.all(
             events.map(async (val) => {
                 let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
 
-                let prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
+                let prices: ( number | null )[] = [];
+
+                try {
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
+                }catch(e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
                 if (prices && prices.length > 0) {
-                    maxPrice = Math.max(...prices as number[]);
-                    minPrice = Math.min(...prices as number[]);
+                    maxPrice = Math.max(...prices as number[]) / 100;
+                    minPrice = Math.min(...prices as number[]) / 100;
                 }
 
                 return {
@@ -386,11 +340,13 @@ export class UserResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${maxPrice}-${minPrice}`,
+                    costRange: `$${maxPrice}-$${minPrice}`,
                     location: {
-                        lat: val.eLat,
-                        long: val.eLong
+                        latitude: val.eLat,
+                        longitude: val.eLong,
+                        location: val.location
                     },
+                    eventDate: new Date( val.eventDate ),
                     miles: Utils.shortenNumericString(miles),
                     timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
                     ticketSold: val.ticketSold || 0,
@@ -402,7 +358,7 @@ export class UserResolver {
                     milesNum: miles
                 };
             })
-        )).filter( val => val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway );
+        )).filter( val => ( val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway )|| val.id !== null );
     }
 
 }

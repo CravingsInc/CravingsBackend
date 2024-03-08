@@ -22,6 +22,8 @@ export class EventRecommendationResponse {
 
     @Field() costRange: string;
 
+    @Field() eventDate: Date;
+
     @Field( () => Location ) location: Location; 
 
     @Field( () => EventOrganizerResponse ) organizer: EventOrganizerResponse;
@@ -40,6 +42,8 @@ export class ModifyEventInputType {
     @Field({ nullable: true }) location?: string;
 
     @Field({ nullable: true }) banner?: string;
+
+    @Field({ nullable: true }) eventDate?: Date;
 }
 
 @InputType()
@@ -69,13 +73,72 @@ export type EventRecommendationDatabaseResponse = {
     createdAt: string;
     updatedAt: string;
     organizerId: string;
+    eventDate: string;
     eLat: number;
     eLong: number;
+    location: string;
     uLat: number;
     uLong: number;
     orgId: string;
+    orgStripeConnectId: string;
     orgName: string;
     orgProfilePicture: string;
     ticketSold: number;
     milesNum: number;
+}
+
+@ObjectType()
+export class EventsPageOrganizer {
+    @Field( () => ID ) id: string;
+
+    @Field() name: string;
+
+    @Field() profilePicture: string;
+
+    @Field() events: number;
+
+    @Field() followers: number;
+
+}
+
+@ObjectType()
+export class EventsPagePrices {
+    @Field( () => ID ) id: string;
+
+    @Field() title: string;
+
+    @Field() description: string;
+
+    @Field() amount: number;
+}
+
+@ObjectType()
+export class EventsPage {
+    @Field( () => ID ) id: string;
+
+    @Field() name: string;
+
+    @Field() description: string;
+
+    @Field() banner: string;
+
+    @Field() costRange: string;
+
+    @Field() ticketSold: string;
+
+    @Field() eventDate: Date;
+
+    @Field( () => Location ) location: Location;
+
+    @Field( () => EventsPageOrganizer ) organizer: EventsPageOrganizer;
+
+    @Field( () => [EventsPagePrices] ) prices: EventsPagePrices[];
+}
+
+@InputType()
+export class TicketBuyClientSecretUpdate {
+    // Price ID
+    @Field() id: string;
+
+    @Field() quantity: number;
 }

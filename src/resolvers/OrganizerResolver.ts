@@ -48,7 +48,7 @@ export class OrganizerResolver {
     }
 
     @Mutation( returns => String ) 
-    async OrganizerLogIn( @Arg("orgName") orgName: string, @Arg("password") password: string ) {
+    async OrganizerLogIn( @Arg("username") orgName: string, @Arg("password") password: string ) {
         let organizer = await models.Organizers.findOne({ where: { orgName } });
 
         if ( !organizer ) organizer = await models.Organizers.findOne({ where: { email: orgName }}) // Just incase they are using there email
@@ -69,7 +69,7 @@ export class OrganizerResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again")
     }
 
-    @Mutation( returns => String )
+    @Query( returns => models.Organizers )
     async getOrganizerProfile( @Arg("token") token: string ) {
         return await Utils.getOrganizerFromJsWebToken(token);
     }
@@ -98,13 +98,17 @@ export class OrganizerResolver {
                 (
                     await models.Events.find({ where: { organizer: { id: organizer.id } } })
                 ).map( async e => {
-                    let prices = (await stripeHandler.getEventTicketPrices(e.productId))?.data.map(v => v.unit_amount);
+                    let prices: ( number | null )[] = [];
+
+                    try {
+                        prices = (await stripeHandler.getEventTicketPrices(e.productId, organizer!.stripeConnectId ))?.data.map(v => v.unit_amount);
+                    }catch(e) { prices = [0]; }
     
                     let maxPrice, minPrice = 0;
     
                     if (prices && prices.length > 0) {
-                        maxPrice = Math.max(...prices as number[]);
-                        minPrice = Math.min(...prices as number[]);
+                        maxPrice = Math.max(...prices as number[]) / 100;
+                        minPrice = Math.min(...prices as number[]) / 100;
                     }
     
                     return {
@@ -112,10 +116,12 @@ export class OrganizerResolver {
                         name: e.title,
                         description: e.description,
                         banner: e.banner,
-                        costRange: `$${minPrice}-${maxPrice}`,
+                        costRange: `$${minPrice}-$${maxPrice}`,
+                        eventDate: e.eventDate,
                         location: {
-                            lat: e.latitude,
-                            long: e.longitude
+                            latitude: e.latitude,
+                            longitude: e.longitude,
+                            location: e.location
                         }
                     }
                 })
@@ -180,7 +186,7 @@ export class OrganizerResolver {
         await org.save();
     }
 
-    @Mutation( () => String )
+    @Mutation( () =>  models.Events )
     async createEvent( @Arg('token') token: string, @Arg('title') title: string, @Arg('description') description: string ) {
         let org = await Utils.getOrganizerFromJsWebToken(token);
 
@@ -188,6 +194,7 @@ export class OrganizerResolver {
             title,
             description,
             banner: "",
+            organizer: { id: org.id }
         }).save();
 
         let stripeEvent = await stripeHandler.createEvent(org.stripeConnectId, org.id, event.id, title );
@@ -211,11 +218,14 @@ export class OrganizerResolver {
 
         if ( args.description ) event.description = args.description;
 
+        if ( args.eventDate ) event.eventDate = args.eventDate;
+
         if ( args.visible ) event.visible = args.visible;
 
         if ( args.location ) {
             let loc = await Utils.googleMapsService.getLatitudeLongitude(args.location);
 
+            event.location = args.location;
             event.latitude = loc.lat;
             event.longitude = loc.lng;
         }
@@ -238,7 +248,8 @@ export class OrganizerResolver {
         let eventTicket = await models.EventTickets.create({
             title,
             description,
-            event
+            event,
+            amount
         }).save();
 
         try {
@@ -271,7 +282,8 @@ export class OrganizerResolver {
         try {
             let newStripeTicket = await stripeHandler.modifyEventPrice( org.stripeConnectId, org.id, eventId, event.productId, eventTicket.priceId, args.amount, args.currency );
 
-            eventTicket.priceId = newStripeTicket.id,
+            eventTicket.priceId = newStripeTicket.id;
+            eventTicket.amount = args.amount;
             await eventTicket.save();
         }catch( err ) {
             return new Utils.CustomError("Problem Creating event ticket");

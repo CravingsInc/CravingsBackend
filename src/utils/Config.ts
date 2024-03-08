@@ -35,6 +35,7 @@ interface BasicAppConfig {
     PORT: number;
     CLEARDB_DATABASE_NEW_URL: string | undefined;
     NODE_ENV: string | undefined;
+    STRIPE_CONNECT_WEBHOOK_SECRET: string | undefined;
 }
 
 const BasicConfig: BasicAppConfig = {
@@ -50,7 +51,9 @@ const BasicConfig: BasicAppConfig = {
 
     CLEARDB_DATABASE_NEW_URL: process.env.CLEARDB_DATABASE_NEW_URL,
 
-    NODE_ENV: process.env.NODE_ENV
+    NODE_ENV: process.env.NODE_ENV,
+
+    STRIPE_CONNECT_WEBHOOK_SECRET: process.env.STRIPE_CONNECT_WEBHOOK_SECRET
 }
 
 interface AppConfig  {
