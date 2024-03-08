@@ -24,6 +24,10 @@ export class EventTicketBuys extends BaseEntity {
 
     @Field()
     @Column()
+    quantity: number;
+
+    @Field()
+    @Column()
     checkIn: boolean;
 
     @Column({ nullable: false })

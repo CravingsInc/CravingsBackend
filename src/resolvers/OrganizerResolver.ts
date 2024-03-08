@@ -101,14 +101,14 @@ export class OrganizerResolver {
                     let prices: ( number | null )[] = [];
 
                     try {
-                        prices = (await stripeHandler.getEventTicketPrices(e.productId))?.data.map(v => v.unit_amount);
+                        prices = (await stripeHandler.getEventTicketPrices(e.productId, organizer!.stripeConnectId ))?.data.map(v => v.unit_amount);
                     }catch(e) { prices = [0]; }
     
                     let maxPrice, minPrice = 0;
     
                     if (prices && prices.length > 0) {
-                        maxPrice = Math.max(...prices as number[]) * 100;
-                        minPrice = Math.min(...prices as number[]) * 100;
+                        maxPrice = Math.max(...prices as number[]) / 100;
+                        minPrice = Math.min(...prices as number[]) / 100;
                     }
     
                     return {

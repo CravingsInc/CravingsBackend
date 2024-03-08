@@ -238,7 +238,7 @@ export class UserResolver {
         let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
         .select(`
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
-            o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
+            o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
             u.latitude as uLat, u.longitude as uLong,
             count(etb.id) as ticketSold
         `)
@@ -260,14 +260,14 @@ export class UserResolver {
                 let prices: ( number | null )[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
                 }catch(e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
                 if (prices && prices.length > 0) {
-                    maxPrice = Math.max(...prices as number[]);
-                    minPrice = Math.min(...prices as number[]);
+                    maxPrice = Math.max(...prices as number[]) / 100;
+                    minPrice = Math.min(...prices as number[]) / 100;
                 }
 
                 return {
@@ -303,7 +303,7 @@ export class UserResolver {
         let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
         .select(`
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
-            o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
+            o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
             u.latitude as uLat, u.longitude as uLong,
             count(etb.id) as ticketSold
         `)
@@ -325,14 +325,14 @@ export class UserResolver {
                 let prices: ( number | null )[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
                 }catch(e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
                 if (prices && prices.length > 0) {
-                    maxPrice = Math.max(...prices as number[]);
-                    minPrice = Math.min(...prices as number[]);
+                    maxPrice = Math.max(...prices as number[]) / 100;
+                    minPrice = Math.min(...prices as number[]) / 100;
                 }
 
                 return {

@@ -80,6 +80,7 @@ export type EventRecommendationDatabaseResponse = {
     uLat: number;
     uLong: number;
     orgId: string;
+    orgStripeConnectId: string;
     orgName: string;
     orgProfilePicture: string;
     ticketSold: number;

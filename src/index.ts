@@ -14,7 +14,8 @@ const multer = require("multer");
 const bodyParser = require("body-parser");
 
 import { IoServer } from "./io";
-import { Utils, s3 } from "./utils";
+import { Utils, s3, stripeHandler } from "./utils";
+import { PaymentIntent } from "@stripe/stripe-js";
 
 const app = express();
 
@@ -24,12 +25,6 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
-});
-
-app.use((req, res, next) => {
-  if (req.originalUrl === "/stripe_webhook" || req.originalUrl === "/stripe/connect/webhook") next();
-
-  else bodyParser.json()(req, res, next);
 });
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -96,6 +91,47 @@ app.post("user/upload/image", (req: any, res: any) => {
       });
     }
   })
+});
+
+app.post('/stripe_webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripeHandler.constructConnectWebHookEvent( req.body, sig as string );
+  } catch ( err : any ) {
+    console.error('Webhook error:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle specific event types
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      // PaymentIntent succeeded, handle accordingly
+      const paymentIntent = event.data.object as any;
+
+      if ( !paymentIntent.metadata ) return;
+
+      if ( paymentIntent.metadata.type === stripeHandler.PAYMENT_INTENT_TYPE.TICKET ) {
+        if ( paymentIntent.metadata.eventId  && paymentIntent.metadata.priceList ) {
+          const charges = paymentIntent.charges.data[0];
+
+          let response = await stripeHandler.StripeWebHooks.buyTicketSuccedded( paymentIntent.id, paymentIntent.metadata, charges.billing_details.name, charges.billing_details.email );
+
+          return res.status( response.status ).send( response.message );
+        }
+        else return res.status(500).send('Required metadata not given');
+      }
+
+      break;
+    case 'payment_intent.payment_failed':
+      // PaymentIntent failed, handle accordingly
+      console.log( event );
+      break;
+    // Handle other event types as needed
+  }
+
+  res.json({ received: true });
 });
 
 const httpServer = http.createServer(app);

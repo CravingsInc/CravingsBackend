@@ -1,6 +1,4 @@
 import { Resolver, Mutation, Arg, Query } from "type-graphql";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 import * as models from "../models";
 
@@ -25,7 +23,7 @@ export class EventResolver {
             let query = models.Events.createQueryBuilder('e') 
             .select(`
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
-                o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
+                o.id as orgId, o.stripeConnectid as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
                 count(etb.id) as ticketSold,
                 count(oF.id) as orgFollowers
@@ -75,14 +73,14 @@ export class EventResolver {
                 let prices: ( number | null )[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
                 }catch(e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
                 if (prices && prices.length > 0) {
-                    maxPrice = Math.max(...prices as number[]);
-                    minPrice = Math.min(...prices as number[]);
+                    maxPrice = Math.max(...prices as number[]) / 100;
+                    minPrice = Math.min(...prices as number[]) / 100;
                 }
 
                 return {
@@ -131,7 +129,7 @@ export class EventResolver {
             let query = models.Events.createQueryBuilder('e') 
             .select(`
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
-                o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
+                o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
                 count(etb.id) as ticketSold
             `)
@@ -179,14 +177,14 @@ export class EventResolver {
                 let prices: ( number | null )[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
                 }catch(e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
                 if (prices && prices.length > 0) {
-                    maxPrice = Math.max(...prices as number[]);
-                    minPrice = Math.min(...prices as number[]);
+                    maxPrice = Math.max(...prices as number[]) / 100;
+                    minPrice = Math.min(...prices as number[]) / 100;
                 }
 
                 return {
@@ -238,7 +236,7 @@ export class EventResolver {
             let query = models.Events.createQueryBuilder('e') 
             .select(`
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
-                o.id as orgId, o.orgName, o.profilePicture as orgProfilePicture,
+                o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
                 count(etb.id) as ticketSold
             `)
@@ -287,14 +285,14 @@ export class EventResolver {
                 let prices: ( number | null )[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId))?.data.map(v => v.unit_amount);
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
                 }catch(e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
                 if (prices && prices.length > 0) {
-                    maxPrice = Math.max(...prices as number[]);
-                    minPrice = Math.min(...prices as number[]);
+                    maxPrice = Math.max(...prices as number[]) / 100;
+                    minPrice = Math.min(...prices as number[]) / 100;
                 }
 
                 return {
@@ -343,14 +341,14 @@ export class EventResolver {
         let prices: ( number | null )[] = [];
 
         try {
-            prices = (await stripeHandler.getEventTicketPrices(event.productId))?.data.map(v => v.unit_amount);
-        }catch(e) { prices = [0]; }
+            prices = (await stripeHandler.getEventTicketPrices(event.productId, event.organizer.stripeConnectId ))?.data.map(v => v.unit_amount);
+        }catch(e) { prices = [0]; console.log(e); }
 
         let max, min = 0;
 
         if ( prices && prices.length > 0 ) {
-            max = Math.max(...prices as number[] ) * 100;
-            min = Math.min(...prices as number[] ) * 100;
+            max = Math.max(...prices as number[] ) / 100;
+            min = Math.min(...prices as number[] ) / 100;
         }
 
         return {
@@ -409,7 +407,7 @@ export class EventResolver {
 
         if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
 
-        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId ) ).client_secret
+        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId, event.id ) ).client_secret
     }
 
     @Mutation( ( ) => String )
