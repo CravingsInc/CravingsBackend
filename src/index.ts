@@ -15,7 +15,6 @@ const bodyParser = require("body-parser");
 
 import { IoServer } from "./io";
 import { Utils, s3, stripeHandler } from "./utils";
-import { PaymentIntent } from "@stripe/stripe-js";
 
 const app = express();
 
