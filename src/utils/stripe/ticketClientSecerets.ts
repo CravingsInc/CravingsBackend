@@ -15,7 +15,7 @@ export const createPaymentIntent = async ( stripeAccount: string, customer?: str
     },
 
     metadata: {
-      guest: customer ? 1 : 0,
+      guest: customer != undefined || null ? 1 : 0,
       customer: customer || null
     }
   });
