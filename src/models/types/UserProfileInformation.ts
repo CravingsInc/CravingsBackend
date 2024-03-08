@@ -1,7 +1,9 @@
-import { ObjectType, InputType, Field } from "type-graphql";
+import { ObjectType, InputType, Field, ID } from "type-graphql";
 
 @ObjectType()
 export class UserProfileInformation {
+    @Field( () => ID ) id: string;
+    
     @Field() firstName: string;
 
     @Field() lastName: string;
@@ -11,17 +13,19 @@ export class UserProfileInformation {
     @Field() phoneNumber: string;
 
     @Field() username: string;
+
+    @Field() profilePicture: string;
 }
 
 @InputType()
 export class UserProfileInformationInput {
-    @Field() firstName: string;
+    @Field({ nullable: true }) firstName?: string;
 
-    @Field() lastName: string;
+    @Field({ nullable: true }) lastName?: string;
 
-    @Field() email: string;
+    @Field({ nullable: true }) email?: string;
 
-    @Field() phoneNumber: string;
+    @Field({ nullable: true }) phoneNumber?: string;
 
-    @Field() username: string;
+    @Field({ nullable: true }) username?: string;
 }
