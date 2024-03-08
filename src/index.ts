@@ -92,12 +92,12 @@ app.post("user/upload/image", (req: any, res: any) => {
   })
 });
 
-app.post('/stripe_webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
 
   try {
-    event = stripeHandler.constructConnectWebHookEvent( req.body, sig as string );
+    event = stripeHandler.constructWebHookEvent( req.body, sig as string );
   } catch ( err : any ) {
     console.error('Webhook error:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -126,6 +126,32 @@ app.post('/stripe_webhook', express.raw({ type: 'application/json' }), async (re
     case 'payment_intent.payment_failed':
       // PaymentIntent failed, handle accordingly
       console.log( event );
+      break;
+    // Handle other event types as needed
+  }
+
+  res.json({ received: true });
+});
+
+app.post('/stripe/webhook/connect', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripeHandler.constructWebHookConnectEvent( req.body, sig as string );
+  } catch ( err : any ) {
+    console.error('Webhook error:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle specific event types
+  switch (event.type) {
+    case 'account.updated':
+      // PaymentIntent succeeded, handle accordingly
+      const connectedAccount = event.data.object as any;
+
+      console.log( connectedAccount );
+
       break;
     // Handle other event types as needed
   }
