@@ -164,7 +164,7 @@ app.post('/stripe/webhook/connect', express.raw({ type: 'application/json' }), a
     // Handle other event types as needed
   }
 
-  res.json({ received: true, howdy: 'wow' });
+  res.json({ received: true });
 });
 
 const httpServer = http.createServer(app);
