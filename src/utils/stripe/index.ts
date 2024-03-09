@@ -9,3 +9,4 @@ export * from "./modifyEventPrice";
 export * from './ticketClientSecerets';
 export * from './constructConnectWebHookEvent';
 export * as StripeWebHooks from './webhook';
+export * from './connectAccountVerification';

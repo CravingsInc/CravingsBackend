@@ -96,7 +96,6 @@ app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (re
   const sig = req.headers['stripe-signature'];
   let event;
 
-  console.log( sig );
   try {
     event = stripeHandler.constructWebHookEvent( req.body, sig as string );
   } catch ( err : any ) {
@@ -104,15 +103,13 @@ app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (re
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  console.log( event );
-
   // Handle specific event types
   switch (event.type) {
     case 'payment_intent.succeeded':
       // PaymentIntent succeeded, handle accordingly
       const paymentIntent = event.data.object as any;
 
-      if ( !paymentIntent.metadata ) return;
+      if ( !paymentIntent.metadata ) return res.json({ received: true });;
 
       if ( paymentIntent.metadata.type === stripeHandler.PAYMENT_INTENT_TYPE.TICKET ) {
         if ( paymentIntent.metadata.eventId  && paymentIntent.metadata.priceList ) {
@@ -140,16 +137,12 @@ app.post('/stripe/webhook/connect', express.raw({ type: 'application/json' }), a
   const sig = req.headers['stripe-signature'];
   let event;
 
-  console.log( sig );
-
   try {
     event = stripeHandler.constructWebHookConnectEvent( req.body, sig as string );
   } catch ( err : any ) {
     console.error('Webhook error:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-
-  console.log( event );
 
   // Handle specific event types
   switch (event.type) {
@@ -158,6 +151,14 @@ app.post('/stripe/webhook/connect', express.raw({ type: 'application/json' }), a
       const connectedAccount = event.data.object as any;
 
       console.log( connectedAccount );
+
+      if ( !connectedAccount.metadata ) return res.json({ received: true });
+
+      if ( connectedAccount.metadata.type && connectedAccount.metadata.userId ) {
+        let response = await stripeHandler.StripeWebHooks.updateConnectAccount( connectedAccount.id, connectedAccount.metadata.userId, connectedAccount.metadata.type );
+        
+        return res.status( response.status ).send( response.message );
+      }
 
       break;
     // Handle other event types as needed

@@ -1,6 +1,10 @@
 import { stripe } from "./stripe";
 
-export const createConnectAccount = async ( email: string, userId: string ) => {
+export enum ConnectAccountType {
+    ORGANIZER = 'ORGANIZER',
+}
+
+export const createConnectAccount = async ( email: string, userId: string, type: ConnectAccountType = ConnectAccountType.ORGANIZER ) => {
     return await stripe.accounts.create({
         type: "express",
         email,
@@ -11,7 +15,7 @@ export const createConnectAccount = async ( email: string, userId: string ) => {
         metadata: {
             email,
             userId,
-            type: "organizer",
+            type: ConnectAccountType.ORGANIZER,
             dateJoined: ( new Date() ).getTime() 
         }
     })

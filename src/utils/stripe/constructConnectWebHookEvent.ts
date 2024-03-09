@@ -2,7 +2,6 @@ import { stripe } from "./stripe";
 import { Utils } from "../Utils";
 
 export const constructWebHookEvent = ( body: any, signature: string ) => {
-    console.log( Utils.AppConfig.BasicConfig );
     const event = stripe.webhooks.constructEvent(
         body,
         signature,
