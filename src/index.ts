@@ -144,6 +144,8 @@ app.post('/stripe/webhook/connect', express.raw({ type: 'application/json' }), a
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  console.log( event );
+
   // Handle specific event types
   switch (event.type) {
     case 'account.updated':
