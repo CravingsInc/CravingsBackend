@@ -96,12 +96,15 @@ app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (re
   const sig = req.headers['stripe-signature'];
   let event;
 
+  console.log( sig );
   try {
     event = stripeHandler.constructWebHookEvent( req.body, sig as string );
   } catch ( err : any ) {
     console.error('Webhook error:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  console.log( event );
 
   // Handle specific event types
   switch (event.type) {
@@ -137,6 +140,8 @@ app.post('/stripe/webhook/connect', express.raw({ type: 'application/json' }), a
   const sig = req.headers['stripe-signature'];
   let event;
 
+  console.log( sig );
+
   try {
     event = stripeHandler.constructWebHookConnectEvent( req.body, sig as string );
   } catch ( err : any ) {
@@ -158,7 +163,7 @@ app.post('/stripe/webhook/connect', express.raw({ type: 'application/json' }), a
     // Handle other event types as needed
   }
 
-  res.json({ received: true });
+  res.json({ received: true, howdy: 'wow' });
 });
 
 const httpServer = http.createServer(app);
