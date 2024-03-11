@@ -142,3 +142,26 @@ export class TicketBuyClientSecretUpdate {
 
     @Field() quantity: number;
 }
+@ObjectType()
+export class EventTicketBuyer {
+    @Field() name: string;
+
+    @Field() email: string;
+
+    @Field() admitCount: number;
+}
+
+@ObjectType()
+export class EventTiket {
+    @Field( () => ID ) id: string;
+    
+    @Field() name: string;
+    
+    @Field() banner: string;
+    
+    @Field() date: Date;
+    
+    @Field( () => EventTicketBuyer ) buyer: EventTicketBuyer;;
+
+    @Field() paymentIntent: string;
+}

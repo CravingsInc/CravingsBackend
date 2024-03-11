@@ -3,6 +3,8 @@ import { Resolver, Mutation, Arg, Query } from "type-graphql";
 import * as models from "../models";
 
 import { Utils, stripeHandler } from "../utils";
+import Stripe from "stripe";
+import { PAYMENT_INTENT_TYPE } from "../utils/stripe";
 
 @Resolver()
 export class EventResolver {
@@ -375,9 +377,30 @@ export class EventResolver {
         }
     }
 
-    @Query( () => models.EventTicketBuys )
-    async getTicketBuy( @Arg('id') id: string ) {
-        return await models.EventTicketBuys.findOne({ where: { id: id }, relations: ['user'] });
+    @Query( () => models.EventTiket )
+    async getTicketBuy( @Arg('payment_intent') payment_intent: string ) {
+        let paymentIntent = await stripeHandler.getPaymentIntentById(payment_intent, true ) as Stripe.PaymentIntent;
+
+        if ( !paymentIntent.metadata || !paymentIntent.metadata.eventId || paymentIntent.metadata.type != PAYMENT_INTENT_TYPE.TICKET ) return new Utils.CustomError('Problem Retrieving Ticket');
+
+        let event = await models.Events.findOne({ where: { id: paymentIntent.metadata.eventId } });
+
+        if ( !event ) return new Utils.CustomError('Couldn\'t find event find event');
+
+        let tickets = await models.EventTicketBuys.find({ where: { stripeTransactionId: paymentIntent.id } });
+
+        return {
+            id: event.id,
+            name: event.title,
+            banner: event.banner,
+            date: event.eventDate,
+            eventBuyer: {
+                name: tickets[0].name,
+                email: tickets[0].email,
+                admitCount: tickets.reduce( (a, b) => a + b.quantity, 0)
+            },
+            paymentIntent: paymentIntent.id
+        }
     }
 
     @Mutation( () => String ) 
