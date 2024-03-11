@@ -394,7 +394,7 @@ export class EventResolver {
             name: event.title,
             banner: event.banner,
             date: event.eventDate,
-            eventBuyer: {
+            buyer: {
                 name: tickets[0].name,
                 email: tickets[0].email,
                 admitCount: tickets.reduce( (a, b) => a + b.quantity, 0)
