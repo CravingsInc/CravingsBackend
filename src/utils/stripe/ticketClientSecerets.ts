@@ -1,11 +1,18 @@
 import { stripe } from "./stripe";
 import * as models from '../../models';
+import { Utils } from "../Utils";
+import Stripe from "stripe";
 
 export enum PAYMENT_INTENT_TYPE {
   TICKET = "TICKET"
 }
 
 export const createPaymentIntent = async ( stripeAccount: string, eventId: string, customer?: string ) => {
+  const cart = await models.EventTicketCart.create({
+    completed: false,
+    eventId
+  }).save();
+  
   const paymentIntent = await stripe.paymentIntents.create({
     amount: 50,
     currency: 'usd',
@@ -21,9 +28,13 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
     metadata: {
       customer: customer || null,
       type: PAYMENT_INTENT_TYPE.TICKET,
-      eventId
+      eventId,
+      cart: cart.id
     }
   });
+
+  cart.stripeTransactionId = paymentIntent.id;
+  cart.save();
 
   return paymentIntent;
 }

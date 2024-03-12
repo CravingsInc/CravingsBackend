@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, M
 import { ObjectType, Field, ID } from "type-graphql";
 import { EventTickets } from "./eventTickets";
 import { Users } from "../../users";
+import { EventTicketCart } from "./EventTIcketCart";
 
 @Entity()
 @ObjectType()
@@ -30,8 +31,8 @@ export class EventTicketBuys extends BaseEntity {
     @Column()
     checkIn: boolean;
 
-    @Column({ nullable: false })
-    stripeTransactionId: string;
+    @ManyToOne( () => EventTicketCart, eTC => eTC.tickets )
+    cart: EventTicketCart;
 
     @Field( () => Users, { nullable: true })
     @ManyToOne( () => Users, u => u.eventTickets, { onDelete: 'CASCADE', nullable: true })

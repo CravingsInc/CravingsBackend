@@ -20,6 +20,8 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.use(bodyParser.json());
+
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -92,6 +94,40 @@ app.post("user/upload/image", (req: any, res: any) => {
   })
 });
 
+app.post('/api/cart/QrCode', async ( req: any, res: any ) => {
+  const upload = multer().single("image");
+
+  upload( req, res, async function( err: any ) {
+    if ( req.fileValidationError ) return res.send( req.fileValidationError );
+
+    else if (!req.file) return res.json({ error: "Please select an image to upload" });
+
+    else if (err instanceof multer.MulterError) return res.send(err);
+
+    else if (err) return res.send(err);
+
+    try {
+      const cart = await models.EventTicketCart.findOne({ where: { stripeTransactionId: req.body.payment_intent } });
+
+      if ( !cart ) return res.status(500).json({ error: 'Could not find Cart', param: req.body });
+
+      if ( cart.qrCode.length === 0 && !cart.completed ) {
+        let url = await s3.uploadImage(req.file, req.file.mimetype, 'qrCode')
+
+        cart.qrCode = url;
+        await cart.save();
+      }
+
+      return res.status(200).json({ message: 'success' });
+    }catch(e) {
+      console.log(e);
+
+      res.status(500).json({ error: 'Error uploading qrCode' });
+    }
+
+  })
+})
+
 app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
@@ -112,7 +148,7 @@ app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (re
       if ( !paymentIntent.metadata ) return res.json({ received: true });;
 
       if ( paymentIntent.metadata.type === stripeHandler.PAYMENT_INTENT_TYPE.TICKET ) {
-        if ( paymentIntent.metadata.eventId  && paymentIntent.metadata.priceList ) {
+        if ( paymentIntent.metadata.eventId  && paymentIntent.metadata.priceList && paymentIntent.metadata.cart ) {
           const charges = paymentIntent.charges.data[0];
 
           let response = await stripeHandler.StripeWebHooks.buyTicketSuccedded( paymentIntent.id, paymentIntent.metadata, charges.billing_details.name, charges.billing_details.email );
