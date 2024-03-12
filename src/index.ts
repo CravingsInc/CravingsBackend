@@ -20,7 +20,11 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(bodyParser.json());
+app.use((req, res, next) => {
+  if (req.originalUrl === "/stripe/webhook" || req.originalUrl === "/stripe/webhook/connect") next();
+
+  else bodyParser.json()(req, res, next);
+});
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");

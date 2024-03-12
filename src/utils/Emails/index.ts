@@ -1,9 +1,6 @@
-import SMTPTransport from "nodemailer/lib/smtp-transport";
-import nodemailer, { Transporter } from "nodemailer";
-
+import { Resend } from 'resend'
 import { Utils } from "../Utils";
 import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
-import { Resend } from "resend";
 import { TicketBuyProps, ticketBuy } from "./email-templates/ticketBuy";
 
 export enum EmailTemplates {
@@ -38,11 +35,9 @@ export class Mailer {
     
     private static _mailer: Mailer;
 
-    private mailer: Resend
+    private mailer = new Resend( Utils.AppConfig.BasicConfig.RESEND_API_KEY );
 
-    private Constructor() {
-        this.mailer = new Resend( Utils.AppConfig.BasicConfig.RESEND_API_KEY );
-    }
+    private Constructor() {}
 
     static getMailer() {
         if ( Mailer._mailer ) return Mailer._mailer;
