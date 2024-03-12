@@ -3,14 +3,17 @@ import nodemailer, { Transporter } from "nodemailer";
 
 import { Utils } from "../Utils";
 import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
+import { Resend } from "resend";
+import { TicketBuyProps, ticketBuy } from "./email-templates/ticketBuy";
 
 export enum EmailTemplates {
     RESERVATION,
     CONTACT,
-    PASSWORD_CHANGE
+    PASSWORD_CHANGE,
+    TICKET_BUY
 }
 
-type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps;
+type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps;
 
 const formatMail = ( mail: string, opt : { [ key: string ]: string | number } ) => {
     for ( let key in opt ) mail = mail.replaceAll(`{{${key}}}`, opt[key] + "" )
@@ -25,6 +28,8 @@ const getEmailTemplates = ( template: EmailTemplates, opt: EmailTemplatesOpt ) =
             return formatMail( contact, opt );
         case EmailTemplates.PASSWORD_CHANGE:
             return formatMail( passwordChange, opt );
+        case EmailTemplates.TICKET_BUY:
+            return formatMail( ticketBuy, opt );
         default: return "";
     }
 }
@@ -33,13 +38,10 @@ export class Mailer {
     
     private static _mailer: Mailer;
 
-    private mailer: Transporter<SMTPTransport.SentMessageInfo>;;
+    private mailer: Resend
 
     private Constructor() {
-        this.mailer = nodemailer.createTransport({
-            service: "gmail",
-            auth: this.getGmailCredentials()
-        });
+        this.mailer = new Resend( Utils.AppConfig.BasicConfig.RESEND_API_KEY );
     }
 
     static getMailer() {
@@ -51,16 +53,12 @@ export class Mailer {
     }
 
     getGmailCredentials() {
-        return {
-            user: "outreach@cravingsinc.us",
-            pass: Utils.AppConfig.BasicConfig.GmailServicePassword
-        }
+        return Utils.AppConfig.BasicConfig.RESEND_API_KEY;
     }
 
-    async sendEmail( to: string, subject: string, text: string | undefined, html: string | undefined, sender?: string ) {
+    async sendEmail( from: string, to: string, subject: string, html: string ) {
         try {
-            await this.mailer.sendMail({ from: "Cravings Inc", to, subject, text, html, sender });
-            return true;
+            await this.mailer.emails.send({ from, to, subject, html });
         }catch(e) {
             console.log(e);
             return false;
@@ -68,30 +66,38 @@ export class Mailer {
     }
 
     async sendContactEmail( opt: ContactProps ) {
-        return await this.sendEmail( 
+        return await this.sendEmail(
+            'CravingsInc <outreach@cravingsinc.us>',
             `${opt.email}, outreach@cravingsinc.us`,
             `CravingsInc Contact by ${opt.first_name}`,
-            undefined, 
             getEmailTemplates(EmailTemplates.CONTACT, opt)
         )
     }
 
     async sendReservationEmail( opt: ReservationProps) {
-        return await this.sendEmail( 
+        return await this.sendEmail(
+            'CravingsInc <reservation@cravingsinc.us>',
             `${opt.email}, outreach@cravingsinc.us`,
             `CravingsInc Event Reservation by ${opt.first_name}`,
-            undefined, 
             getEmailTemplates(EmailTemplates.RESERVATION, opt)
         )
     }
 
     async sendPasswordChangeEmail( opt: PasswordChangeProps ) {
-        return await this.sendEmail( 
+        return await this.sendEmail(
+            'CravingsInc <dont-reply@cravingsinc.us>',
             `${opt.email}`,
             `${opt.username} you requested a password change on CravingsInc`,
-            undefined, 
-            getEmailTemplates(EmailTemplates.PASSWORD_CHANGE, opt),
-            "dont-reply@cravingsinc.us"
+            getEmailTemplates(EmailTemplates.PASSWORD_CHANGE, opt)
+        )
+    }
+
+    async sendTicketBuyConfirmation( opt: TicketBuyProps ) {
+        return await this.sendEmail(
+            'CravingsInc <dont-reply@cravingsinc.us>',
+            `${opt.email}`,
+            `CravingsInc: ${opt.eventName} Ticket Confirmation`,
+            getEmailTemplates(EmailTemplates.TICKET_BUY, opt )
         )
     }
 }

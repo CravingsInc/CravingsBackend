@@ -387,7 +387,7 @@ export class EventResolver {
 
         if ( !event ) return new Utils.CustomError('Couldn\'t find event find event');
 
-        let tickets = await models.EventTicketBuys.find({ where: { stripeTransactionId: paymentIntent.id } });
+        let tickets = await models.EventTicketBuys.find({ where: { cart: { stripeTransactionId: paymentIntent.id } } });
 
         return {
             id: event.id,
