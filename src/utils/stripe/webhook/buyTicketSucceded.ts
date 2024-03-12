@@ -2,6 +2,8 @@ import * as models from '../../../models';
 
 import { PAYMENT_INTENT_TYPE } from '../ticketClientSecerets';
 
+import { Utils } from '../../Utils';
+
 type Price = { amount: number, quantity: number, id: string };
 
 export const buyTicketSuccedded = async ( id: string, metadata: { customer: string | null, type: PAYMENT_INTENT_TYPE, eventId: string, priceList: string, cart: string }, name?: string, email?: string ) => {
@@ -50,6 +52,8 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
 
     cart.completed = true;
     await cart.save();
+
+    if ( email ) Utils.Mailer.sendTicketBuyConfirmation({ name: name || 'UNKNOWN USER', eventName: event.title, banner: event.banner, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?payment_intent=${cart.stripeTransactionId}`, qrCode: cart.qrCode, email })
 
     return { status: 200, message: 'Event Tickets Created Successfully' };
 }

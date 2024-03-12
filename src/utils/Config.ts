@@ -37,6 +37,7 @@ interface BasicAppConfig {
     NODE_ENV: string | undefined;
     STRIPE_WEBHOOK_SECRET: string | undefined;
     STRIPE_WEBHOOK_CONNECT_SECRET: string | undefined;
+    RESEND_API_KEY: string;
 }
 
 const BasicConfig: BasicAppConfig = {
@@ -56,7 +57,9 @@ const BasicConfig: BasicAppConfig = {
 
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
 
-    STRIPE_WEBHOOK_CONNECT_SECRET: process.env.STRIPE_WEBHOOK_CONNECT_SECRET
+    STRIPE_WEBHOOK_CONNECT_SECRET: process.env.STRIPE_WEBHOOK_CONNECT_SECRET,
+
+    RESEND_API_KEY: process.env.RESEND_API_KEY || ''
 }
 
 interface AppConfig  {
