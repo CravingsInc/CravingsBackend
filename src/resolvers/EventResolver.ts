@@ -37,7 +37,7 @@ export class EventResolver {
 
             if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
-            query.where(
+            /*query.where(
                 user ? `
                     ( u.searchMilesRadius * u.searchMilesRadius ) - (
                         (
@@ -60,8 +60,8 @@ export class EventResolver {
                             ) >= 0
                         `
                     )
-            )
-            .andWhere("e.visible = true")
+            )*/
+            .where("e.visible = true")
             .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
             .orderBy('orgFollowers', 'DESC')
             .limit(limit);
@@ -142,7 +142,7 @@ export class EventResolver {
 
             if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
-            query.where(
+            /*query.where(
                 user ? `
                     ( u.searchMilesRadius * u.searchMilesRadius ) - (
                         (
@@ -165,8 +165,8 @@ export class EventResolver {
                             ) >= 0
                         `
                     )
-            )
-            .andWhere("e.visible = true").groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
+            )*/
+            .where("e.visible = true").groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
             .orderBy('ticketSold', 'DESC')
             .limit(limit);
 
@@ -249,7 +249,7 @@ export class EventResolver {
 
             if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
-            query.where(
+            /*query.where(
                 user ? `
                     ( u.searchMilesRadius * u.searchMilesRadius ) - (
                         (
@@ -272,8 +272,8 @@ export class EventResolver {
                             ) >= 0
                         `
                     )
-            )
-            .andWhere("e.visible = true")
+            )*/
+            .where("e.visible = true")
             .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
             .orderBy('ticketSold', 'DESC')
             .addOrderBy(`ABS( e.eventDate - CAST( '${currentDate}' as Date ) )`)
