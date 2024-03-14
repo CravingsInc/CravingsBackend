@@ -250,8 +250,10 @@ export class UserResolver {
         .where(`
             etb.userId = uF.followingId
         `).andWhere("e.visible = true")
-        .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
-        .orderBy('ticketSold', 'DESC')
+        .groupBy(`
+        e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate,
+        o.id, o.orgName, o.profilePicture, u.latitude, u.longitude
+        `).orderBy('ticketSold', 'DESC')
         .limit( limit )
         .getRawMany();
 
@@ -317,8 +319,10 @@ export class UserResolver {
         .where(`
             o.id = oF.followingId
         `).andWhere("e.visible = true")
-        .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
-        .orderBy('ticketSold', 'DESC')
+        .groupBy(`
+            e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate,
+            o.id, o.orgName, o.profilePicture, u.latitude, u.longitude
+        `).orderBy('ticketSold', 'DESC')
         .limit(limit)
         .getRawMany();
 

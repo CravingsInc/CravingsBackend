@@ -62,8 +62,10 @@ export class EventResolver {
                     )
             )*/
             .where("e.visible = true")
-            .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
-            .orderBy('orgFollowers', 'DESC')
+            .groupBy(`
+                e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate,
+                o.id, o.orgName, o.profilePicture, u.latitude, u.longitude
+            `).orderBy('orgFollowers', 'DESC')
             .limit(limit);
 
             events = await query.getRawMany()
@@ -166,8 +168,11 @@ export class EventResolver {
                         `
                     )
             )*/
-            .where("e.visible = true").groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
-            .orderBy('ticketSold', 'DESC')
+            .where("e.visible = true")
+            .groupBy(`
+                e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate,
+                o.id, o.orgName, o.profilePicture, u.latitude, u.longitude
+            `).orderBy('ticketSold', 'DESC')
             .limit(limit);
 
             events = await query.getRawMany()
@@ -274,8 +279,10 @@ export class EventResolver {
                     )
             )*/
             .where("e.visible = true")
-            .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
-            .orderBy('ticketSold', 'DESC')
+            .groupBy(`
+                e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate,
+                o.id, o.orgName, o.profilePicture, u.latitude, u.longitude
+            `).orderBy('ticketSold', 'DESC')
             .addOrderBy(`ABS( e.eventDate - CAST( '${currentDate}' as Date ) )`)
             .limit(limit);
 
