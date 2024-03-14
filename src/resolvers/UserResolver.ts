@@ -239,9 +239,9 @@ export class UserResolver {
         .select(`
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
             o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-            u.latitude as uLat, u.longitude as uLong
+            u.latitude as uLat, u.longitude as uLong,
+            COUNT(etb.id) as ticketSold
         `)
-        .addSelect("COUNT(etb.id)", "ticketSold")
         .leftJoin('users', 'u', `u.id = ${user.id}`)
         .leftJoin('user_followers', 'uF', 'uF.userId = u.id')
         .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
@@ -306,9 +306,9 @@ export class UserResolver {
         .select(`
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
             o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-            u.latitude as uLat, u.longitude as uLong
+            u.latitude as uLat, u.longitude as uLong,
+            COUNT(etb.id) as ticketSold
         `)
-        .addSelect("COUNT(etb.id)", "ticketSold")
         .leftJoin('users', 'u', `u.id = ${user.id}`)
         .leftJoin('organizers_followers', 'oF', 'oF.userId = u.id')
         .leftJoin('event_tickets', 'et', 'e.id = et.eventId')

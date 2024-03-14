@@ -62,6 +62,7 @@ export class EventResolver {
                     )
             )
             .andWhere("e.visible = true")
+            .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
             .orderBy('orgFollowers', 'DESC')
             .limit(limit);
 
@@ -132,9 +133,9 @@ export class EventResolver {
             .select(`
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-                ${ user ? "u.latitude as uLat, u.longitude as uLong" : "" }
+                ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+                COUNT(etb.id) as ticketSold
             `)
-            .addSelect("COUNT(etb.id)", "ticketSold")
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
             .leftJoin('organizers', 'o', 'e.organizerId = o.id')
@@ -239,9 +240,9 @@ export class EventResolver {
             .select(`
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-                ${ user ? "u.latitude as uLat, u.longitude as uLong" : "" }
+                ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+                COUNT(etb.id) as ticketSold
             `)
-            .addSelect("COUNT(etb.id)", "ticketSold")
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
             .leftJoin('organizers', 'o', 'e.organizerId = o.id')
