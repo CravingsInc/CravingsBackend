@@ -28,7 +28,7 @@ export class EventResolver {
                 o.id as orgId, o.stripeConnectid as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
                 (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold,
-                ( select count(oF.id) from organizers_followers oF where oF.organizerId = o.id) as orgFollowers
+                ( select count(oFS.id) from organizers_followers oFS where oF.organizerId = o.id) as orgFollowers
             `)
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
