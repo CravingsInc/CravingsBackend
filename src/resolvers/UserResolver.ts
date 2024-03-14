@@ -239,9 +239,9 @@ export class UserResolver {
         .select(`
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
             o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-            u.latitude as uLat, u.longitude as uLong,
-            count(etb.id) as ticketSold
+            u.latitude as uLat, u.longitude as uLong
         `)
+        .addSelect("COUNT(etb.id)", "ticketSold")
         .leftJoin('users', 'u', `u.id = ${user.id}`)
         .leftJoin('user_followers', 'uF', 'uF.userId = u.id')
         .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
@@ -249,7 +249,9 @@ export class UserResolver {
         .leftJoin('organizers', 'o', 'e.organizerId = o.id')
         .where(`
             etb.userId = uF.followingId
-        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
+        `).andWhere("e.visible = true")
+        .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
+        .orderBy('ticketSold', 'DESC')
         .limit( limit )
         .getRawMany();
 
@@ -304,9 +306,9 @@ export class UserResolver {
         .select(`
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
             o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-            u.latitude as uLat, u.longitude as uLong,
-            count(etb.id) as ticketSold
+            u.latitude as uLat, u.longitude as uLong
         `)
+        .addSelect("COUNT(etb.id)", "ticketSold")
         .leftJoin('users', 'u', `u.id = ${user.id}`)
         .leftJoin('organizers_followers', 'oF', 'oF.userId = u.id')
         .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
@@ -314,7 +316,9 @@ export class UserResolver {
         .leftJoin('organizers', 'o', 'e.organizerId = o.id')
         .where(`
             o.id = oF.followingId
-        `).andWhere("e.visible = true").orderBy('ticketSold', 'DESC')
+        `).andWhere("e.visible = true")
+        .groupBy("e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate, o.id, o.orgName, o.profilePicture, u.latitude, u.longitude")
+        .orderBy('ticketSold', 'DESC')
         .limit(limit)
         .getRawMany();
 
