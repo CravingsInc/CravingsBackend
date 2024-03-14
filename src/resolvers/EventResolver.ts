@@ -27,8 +27,8 @@ export class EventResolver {
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectid as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                count(etb.id) as ticketSold,
-                count(oF.id) as orgFollowers
+                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold,
+                ( select count(oF.id) from organizers_followers oF where oF.organizerId = o.id) as orgFollowers
             `)
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
@@ -62,10 +62,7 @@ export class EventResolver {
                     )
             )*/
             .where("e.visible = true")
-            .groupBy(`
-                e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate,
-                o.id, o.orgName, o.profilePicture, u.latitude, u.longitude
-            `).orderBy('orgFollowers', 'DESC')
+            .orderBy('orgFollowers', 'DESC')
             .limit(limit);
 
             events = await query.getRawMany()
@@ -136,7 +133,7 @@ export class EventResolver {
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                COUNT(etb.id) as ticketSold
+                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold
             `)
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
@@ -169,10 +166,7 @@ export class EventResolver {
                     )
             )*/
             .where("e.visible = true")
-            .groupBy(`
-                e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate,
-                o.id, o.orgName, o.profilePicture, u.latitude, u.longitude
-            `).orderBy('ticketSold', 'DESC')
+            .orderBy('ticketSold', 'DESC')
             .limit(limit);
 
             events = await query.getRawMany()
@@ -246,7 +240,7 @@ export class EventResolver {
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                COUNT(etb.id) as ticketSold
+                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold
             `)
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
@@ -279,10 +273,7 @@ export class EventResolver {
                     )
             )*/
             .where("e.visible = true")
-            .groupBy(`
-                e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude, e.longitude, e.eventDate,
-                o.id, o.orgName, o.profilePicture, u.latitude, u.longitude
-            `).orderBy('ticketSold', 'DESC')
+            .orderBy('ticketSold', 'DESC')
             .addOrderBy(`ABS( e.eventDate - CAST( '${currentDate}' as Date ) )`)
             .limit(limit);
 
