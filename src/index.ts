@@ -15,6 +15,7 @@ const bodyParser = require("body-parser");
 
 import { IoServer } from "./io";
 import { Utils, s3, stripeHandler } from "./utils";
+import { stripe } from "./utils/stripe";
 
 const app = express();
 
@@ -153,9 +154,23 @@ app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (re
 
       if ( paymentIntent.metadata.type === stripeHandler.PAYMENT_INTENT_TYPE.TICKET ) {
         if ( paymentIntent.metadata.eventId  && paymentIntent.metadata.priceList && paymentIntent.metadata.cart ) {
+          let name, email = "";
+
+          try {
+            const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+
+            let billingDetails = charge.billing_details;
+
+            name = billingDetails.name || "";
+            email = billingDetails.email || "";
+          }catch(e) {
+            console.log(e);
+            return res.status(500).send('Problem getting charge information');
+          }
+
           const charges = paymentIntent.charges.data[0];
 
-          let response = await stripeHandler.StripeWebHooks.buyTicketSuccedded( paymentIntent.id, paymentIntent.metadata, charges.billing_details.name, charges.billing_details.email );
+          let response = await stripeHandler.StripeWebHooks.buyTicketSuccedded( paymentIntent.id, paymentIntent.metadata, name, email );
 
           return res.status( response.status ).send( response.message );
         }
