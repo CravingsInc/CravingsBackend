@@ -43,11 +43,11 @@ export class Organizers extends BaseEntity {
     stripeAccountVerified: boolean;
 
     @Field()
-    @Column({ default: 0, nullable: true })
+    @Column({ default: 0, nullable: true, type: 'float' })
     latitude: number;
 
     @Field()
-    @Column({ default: 0, nullable: true })
+    @Column({ default: 0, nullable: true, type: 'float' })
     longitude: number;
 
     @Field()
