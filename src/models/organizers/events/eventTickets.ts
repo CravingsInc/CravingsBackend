@@ -15,7 +15,7 @@ export class EventTickets extends BaseEntity {
     title: string;
 
     @Field()
-    @Column({ default: "", type: "longtext" })
+    @Column({ type: "longtext" })
     description: string;
 
     @Field()
