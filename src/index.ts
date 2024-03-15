@@ -168,8 +168,6 @@ app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (re
             return res.status(500).send('Problem getting charge information');
           }
 
-          const charges = paymentIntent.charges.data[0];
-
           let response = await stripeHandler.StripeWebHooks.buyTicketSuccedded( paymentIntent.id, paymentIntent.metadata, name, email );
 
           return res.status( response.status ).send( response.message );
