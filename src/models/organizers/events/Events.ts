@@ -17,7 +17,7 @@ export class Events extends BaseEntity {
     title: string;
 
     @Field()
-    @Column()
+    @Column({ type: "text" })
     description: string;
 
     @Field()
