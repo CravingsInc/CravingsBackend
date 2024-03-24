@@ -17,7 +17,7 @@ export class Events extends BaseEntity {
     title: string;
 
     @Field()
-    @Column()
+    @Column({ type: "longtext" })
     description: string;
 
     @Field()
@@ -33,11 +33,11 @@ export class Events extends BaseEntity {
     productId: string;
 
     @Field()
-    @Column({ default: 0, nullable: true })
+    @Column({ default: 0, nullable: true, type: 'float' })
     latitude: number;
 
     @Field()
-    @Column({ default: 0, nullable: true })
+    @Column({ default: 0, nullable: true, type: 'float' })
     longitude: number;
 
     @Field()

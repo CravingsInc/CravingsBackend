@@ -15,7 +15,7 @@ export class EventTickets extends BaseEntity {
     title: string;
 
     @Field()
-    @Column({ default: "" })
+    @Column({ type: "longtext" })
     description: string;
 
     @Field()
@@ -23,7 +23,7 @@ export class EventTickets extends BaseEntity {
     priceId: string;
 
     @Field()
-    @Column()
+    @Column({ type: 'float' })
     amount: number;
 
     @Field( () => [EventTicketBuys] )

@@ -42,15 +42,15 @@ export class Users extends BaseEntity {
     stripeCustomerId: string;
 
     @Field()
-    @Column({ default: 0, nullable: true })
+    @Column({ default: 0, nullable: true, type: 'float' })
     latitude: number;
 
     @Field()
-    @Column({ default: 0, nullable: true })
+    @Column({ default: 0, nullable: true, type: 'float' })
     longitude: number;
 
     @Field()
-    @Column({ default: 12, nullable: true })
+    @Column({ default: 12, nullable: true, type: 'float' })
     searchMilesRadius: number;
 
     @OneToMany( () => UserPasswordChange, pwc => pwc.user )

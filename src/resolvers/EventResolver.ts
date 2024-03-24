@@ -27,8 +27,8 @@ export class EventResolver {
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectid as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                count(etb.id) as ticketSold,
-                count(oF.id) as orgFollowers
+                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold,
+                ( select count(oFS.id) from organizers_followers oFS where oF.organizerId = o.id) as orgFollowers
             `)
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
@@ -37,7 +37,7 @@ export class EventResolver {
 
             if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
-            query.where(
+            /*query.where(
                 user ? `
                     ( u.searchMilesRadius * u.searchMilesRadius ) - (
                         (
@@ -60,8 +60,8 @@ export class EventResolver {
                             ) >= 0
                         `
                     )
-            )
-            .andWhere("e.visible = true")
+            )*/
+            .where("e.visible = true")
             .orderBy('orgFollowers', 'DESC')
             .limit(limit);
 
@@ -133,7 +133,7 @@ export class EventResolver {
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                count(etb.id) as ticketSold
+                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold
             `)
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
@@ -141,7 +141,7 @@ export class EventResolver {
 
             if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
-            query.where(
+            /*query.where(
                 user ? `
                     ( u.searchMilesRadius * u.searchMilesRadius ) - (
                         (
@@ -164,8 +164,8 @@ export class EventResolver {
                             ) >= 0
                         `
                     )
-            )
-            .andWhere("e.visible = true")
+            )*/
+            .where("e.visible = true")
             .orderBy('ticketSold', 'DESC')
             .limit(limit);
 
@@ -240,7 +240,7 @@ export class EventResolver {
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                count(etb.id) as ticketSold
+                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold
             `)
             .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
             .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
@@ -248,7 +248,7 @@ export class EventResolver {
 
             if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
-            query.where(
+            /*query.where(
                 user ? `
                     ( u.searchMilesRadius * u.searchMilesRadius ) - (
                         (
@@ -271,8 +271,8 @@ export class EventResolver {
                             ) >= 0
                         `
                     )
-            )
-            .andWhere("e.visible = true")
+            )*/
+            .where("e.visible = true")
             .orderBy('ticketSold', 'DESC')
             .addOrderBy(`ABS( e.eventDate - CAST( '${currentDate}' as Date ) )`)
             .limit(limit);
