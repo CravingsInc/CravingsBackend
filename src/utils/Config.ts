@@ -65,10 +65,13 @@ const BasicConfig: BasicAppConfig = {
 interface AppConfig  {
     BasicConfig: BasicAppConfig;
     SpaceKeysConfig: SpaceKeys;
+    TEST_SERVER: Boolean;
 }
 
 export const AppConfig: AppConfig = {
     SpaceKeysConfig,
 
-    BasicConfig
+    BasicConfig,
+    
+    TEST_SERVER: process.env.CLEARDB_DATABASE_NEW_URL ? true : false
 }

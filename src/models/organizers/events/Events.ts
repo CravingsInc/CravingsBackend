@@ -3,6 +3,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { Organizers } from "../Organizers";
 import { EventTickets } from "./eventTickets";
 import { EventsPageVisit } from "../analystics";
+import { Utils } from "../../../utils";
 
 
 @Entity()
@@ -17,7 +18,7 @@ export class Events extends BaseEntity {
     title: string;
 
     @Field()
-    @Column({ type: "longtext" })
+    @Column({ type: Utils.AppConfig.TEST_SERVER ? "longtext" : undefined })
     description: string;
 
     @Field()

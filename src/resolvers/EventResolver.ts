@@ -22,22 +22,25 @@ export class EventResolver {
         let events: ( { orgFollowers: number } & models.EventRecommendationDatabaseResponse )[] = [];
 
         try {
-            let query = models.Events.createQueryBuilder('e') 
-            .select(`
+            events = await models.Events.query(`
+                select
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
-                o.id as orgId, o.stripeConnectid as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
+                o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold,
-                ( select count(oFS.id) from organizers_followers oFS where oF.organizerId = o.id) as orgFollowers
-            `)
-            .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
-            .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
-            .leftJoin('organizers', 'o', 'e.organizerId = o.id')
-            .leftJoin('organizers_followers', 'oF', 'o.id = oF.organizerId')
+                COUNT(etb.id) AS ticketSold
+                from events e
+                left join event_tickets et on e.id = et.eventId
+                left join event_ticket_buys etb on et.id = etb.eventTicketId
+                left join organizers o on e.organizerId = o.id
+                where e.visible = TRUE
+                group by e.id 
+                order by ticketSold DESC, ABS( e.eventDate - CAST( CURRENT_TIMESTAMP() as Date ) )
+                limit ${limit}
+            `);
 
-            if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
+            /* if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
-            /*query.where(
+            query.where(
                 user ? `
                     ( u.searchMilesRadius * u.searchMilesRadius ) - (
                         (
@@ -61,11 +64,6 @@ export class EventResolver {
                         `
                     )
             )*/
-            .where("e.visible = true")
-            .orderBy('orgFollowers', 'DESC')
-            .limit(limit);
-
-            events = await query.getRawMany()
         }catch ( e ) { console.log(e); }
 
         return (await Promise.all(
@@ -128,20 +126,25 @@ export class EventResolver {
         let events: models.EventRecommendationDatabaseResponse[] = [];
 
         try {
-            let query = models.Events.createQueryBuilder('e') 
-            .select(`
+            events = await models.Events.query(`
+                select
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold
-            `)
-            .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
-            .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
-            .leftJoin('organizers', 'o', 'e.organizerId = o.id')
+                COUNT(etb.id) AS ticketSold
+                from events e
+                left join event_tickets et on e.id = et.eventId
+                left join event_ticket_buys etb on et.id = etb.eventTicketId
+                left join organizers o on e.organizerId = o.id
+                where e.visible = TRUE
+                group by e.id 
+                order by ticketSold DESC, ABS( e.eventDate - CAST( CURRENT_TIMESTAMP() as Date ) )
+                limit ${limit}
+            `);
 
-            if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
+            /*if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
-            /*query.where(
+            query.where(
                 user ? `
                     ( u.searchMilesRadius * u.searchMilesRadius ) - (
                         (
@@ -165,11 +168,6 @@ export class EventResolver {
                         `
                     )
             )*/
-            .where("e.visible = true")
-            .orderBy('ticketSold', 'DESC')
-            .limit(limit);
-
-            events = await query.getRawMany()
         }catch ( e ) { console.log(e); }
 
         return (await Promise.all(
@@ -229,24 +227,26 @@ export class EventResolver {
             }catch( e ) { console.log( e) }
         }
 
-        const currentDateQuery = await models.Events.query(`select CURRENT_DATE`);
-        const currentDate = currentDateQuery[0].CURRENT_DATE;
-
         let events: models.EventRecommendationDatabaseResponse[] = [];
 
         try {
-            let query = models.Events.createQueryBuilder('e') 
-            .select(`
+            events = await models.Events.query(`
+                select
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
                 ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
-                (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold
-            `)
-            .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
-            .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
-            .leftJoin('organizers', 'o', 'e.organizerId = o.id')
+                COUNT(etb.id) AS ticketSold
+                from events e
+                left join event_tickets et on e.id = et.eventId
+                left join event_ticket_buys etb on et.id = etb.eventTicketId
+                left join organizers o on e.organizerId = o.id
+                where e.visible = TRUE
+                group by e.id 
+                order by ticketSold DESC, ABS( e.eventDate - CAST( CURRENT_TIMESTAMP() as Date ) )
+                limit ${limit}
+            `);
 
-            if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
+            /* if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
         
             /*query.where(
                 user ? `
@@ -272,12 +272,6 @@ export class EventResolver {
                         `
                     )
             )*/
-            .where("e.visible = true")
-            .orderBy('ticketSold', 'DESC')
-            .addOrderBy(`ABS( e.eventDate - CAST( '${currentDate}' as Date ) )`)
-            .limit(limit);
-
-            events = await query.getRawMany()
         }catch ( e ) { console.log(e); }
 
         return (await Promise.all(
