@@ -32,9 +32,10 @@ export class EventResolver {
                 left join event_tickets et on e.id = et.eventId
                 left join event_ticket_buys etb on et.id = etb.eventTicketId
                 left join organizers o on e.organizerId = o.id
+                ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CAST( CURRENT_TIMESTAMP() as Date ) )
+                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
                 limit ${limit}
             `);
 
@@ -136,9 +137,10 @@ export class EventResolver {
                 left join event_tickets et on e.id = et.eventId
                 left join event_ticket_buys etb on et.id = etb.eventTicketId
                 left join organizers o on e.organizerId = o.id
+                ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CAST( CURRENT_TIMESTAMP() as Date ) )
+                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
                 limit ${limit}
             `);
 
@@ -240,9 +242,10 @@ export class EventResolver {
                 left join event_tickets et on e.id = et.eventId
                 left join event_ticket_buys etb on et.id = etb.eventTicketId
                 left join organizers o on e.organizerId = o.id
+                ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CAST( CURRENT_TIMESTAMP() as Date ) )
+                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
                 limit ${limit}
             `);
 
