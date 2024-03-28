@@ -235,24 +235,23 @@ export class UserResolver {
     async getFriendsFollowingEvents( @Arg('token') token: string, @Arg('limit', { defaultValue: 50 }) limit: number ) {
         let user = await Utils.getUserFromJsWebToken( token );
 
-        let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
-        .select(`
+        let events: models.EventRecommendationDatabaseResponse[] = await models.Events.query(`
+            select
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
             o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-            u.latitude as uLat, u.longitude as uLong,
-            (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold
-        `)
-        .leftJoin('users', 'u', `u.id = ${user.id}`)
-        .leftJoin('user_followers', 'uF', 'uF.userId = u.id')
-        .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
-        .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
-        .leftJoin('organizers', 'o', 'e.organizerId = o.id')
-        .where(`
-            etb.userId = uF.followingId
-        `).andWhere("e.visible = true")
-        .orderBy('ticketSold', 'DESC')
-        .limit( limit )
-        .getRawMany();
+            ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+            COUNT(etb.id) AS ticketSold
+            from events e
+            left join event_tickets et on e.id = et.eventId
+            left join event_ticket_buys etb on et.id = etb.eventTicketId
+            left join organizers o on e.organizerId = o.id
+            left join users u on u.id = ${user.id}
+            left join organizers_followers oF on oF.userId = u.id
+            where e.visible = TRUE and o.id = oF.followingId
+            group by e.id 
+            order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+            limit ${limit}
+        `);
 
         return (await Promise.all(
             events.map(async (val) => {
@@ -301,24 +300,23 @@ export class UserResolver {
     async getOrgFollowingEvents( @Arg('token') token: string, @Arg('limit', { defaultValue: 50 }) limit: number ) {
         let user = await Utils.getUserFromJsWebToken( token );
 
-        let events: models.EventRecommendationDatabaseResponse[] = await models.Events.createQueryBuilder('e') 
-        .select(`
+        let events: models.EventRecommendationDatabaseResponse[] = await models.Events.query(`
+            select
             e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
             o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-            u.latitude as uLat, u.longitude as uLong,
-            (SELECT COUNT(etb.id) FROM event_ticket_buys etb WHERE etb.eventTicketId = et.id) as ticketSold
-        `)
-        .leftJoin('users', 'u', `u.id = ${user.id}`)
-        .leftJoin('organizers_followers', 'oF', 'oF.userId = u.id')
-        .leftJoin('event_tickets', 'et', 'e.id = et.eventId')
-        .leftJoin('event_ticket_buys', 'etb', 'et.id = etb.eventTicketId')
-        .leftJoin('organizers', 'o', 'e.organizerId = o.id')
-        .where(`
-            o.id = oF.followingId
-        `).andWhere("e.visible = true")
-        .orderBy('ticketSold', 'DESC')
-        .limit(limit)
-        .getRawMany();
+            ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+            COUNT(etb.id) AS ticketSold
+            from events e
+            left join event_tickets et on e.id = et.eventId
+            left join event_ticket_buys etb on et.id = etb.eventTicketId
+            left join organizers o on e.organizerId = o.id
+            left join users u on u.id = ${user.id}
+            left join organizers_followers oF on oF.userId = u.id
+            where e.visible = TRUE and o.id = oF.followingId
+            group by e.id 
+            order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+            limit ${limit}
+        `);
 
         return (await Promise.all(
             events.map(async (val) => {

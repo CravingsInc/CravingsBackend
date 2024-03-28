@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, Ba
 import { ObjectType, Field, ID } from "type-graphql";
 import { Events } from "./Events";
 import { EventTicketBuys } from "./EventTicketBuys";
+import { Utils } from "../../../utils";
 
 @Entity()
 @ObjectType()
@@ -15,7 +16,7 @@ export class EventTickets extends BaseEntity {
     title: string;
 
     @Field()
-    @Column({ type: "longtext" })
+    @Column({ type: Utils.AppConfig.TEST_SERVER ? "longtext" : undefined })
     description: string;
 
     @Field()
