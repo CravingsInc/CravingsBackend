@@ -26,7 +26,7 @@ const getEmailTemplates = ( template: EmailTemplates, opt: EmailTemplatesOpt ) =
         case EmailTemplates.PASSWORD_CHANGE:
             return formatMail( passwordChange, opt );
         case EmailTemplates.TICKET_BUY:
-            return formatMail( ticketBuy, opt );
+            return ticketBuy( opt as TicketBuyProps );
         default: return "";
     }
 }
