@@ -53,7 +53,7 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
     cart.completed = true;
     await cart.save();
 
-    if ( email ) Utils.Mailer.sendTicketBuyConfirmation({ name: name || 'UNKNOWN USER', eventName: event.title, banner: event.banner, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?payment_intent=${cart.stripeTransactionId}`, qrCode: cart.qrCode, email })
+    if ( email ) Utils.Mailer.sendTicketBuyConfirmation({ name: name || 'UNKNOWN USER', eventName: event.title, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?payment_intent=${cart.stripeTransactionId}`, qrCode: cart.qrCode, email })
 
     return { status: 200, message: 'Event Tickets Created Successfully' };
 }
