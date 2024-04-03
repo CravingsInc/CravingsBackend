@@ -31,7 +31,7 @@ export class Users extends BaseEntity {
     lastName: string;
 
     @Field()
-    @Column({ default: "", nullable: true })
+    @Column({ default: "/home-header.png", nullable: true })
     profilePicture: string;
 
     @Field()
