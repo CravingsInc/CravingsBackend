@@ -77,7 +77,7 @@ export class UserResolver {
 
     @Query( () => models.UserProfileInformation ) 
     async getUserProfileInformation( @Arg('token') token: string ) {
-        let user = await Utils.getUserFromJsWebToken(token);
+        let user = await Utils.getUserFromJsWebToken(token, [ 'eventTickets.cart']);
 
         return {
             id: user.id,
@@ -86,7 +86,18 @@ export class UserResolver {
             username: user.username,
             phoneNumber: user.phoneNumber,
             email: user.email,
-            profilePicture: user.profilePicture
+            profilePicture: user.profilePicture,
+            followers: await models.UserFollowers.count({ where: { following: { id: user.id } } }),
+            following: await models.UserFollowers.count({ where: { user: { id: user.id } } }),
+            events: (
+                await Promise.all(
+                    [ ... new Set(
+                        (
+                            await models.EventTicketBuys.find({ where: { user: { id: user.id } }, relations: [ 'cart' ] })
+                        ).map( et => et.cart.eventId )
+                    )]
+                )
+            ).length
         }
     }
 

@@ -15,6 +15,12 @@ export class UserProfileInformation {
     @Field() username: string;
 
     @Field() profilePicture: string;
+
+    @Field() followers: number;
+
+    @Field() following: number;
+
+    @Field() events: number;
 }
 
 @InputType()
