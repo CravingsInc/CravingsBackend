@@ -372,4 +372,74 @@ export class UserResolver {
         )).filter( val => ( val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway )|| val.id !== null );
     }
 
+    @Query( () => [ models.UserOrgFollowing ])
+    async usersOrgFollowing( @Arg('token') token: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let orgFollowed = await models.OrganizersFollowers.find({ where: { user: { id: user.id } }, relations: [ 'organizer' ] });
+
+        return orgFollowed.map( oF => ({
+            id: oF.id,
+            orgId: oF.organizer.id,
+            orgPic: oF.organizer.profilePicture,
+            orgName: oF.organizer.orgName
+        }))
+    }
+
+    @Query( () => [ models.UserUsersFollowing ])
+    async usersFollowing( @Arg('token') token : string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let userFollowed = await models.UserFollowers.find({ where: { user: { id: user.id } }, relations: ['following'] });
+
+        return userFollowed.map( uF => ({
+            id: uF.id,
+            userId: uF.following.id,
+            userPic: uF.following.profilePicture,
+            userName: uF.following.username
+        }))
+    }
+
+    @Mutation( () => models.UserDeleteOrgFollowing )
+    async userDeleteOrgFollowing( @Arg('token') token: string, @Arg('orgId') orgId: string  ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let orgToDelete = await models.OrganizersFollowers.findOne({ where: { id: orgId }});
+
+        if ( !orgToDelete ) return new Utils.CustomError(`Organizer following id does not exist`);
+
+        orgToDelete = await orgToDelete.remove();
+
+        return {
+            deletedOrgFollowing: orgToDelete,
+            orgFollowing: ( await models.OrganizersFollowers.find({ where: { user: { id: user.id } }, relations: [ 'organizer' ] }) ).map( oF => ({
+                id: oF.id,
+                orgId: oF.organizer.id,
+                orgPic: oF.organizer.profilePicture,
+                orgName: oF.organizer.orgName
+            }))
+        }
+    }
+
+    @Mutation( () => models.UserDeleteUsersFollowing )
+    async userDeleteUserFollowing( @Arg('token') token: string, @Arg('userId') userId: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let userToDelete = await models.UserFollowers.findOne({ where: { id: userId } });
+
+        if ( !userToDelete ) return new Utils.CustomError(`User following id does not exist`);
+
+        userToDelete = await userToDelete.remove();
+
+        return {
+            deletedUserFollowing: userToDelete,
+            userFollowing: ( await models.UserFollowers.find({ where: { user: { id: user.id } }, relations: ['following'] }) ).map( uF => ({
+                id: uF.id,
+                userId: uF.following.id,
+                userPic: uF.following.profilePicture,
+                userName: uF.following.username
+            }))
+        }
+    }
+
 }

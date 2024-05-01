@@ -35,3 +35,52 @@ export class UserProfileInformationInput {
 
     @Field({ nullable: true }) username?: string;
 }
+
+@ObjectType()
+export class UserOrgFollowing {
+    @Field()
+    id: string;
+
+    @Field()
+    orgId: string;
+
+    @Field()
+    orgPic: string;
+
+    @Field()
+    orgName: string;
+}
+
+@ObjectType()
+export class UserUsersFollowing {
+    @Field()
+    id: string;
+
+    @Field()
+    userId: string;
+
+    @Field()
+    userPic: string;
+
+    @Field()
+    userName: string;
+}
+
+@ObjectType()
+export class UserDeleteOrgFollowing {
+    @Field( () => UserOrgFollowing )
+    deletedOrgFollowing: UserOrgFollowing;
+
+    @Field( () => [ UserOrgFollowing ] )
+    orgFollowing: UserOrgFollowing[];
+}
+
+@ObjectType()
+export class UserDeleteUsersFollowing {
+    @Field( () => UserUsersFollowing )
+    deletedUserFollowing: UserUsersFollowing;
+
+    @Field( () => [ UserUsersFollowing ] )
+    userFollowing: UserUsersFollowing[];
+}
+
