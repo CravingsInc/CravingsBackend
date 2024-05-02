@@ -34,7 +34,7 @@ export class UserResolver {
             }catch(e) {
                 console.log(e)
                 await user.remove(); // If there was a error then the user will be removed since they will most likely wanna recreate account and try again
-                throw new Utils.CustomError("Problem Creating Customer Account") 
+                throw new Utils.CustomError("Probjectlem Creating Customer Account") 
             };
 
             return jwt.sign(
@@ -141,7 +141,7 @@ export class UserResolver {
 
         if ( !sentSuccessfully ) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
 
-        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
+        return sentSuccessfully ? "Password change email sent successfully" : "Probjectlem sending password change email";
     }
 
     @Query( () => String )
@@ -372,7 +372,7 @@ export class UserResolver {
         )).filter( val => ( val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway )|| val.id !== null );
     }
 
-    @Query( () => [ models.UserOrgFollowing ])
+    @Query( () => [ models.UsersFollowing ])
     async usersOrgFollowing( @Arg('token') token: string ) {
         let user = await Utils.getUserFromJsWebToken(token);
 
@@ -380,13 +380,14 @@ export class UserResolver {
 
         return orgFollowed.map( oF => ({
             id: oF.id,
-            orgId: oF.organizer.id,
-            orgPic: oF.organizer.profilePicture,
-            orgName: oF.organizer.orgName
+            objectId: oF.organizer.id,
+            objectPic: oF.organizer.profilePicture,
+            objectName: oF.organizer.orgName,
+            type: 'org'
         }))
     }
 
-    @Query( () => [ models.UserUsersFollowing ])
+    @Query( () => [ models.UsersFollowing ])
     async usersFollowing( @Arg('token') token : string ) {
         let user = await Utils.getUserFromJsWebToken(token);
 
@@ -394,9 +395,10 @@ export class UserResolver {
 
         return userFollowed.map( uF => ({
             id: uF.id,
-            userId: uF.following.id,
-            userPic: uF.following.profilePicture,
-            userName: uF.following.username
+            objectId: uF.following.id,
+            objectPic: uF.following.profilePicture,
+            objectName: uF.following.username,
+            type: 'user'
         }))
     }
 
@@ -411,12 +413,19 @@ export class UserResolver {
         orgToDelete = await orgToDelete.remove();
 
         return {
-            deletedOrgFollowing: orgToDelete,
+            deletedOrgFollowing: {
+                id: orgToDelete.id,
+                objectId: orgToDelete.organizer.id,
+                objectPic: orgToDelete.organizer.profilePicture,
+                objectName: orgToDelete.organizer.orgName,
+                type: 'org'
+            },
             orgFollowing: ( await models.OrganizersFollowers.find({ where: { user: { id: user.id } }, relations: [ 'organizer' ] }) ).map( oF => ({
                 id: oF.id,
-                orgId: oF.organizer.id,
-                orgPic: oF.organizer.profilePicture,
-                orgName: oF.organizer.orgName
+                objectId: oF.organizer.id,
+                objectPic: oF.organizer.profilePicture,
+                objectName: oF.organizer.orgName,
+                type: 'org'
             }))
         }
     }
@@ -432,12 +441,19 @@ export class UserResolver {
         userToDelete = await userToDelete.remove();
 
         return {
-            deletedUserFollowing: userToDelete,
+            deletedUserFollowing: {
+                id: userToDelete.id,
+                objectId: userToDelete.following.id,
+                objectPic: userToDelete.following.profilePicture,
+                objectName: userToDelete.following.username,
+                type: 'user'
+            },
             userFollowing: ( await models.UserFollowers.find({ where: { user: { id: user.id } }, relations: ['following'] }) ).map( uF => ({
                 id: uF.id,
-                userId: uF.following.id,
-                userPic: uF.following.profilePicture,
-                userName: uF.following.username
+                objectId: uF.following.id,
+                objectPic: uF.following.profilePicture,
+                objectName: uF.following.username,
+                type: 'user'
             }))
         }
     }

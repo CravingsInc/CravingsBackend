@@ -35,52 +35,39 @@ export class UserProfileInformationInput {
 
     @Field({ nullable: true }) username?: string;
 }
-
 @ObjectType()
-export class UserOrgFollowing {
+export class UsersFollowing {
     @Field()
     id: string;
 
     @Field()
-    orgId: string;
+    objectId: string;
 
     @Field()
-    orgPic: string;
+    objectPic: string;
 
     @Field()
-    orgName: string;
-}
-
-@ObjectType()
-export class UserUsersFollowing {
-    @Field()
-    id: string;
+    objectName: string;
 
     @Field()
-    userId: string;
-
-    @Field()
-    userPic: string;
-
-    @Field()
-    userName: string;
+    type: 'user' | 'org';
 }
 
 @ObjectType()
 export class UserDeleteOrgFollowing {
-    @Field( () => UserOrgFollowing )
-    deletedOrgFollowing: UserOrgFollowing;
+    @Field( () => UsersFollowing )
+    deletedOrgFollowing: UsersFollowing;
 
-    @Field( () => [ UserOrgFollowing ] )
-    orgFollowing: UserOrgFollowing[];
+    @Field( () => [ UsersFollowing ] )
+    orgFollowing: UsersFollowing[];
 }
 
 @ObjectType()
 export class UserDeleteUsersFollowing {
-    @Field( () => UserUsersFollowing )
-    deletedUserFollowing: UserUsersFollowing;
+    @Field( () => UsersFollowing )
+    deletedUserFollowing: UsersFollowing;
 
-    @Field( () => [ UserUsersFollowing ] )
-    userFollowing: UserUsersFollowing[];
+    @Field( () => [ UsersFollowing ] )
+    userFollowing: UsersFollowing[];
 }
 
