@@ -34,7 +34,7 @@ export class UserResolver {
             }catch(e) {
                 console.log(e)
                 await user.remove(); // If there was a error then the user will be removed since they will most likely wanna recreate account and try again
-                throw new Utils.CustomError("Problem Creating Customer Account") 
+                throw new Utils.CustomError("Probjectlem Creating Customer Account") 
             };
 
             return jwt.sign(
@@ -77,7 +77,7 @@ export class UserResolver {
 
     @Query( () => models.UserProfileInformation ) 
     async getUserProfileInformation( @Arg('token') token: string ) {
-        let user = await Utils.getUserFromJsWebToken(token);
+        let user = await Utils.getUserFromJsWebToken(token, [ 'eventTickets.cart']);
 
         return {
             id: user.id,
@@ -86,7 +86,18 @@ export class UserResolver {
             username: user.username,
             phoneNumber: user.phoneNumber,
             email: user.email,
-            profilePicture: user.profilePicture
+            profilePicture: user.profilePicture,
+            followers: await models.UserFollowers.count({ where: { following: { id: user.id } } }),
+            following: await models.UserFollowers.count({ where: { user: { id: user.id } } }),
+            events: (
+                await Promise.all(
+                    [ ... new Set(
+                        (
+                            await models.EventTicketBuys.find({ where: { user: { id: user.id } }, relations: [ 'cart' ] })
+                        ).map( et => et.cart.eventId )
+                    )]
+                )
+            ).length
         }
     }
 
@@ -130,7 +141,7 @@ export class UserResolver {
 
         if ( !sentSuccessfully ) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
 
-        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
+        return sentSuccessfully ? "Password change email sent successfully" : "Probjectlem sending password change email";
     }
 
     @Query( () => String )
@@ -359,6 +370,92 @@ export class UserResolver {
                 };
             })
         )).filter( val => ( val.milesNum <= user.searchMilesRadius + Utils.milesFilterLeway )|| val.id !== null );
+    }
+
+    @Query( () => [ models.UsersFollowing ])
+    async usersOrgFollowing( @Arg('token') token: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let orgFollowed = await models.OrganizersFollowers.find({ where: { user: { id: user.id } }, relations: [ 'organizer' ] });
+
+        return orgFollowed.map( oF => ({
+            id: oF.id,
+            objectId: oF.organizer.id,
+            objectPic: oF.organizer.profilePicture,
+            objectName: oF.organizer.orgName,
+            type: 'org'
+        }))
+    }
+
+    @Query( () => [ models.UsersFollowing ])
+    async usersFollowing( @Arg('token') token : string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let userFollowed = await models.UserFollowers.find({ where: { user: { id: user.id } }, relations: ['following'] });
+
+        return userFollowed.map( uF => ({
+            id: uF.id,
+            objectId: uF.following.id,
+            objectPic: uF.following.profilePicture,
+            objectName: uF.following.username,
+            type: 'user'
+        }))
+    }
+
+    @Mutation( () => models.UserDeleteOrgFollowing )
+    async userDeleteOrgFollowing( @Arg('token') token: string, @Arg('orgId') orgId: string  ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let orgToDelete = await models.OrganizersFollowers.findOne({ where: { id: orgId }});
+
+        if ( !orgToDelete ) return new Utils.CustomError(`Organizer following id does not exist`);
+
+        orgToDelete = await orgToDelete.remove();
+
+        return {
+            deletedOrgFollowing: {
+                id: orgToDelete.id,
+                objectId: orgToDelete.organizer.id,
+                objectPic: orgToDelete.organizer.profilePicture,
+                objectName: orgToDelete.organizer.orgName,
+                type: 'org'
+            },
+            orgFollowing: ( await models.OrganizersFollowers.find({ where: { user: { id: user.id } }, relations: [ 'organizer' ] }) ).map( oF => ({
+                id: oF.id,
+                objectId: oF.organizer.id,
+                objectPic: oF.organizer.profilePicture,
+                objectName: oF.organizer.orgName,
+                type: 'org'
+            }))
+        }
+    }
+
+    @Mutation( () => models.UserDeleteUsersFollowing )
+    async userDeleteUserFollowing( @Arg('token') token: string, @Arg('userId') userId: string ) {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        let userToDelete = await models.UserFollowers.findOne({ where: { id: userId } });
+
+        if ( !userToDelete ) return new Utils.CustomError(`User following id does not exist`);
+
+        userToDelete = await userToDelete.remove();
+
+        return {
+            deletedUserFollowing: {
+                id: userToDelete.id,
+                objectId: userToDelete.following.id,
+                objectPic: userToDelete.following.profilePicture,
+                objectName: userToDelete.following.username,
+                type: 'user'
+            },
+            userFollowing: ( await models.UserFollowers.find({ where: { user: { id: user.id } }, relations: ['following'] }) ).map( uF => ({
+                id: uF.id,
+                objectId: uF.following.id,
+                objectPic: uF.following.profilePicture,
+                objectName: uF.following.username,
+                type: 'user'
+            }))
+        }
     }
 
 }
