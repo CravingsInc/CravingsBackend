@@ -97,7 +97,8 @@ export class UserResolver {
                         ).map( et => et.cart.eventId )
                     )]
                 )
-            ).length
+            ).length,
+            searchMilesRadius: user.searchMilesRadius
         }
     }
 

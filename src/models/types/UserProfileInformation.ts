@@ -21,6 +21,8 @@ export class UserProfileInformation {
     @Field() following: number;
 
     @Field() events: number;
+
+    @Field() searchMilesRadius: number;
 }
 
 @InputType()
