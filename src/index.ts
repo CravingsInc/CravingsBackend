@@ -79,10 +79,11 @@ app.post("user/upload/image", (req: any, res: any) => {
 
     try {
       let user: models.Users | models.Organizers | undefined = undefined;
-      try {
-        user = (await Utils.getUserFromJsWebToken(req.body.token));
-      } catch {
-        user = (await Utils.getUserFromJsWebToken(req.body.token));
+
+      if ( req.body.craving === 'events' ) {
+        user = ( await Utils.getUserFromJsWebToken(req.body.token) );
+      }else {
+        user = ( await Utils.getOrganizerFromJsWebToken(req.body.token) );
       }
 
       let url = await s3.uploadImage(req.file, req.file.mimetype);
