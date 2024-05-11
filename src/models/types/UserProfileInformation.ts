@@ -36,6 +36,8 @@ export class UserProfileInformationInput {
     @Field({ nullable: true }) phoneNumber?: string;
 
     @Field({ nullable: true }) username?: string;
+
+    @Field({ nullable: true }) searchMilesRadius?: number;
 }
 @ObjectType()
 export class UsersFollowing {
