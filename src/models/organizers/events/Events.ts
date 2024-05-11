@@ -22,7 +22,7 @@ export class Events extends BaseEntity {
     description: string;
 
     @Field()
-    @Column()
+    @Column({ default: "/home-header.png" })
     banner: string;
 
     @Field()

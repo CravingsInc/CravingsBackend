@@ -25,7 +25,7 @@ export class Organizers extends BaseEntity {
     orgName: string;
 
     @Field()
-    @Column({ default: "", nullable: true })
+    @Column({ default: "/home-header.png", nullable: true })
     profilePicture: string;
 
     @Field()
