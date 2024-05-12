@@ -286,7 +286,8 @@ export class OrganizerResolver {
             eventTicket.amount = args.amount;
             await eventTicket.save();
         }catch( err ) {
-            return new Utils.CustomError("Problem Creating event ticket");
+            console.log( err );
+            return new Utils.CustomError("Problem modifying event ticket");
         }
 
         return "Event Ticket Price modified successfully";
