@@ -61,7 +61,7 @@ export class ModifyEventTicketPriceInputType {
 
     @Field() amount: number;
 
-    @Field({ nullable: true, defaultValue: "us" }) currency?: string;
+    @Field({ nullable: true, defaultValue: "usd" }) currency?: string;
 }
 
 export type EventRecommendationDatabaseResponse = {
