@@ -356,6 +356,7 @@ export class EventResolver {
             description: event.description,
             banner: event.banner,
             eventDate: new Date( event.eventDate ),
+            endEventDate: new Date( event.endEventDate ),
             costRange: `$${min}-$${max}`,
             ticketSold: await models.EventTicketBuys.countBy({ eventTicket: { event: { id: event.id } } }),
             location: {
