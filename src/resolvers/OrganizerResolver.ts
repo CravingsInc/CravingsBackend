@@ -220,6 +220,8 @@ export class OrganizerResolver {
 
         if ( args.eventDate ) event.eventDate = args.eventDate;
 
+        if ( args.endDate ) event.endEventDate = args.endDate;
+
         if ( args.visible ) event.visible = args.visible;
 
         if ( args.location ) {

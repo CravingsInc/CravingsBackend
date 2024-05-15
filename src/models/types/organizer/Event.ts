@@ -44,6 +44,8 @@ export class ModifyEventInputType {
     @Field({ nullable: true }) banner?: string;
 
     @Field({ nullable: true }) eventDate?: Date;
+
+    @Field({ nullable: true }) endDate?: Date;
 }
 
 @InputType()
@@ -127,6 +129,8 @@ export class EventsPage {
     @Field() ticketSold: string;
 
     @Field() eventDate: Date;
+
+    @Field() endEventDate: Date;
 
     @Field( () => Location ) location: Location;
 
