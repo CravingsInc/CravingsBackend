@@ -307,11 +307,13 @@ export class OrganizerResolver {
 
         if ( !eventTicket ) return new Utils.CustomError("Problem changing event ticket");
 
-        if ( args.title ) event.title = args.title;
+        if ( args.title ) eventTicket.title = args.title;
 
-        if ( args.description ) event.description = args.description;
+        if ( args.description ) eventTicket.description = args.description;
 
-        await event.save();
+        if ( args.totalTicketAvailable ) eventTicket.totalTicketAvailable = args.totalTicketAvailable;
+
+        await eventTicket.save();
 
         return "Event Ticket updated successfully";
     }
