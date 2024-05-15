@@ -49,6 +49,10 @@ export class Events extends BaseEntity {
     @Column({ default: () => "CURRENT_TIMESTAMP" })
     eventDate: Date;
 
+    @Field()
+    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    endEventDate: Date;
+
     @Field( () => [EventTickets] )
     @OneToMany( () => EventTickets, eT => eT.event )
     prices: EventTickets[];
