@@ -350,6 +350,13 @@ export class EventResolver {
             min = Math.min(...prices as number[] ) / 100;
         }
 
+        let ticketAvailable = 0;
+        let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { event: { id: event.id } }, cart: { completed: true } });
+
+        if ( event.ticketType === 'limited' ) {
+            for ( let price of event.prices ) ticketAvailable += price.totalTicketAvailable;
+        }
+
         return {
             id: event.id,
             name: event.title,
@@ -357,8 +364,10 @@ export class EventResolver {
             banner: event.banner,
             eventDate: new Date( event.eventDate ),
             endEventDate: new Date( event.endEventDate ),
+            ticketType: event.ticketType,
+            ticketAvailable: ticketAvailable - ticketSold,
             costRange: `$${min}-$${max}`,
-            ticketSold: await models.EventTicketBuys.countBy({ eventTicket: { event: { id: event.id } } }),
+            ticketSold,
             location: {
                 latitude: event.latitude,
                 longitude: event.longitude,
@@ -371,7 +380,12 @@ export class EventResolver {
                 events: await models.Events.countBy({ organizer: { id: event.organizer.id } }),
                 followers: await models.OrganizersFollowers.countBy({ organizer: { id: event.organizer.id } })
             },
-            prices: event.prices.map( prices => ({ id: prices.priceId, title: prices.title, description: prices.description, amount: prices.amount }))
+            prices: await Promise.all(
+                event.prices.map( async prices => ({ 
+                    id: prices.priceId, title: prices.title, description: prices.description, amount: prices.amount,
+                    ticketAvailable: prices.totalTicketAvailable - ( await models.EventTicketBuys.countBy({ eventTicket: { id: prices.id }, cart: { completed: true } }) )
+                }))
+            )
         }
     }
 
@@ -438,6 +452,18 @@ export class EventResolver {
         if ( !event ) return new Utils.CustomError("Event not found.");
 
         if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
+        
+        if ( event.ticketType === 'limited' ) {
+            for ( let price of prices ) {
+                let ticket = await models.EventTickets.findOneBy({ priceId: price.id });
+
+                if ( !ticket ) return new Utils.CustomError('Ticket not found');
+
+                let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { id: ticket.id }, cart: { completed: true } });
+
+                if ( ticketSold + price.quantity > ticket.totalTicketAvailable ) return new Utils.CustomError('Ticket not available for sale.');
+            }
+        }
         
         const intent = await stripeHandler.updatePaymentIntent( id, prices, event.organizer.stripeConnectId );
 

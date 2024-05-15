@@ -46,6 +46,10 @@ export class Events extends BaseEntity {
     location: string;
 
     @Field()
+    @Column({ default: 'infinite' })
+    ticketType: 'infinite' | 'limited';
+
+    @Field()
     @Column({ default: () => "CURRENT_TIMESTAMP" })
     eventDate: Date;
 
