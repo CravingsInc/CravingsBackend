@@ -55,6 +55,8 @@ export class ModifyEventTicketInputType {
     @Field({ nullable: true }) title?: string;
 
     @Field({ nullable: true }) description?: string;
+
+    @Field({ nullable: true }) totalTicketAvailable?: number;
 }
 
 @InputType()
@@ -112,6 +114,8 @@ export class EventsPagePrices {
     @Field() description: string;
 
     @Field() amount: number;
+
+    @Field() ticketAvailable: number;
 }
 
 @ObjectType()
@@ -131,6 +135,10 @@ export class EventsPage {
     @Field() eventDate: Date;
 
     @Field() endEventDate: Date;
+
+    @Field() ticketType: string;
+
+    @Field() ticketAvailable: number;
 
     @Field( () => Location ) location: Location;
 
