@@ -89,7 +89,7 @@ export class EventResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${minPrice}-$${maxPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -194,7 +194,7 @@ export class EventResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${minPrice}-$${maxPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -299,7 +299,7 @@ export class EventResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${minPrice}-$${maxPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -366,7 +366,7 @@ export class EventResolver {
             endEventDate: new Date( event.endEventDate ),
             ticketType: event.ticketType,
             ticketAvailable: ticketAvailable - ticketSold,
-            costRange: `$${min}-$${max}`,
+            costRange: prices.length > 1 ? `$${min}-$${max}` : `$${min}`,
             ticketSold,
             location: {
                 latitude: event.latitude,

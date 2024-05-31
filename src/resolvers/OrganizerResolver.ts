@@ -116,7 +116,7 @@ export class OrganizerResolver {
                         name: e.title,
                         description: e.description,
                         banner: e.banner,
-                        costRange: `$${minPrice}-$${maxPrice}`,
+                        costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                         eventDate: e.eventDate,
                         location: {
                             latitude: e.latitude,
