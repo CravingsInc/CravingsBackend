@@ -287,7 +287,7 @@ export class UserResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${maxPrice}-$${minPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -352,7 +352,7 @@ export class UserResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${maxPrice}-$${minPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
