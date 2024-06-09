@@ -35,7 +35,7 @@ export class EventResolver {
                 ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+                order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
             `);
 
@@ -140,7 +140,7 @@ export class EventResolver {
                 ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+                order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
             `);
 
@@ -245,7 +245,7 @@ export class EventResolver {
                 ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+                order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
             `);
 
