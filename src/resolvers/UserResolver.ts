@@ -261,7 +261,7 @@ export class UserResolver {
             left join organizers_followers oF on oF.userId = u.id
             where e.visible = TRUE and o.id = oF.followingId
             group by e.id 
-            order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+            order by DATE(e.eventDate) DESC, ticketSold DESC
             limit ${limit}
         `);
 
@@ -287,7 +287,7 @@ export class UserResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${maxPrice}-$${minPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -326,7 +326,7 @@ export class UserResolver {
             left join organizers_followers oF on oF.userId = u.id
             where e.visible = TRUE and o.id = oF.followingId
             group by e.id 
-            order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+            order by DATE(e.eventDate) DESC, ticketSold DESC
             limit ${limit}
         `);
 
@@ -352,7 +352,7 @@ export class UserResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${maxPrice}-$${minPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,

@@ -35,7 +35,7 @@ export class EventResolver {
                 ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+                order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
             `);
 
@@ -89,7 +89,7 @@ export class EventResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${minPrice}-$${maxPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -140,7 +140,7 @@ export class EventResolver {
                 ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+                order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
             `);
 
@@ -194,7 +194,7 @@ export class EventResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${minPrice}-$${maxPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -245,7 +245,7 @@ export class EventResolver {
                 ${ user ? `left join users u on u.id = ${user.id}` : ''}
                 where e.visible = TRUE
                 group by e.id 
-                order by ticketSold DESC, ABS( e.eventDate - CURRENT_TIMESTAMP )
+                order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
             `);
 
@@ -299,7 +299,7 @@ export class EventResolver {
                     title: val.title,
                     description: val.description,
                     banner: val.banner,
-                    costRange: `$${minPrice}-$${maxPrice}`,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
                     location: {
                         latitude: val.eLat,
                         longitude: val.eLong,
@@ -366,7 +366,7 @@ export class EventResolver {
             endEventDate: new Date( event.endEventDate ),
             ticketType: event.ticketType,
             ticketAvailable: ticketAvailable - ticketSold,
-            costRange: `$${min}-$${max}`,
+            costRange: prices.length > 1 ? `$${min}-$${max}` : `$${min}`,
             ticketSold,
             location: {
                 latitude: event.latitude,
