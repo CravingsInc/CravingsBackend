@@ -231,10 +231,10 @@ export class UserResolver {
     }
 
     @Mutation( () => String )
-    async unFollowOrganizer( @Arg('token') token: string, @Arg('organizerId') userId: string ) {
+    async unFollowOrganizer( @Arg('token') token: string, @Arg('organizerId') organizerId: string ) {
         let user = await Utils.getUserFromJsWebToken( token );
 
-        let alreadyFollowing = await models.OrganizersFollowers.findOne({ where: { user: { id: user.id }, organizer: { id: userId } } });
+        let alreadyFollowing = await models.OrganizersFollowers.findOne({ where: { user: { id: user.id }, organizer: { id: organizerId } } });
 
         if ( !alreadyFollowing ) return 'Not following';
 

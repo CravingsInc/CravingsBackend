@@ -366,6 +366,7 @@ export class EventResolver {
             endEventDate: new Date( event.endEventDate ),
             ticketType: event.ticketType,
             ticketAvailable: ticketAvailable - ticketSold,
+            userFollowing: ( await models.OrganizersFollowers.findOne({ where: { user: { id: user?.id }, organizer: { id: event.organizer.id } }}) ) ? true : false,
             costRange: prices.length > 1 ? `$${min}-$${max}` : `$${min}`,
             ticketSold,
             location: {
