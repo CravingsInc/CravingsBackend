@@ -132,6 +132,8 @@ export class EventsPage {
 
     @Field() ticketSold: string;
 
+    @Field() userFollowing: boolean;
+
     @Field() eventDate: Date;
 
     @Field() endEventDate: Date;
