@@ -28,6 +28,10 @@ export class EventTickets extends BaseEntity {
     amount: number;
 
     @Field()
+    @Column({ default: 'usd' })
+    currency: string;
+
+    @Field()
     @Column({ default: 45 })
     totalTicketAvailable: number;
 

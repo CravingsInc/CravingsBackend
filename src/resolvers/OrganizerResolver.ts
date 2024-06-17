@@ -206,6 +206,59 @@ export class OrganizerResolver {
         return event;
     }
 
+    @Mutation( () => models.Events )
+    async repeatEvent( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('ticket') ticket?: boolean ) {
+        let org = await Utils.getOrganizerFromJsWebToken( token );
+
+        let parentEvent = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }, relations: ['parent', 'prices'] });
+
+        if ( !parentEvent ) return new Utils.CustomError("Event Couldn't be repeated, please try again.");
+
+        let event = await models.Events.create({
+            title: parentEvent.title,
+            description: parentEvent.description,
+            banner: parentEvent.banner,
+            latitude: parentEvent.latitude,
+            longitude: parentEvent.longitude,
+            location: parentEvent.location,
+            ticketType: parentEvent.ticketType,
+            organizer: { id: org.id },
+            // If event alread has a parent we will use that parent, else we will make that event the parent.
+            parent: { id: parentEvent.parent ? parentEvent.parent.id : parentEvent.id },
+        }).save();
+
+        let stripeEvent = await stripeHandler.createEvent( org.stripeConnectId, org.id, event.id, event.title );
+
+        event.productId = stripeEvent.id;
+
+        if ( ticket ) {
+            for ( let price of parentEvent.prices ) {
+                let eventTicket = await models.EventTickets.create({
+                    title: price.title,
+                    description: price.description,
+                    event,
+                    amount: price.amount
+                });
+
+                try {
+                    eventTicket.save();
+
+                    let stripeTicket = await stripeHandler.createEventPrice( org.stripeConnectId, org.id, event.id, event.productId, price.amount, price.currency );
+                    
+                    eventTicket.priceId = stripeTicket.id;
+        
+                    await eventTicket.save();
+                }catch(err) {
+                    await eventTicket.remove(); // want to self clean database
+                }
+            }
+        }
+
+        await event.save();
+        
+        return event;
+    }
+
     @Mutation( () => String )
     async modifyEvent( @Arg('token') token: string, @Arg('args', () =>  models.ModifyEventInputType ) args: models.ModifyEventInputType ) {
         let organizer = await Utils.getOrganizerFromJsWebToken( token );
@@ -251,7 +304,8 @@ export class OrganizerResolver {
             title,
             description,
             event,
-            amount
+            amount,
+            currency
         }).save();
 
         try {
@@ -286,6 +340,7 @@ export class OrganizerResolver {
 
             eventTicket.priceId = newStripeTicket.id;
             eventTicket.amount = args.amount;
+            eventTicket.currency = args.currency || "usd";
             await eventTicket.save();
         }catch( err ) {
             console.log( err );
