@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, Ba
 import { ObjectType, Field, ID } from "type-graphql";
 import { Organizers } from "../Organizers";
 import { EventTickets } from "./eventTickets";
-import { EventsPageVisit } from "../analystics";
+import { EventsPageVisit } from "../../analysis";
 import { Utils } from "../../../utils";
 
 
