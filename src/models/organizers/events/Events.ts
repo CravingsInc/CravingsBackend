@@ -69,6 +69,18 @@ export class Events extends BaseEntity {
     @ManyToOne( () => Organizers, o => o.events, { onDelete: "CASCADE" })
     organizer: Organizers;
 
+    /**
+     * @description main event, or starting event that creates all other "repeats events"
+     */
+    @ManyToOne( () => Events, e => e.repeats, { onDelete: 'CASCADE' } )
+    parent: Events;
+
+    /**
+     * @description events that are repeated by this event. A repeat event CAN NOT have another repeat event
+     */
+    @OneToMany( () => Events, e => e.parent )
+    repeats: Events[];
+
     @CreateDateColumn()
     @Field()
     createdAt: Date;
