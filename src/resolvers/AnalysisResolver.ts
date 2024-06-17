@@ -51,6 +51,7 @@ export class AnalysisResolver {
             urlVisited,
             urlFull: arg.urlFull,
             isMobile: arg.isMobile,
+            isDesktop: arg.isDesktop,
             isTablet: arg.isTablet,
             isSmartTV: arg.isSmartTV,
             isWearable: arg.isWearable,
