@@ -119,6 +119,15 @@ export class EventsPagePrices {
 }
 
 @ObjectType()
+export class PhotoGallery {
+    @Field( () => ID ) id: string;
+    
+    @Field() picture: string;
+
+    @Field() eventId: string;
+}
+
+@ObjectType()
 export class EventsPage {
     @Field( () => ID ) id: string;
 
@@ -132,6 +141,8 @@ export class EventsPage {
 
     @Field() ticketSold: string;
 
+    @Field() userFollowing: boolean;
+
     @Field() eventDate: Date;
 
     @Field() endEventDate: Date;
@@ -139,6 +150,8 @@ export class EventsPage {
     @Field() ticketType: string;
 
     @Field() ticketAvailable: number;
+
+    @Field( () => [ PhotoGallery ] ) photoGallery: PhotoGallery[];
 
     @Field( () => Location ) location: Location;
 

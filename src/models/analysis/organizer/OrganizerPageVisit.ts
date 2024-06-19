@@ -1,11 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, ManyToOne } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
+import { Organizers } from "../../organizers/Organizers";
 import { Users } from "../../users";
-import { Events } from "../events";
 
 @ObjectType()
 @Entity()
-export class EventsPageVisit extends BaseEntity {
+export class OrganizerPageVisit extends BaseEntity {
     @PrimaryGeneratedColumn('uuid')
     @Field( () => ID )
     id: string;
@@ -15,12 +15,12 @@ export class EventsPageVisit extends BaseEntity {
     guest: boolean;
 
     @Field( () => Users, { nullable: true } )
-    @ManyToOne( () => Users, u => u.eventPageVisited, { onDelete: 'CASCADE' })
+    @ManyToOne( () => Users, u => u.organizerPageVisited, { onDelete: 'CASCADE' })
     user?: Users | null; 
 
-    @Field( () => [ Events ])
-    @ManyToOne( () => Events, o => o.pageVisitors, { onDelete: 'CASCADE' })
-    event: Events;
+    @Field( () => [ Organizers ])
+    @ManyToOne( () => Organizers, o => o.pageVisitors, { onDelete: 'CASCADE' })
+    organizer: Organizers;
 
     @Field()
     @CreateDateColumn()

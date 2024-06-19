@@ -3,7 +3,8 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { Events } from "./events";
 import { OrganizerPasswordChange } from "./OrganizerPasswordChange";
 import { OrganizersFollowers } from "./OrganizersFollowers";
-import { OrganizerPageVisit } from "./analystics/OrganizerPageVisit";
+import { OrganizerPageVisit } from "../analysis/organizer/OrganizerPageVisit";
+import { SiteHistory } from "../analysis";
 
 
 @Entity()
@@ -68,6 +69,10 @@ export class Organizers extends BaseEntity {
     @Field( () => [Events] )
     @OneToMany( () => Events, e => e.organizer )
     events: Events[];
+
+    @Field( () => [ SiteHistory ])
+    @OneToMany( () => SiteHistory, sH => sH.organizer )
+    siteHistory: SiteHistory[];
 
     @Field()
     @CreateDateColumn()
