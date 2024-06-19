@@ -4,6 +4,7 @@ import { Organizers } from "../Organizers";
 import { EventTickets } from "./eventTickets";
 import { EventsPageVisit } from "../../analysis";
 import { Utils } from "../../../utils";
+import { EventPhotos } from "./EventPhotos";
 
 
 @Entity()
@@ -81,6 +82,10 @@ export class Events extends BaseEntity {
     @OneToMany( () => Events, e => e.parent )
     repeats: Events[];
 
+    @Field( () => EventPhotos )
+    @OneToMany( () => EventPhotos, e => e.event )
+    photoGallery: EventPhotos[];
+    
     @CreateDateColumn()
     @Field()
     createdAt: Date;

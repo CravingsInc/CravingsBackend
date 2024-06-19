@@ -323,11 +323,31 @@ export class EventResolver {
         );
     }
 
+    @Query( () => models.PhotoGallery )
+    async addPhotoGallery( @Arg('token') token: string, @Arg('photoUrl') photoUrl: string, @Arg('eventId') eventId: string ) {
+        let org = await Utils.getOrganizerFromJsWebToken( token );
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
+
+        if ( !event ) return new Utils.CustomError("Couldn't find event");
+
+        let photo = await models.EventPhotos.create({
+            picture: photoUrl,
+            event: { id: eventId }
+        }).save();
+
+        return {
+            id: photo.id,
+            picture: photo.picture,
+            eventId
+        }
+    }
+
     @Query( () => models.EventsPage )
     async getEventsPage( @Arg('eventId') eventId: string, @Arg("userToken", { nullable: true }) userToken?: string ) {
         let user = userToken ? await Utils.getUserFromJsWebToken(userToken) : null;
 
-        let event = await models.Events.findOne({ where: { id: eventId }, relations: [ 'organizer', 'prices' ] });
+        let event = await models.Events.findOne({ where: { id: eventId }, relations: [ 'organizer', 'prices', 'parent' ] });
 
         if ( !event ) return new Utils.CustomError("Invalid Event. Please try again.");
 
@@ -357,6 +377,16 @@ export class EventResolver {
             for ( let price of event.prices ) ticketAvailable += price.totalTicketAvailable;
         }
 
+        let queryEventId = event.parent ? event.parent.id : event.id;
+
+        let photoGallery: models.PhotoGallery = await models.EventPhotos.query(
+            `
+                select ep.id, picture, eventId from event_photos ep 
+                inner join events e on ep.eventId = e.id
+                where e.id = "${queryEventId}" or e.parentId = "${queryEventId}"
+            `
+        );
+
         return {
             id: event.id,
             name: event.title,
@@ -369,6 +399,7 @@ export class EventResolver {
             userFollowing: ( await models.OrganizersFollowers.findOne({ where: { user: { id: user?.id }, organizer: { id: event.organizer.id } }}) ) ? true : false,
             costRange: prices.length > 1 ? `$${min}-$${max}` : `$${min}`,
             ticketSold,
+            photoGallery,
             location: {
                 latitude: event.latitude,
                 longitude: event.longitude,
