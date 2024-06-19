@@ -18,7 +18,7 @@ export class AnalysisResolver {
 
         let urlVisited: models.UrlVisitedType = models.UrlVisitedType.HOME;
 
-        let mainPattern = new URLPattern('(http(s)\\://)(:subdomain.):domain.:tld(\\::port)/:main(/*)');
+        let mainPattern = new URLPattern('(http(s)\\://)(:subdomain.)(:domain.):tld(\\::port)/:main(/*)');
 
         if ( !mainPattern.match(arg.urlFull) ) urlVisited = models.UrlVisitedType.HOME;
         else {
@@ -29,12 +29,12 @@ export class AnalysisResolver {
             else if (mainPattern.match(arg.urlFull).main === "home") urlVisited = models.UrlVisitedType.USER_HOME;
             else if (mainPattern.match(arg.urlFull).main === "events") {
 
-                let mainDetailsPattern = new URLPattern('(http(s)\\://)(:subdomain.):domain.:tld(\\::port)/:main/:eventId(/*)')
+                let mainDetailsPattern = new URLPattern('(http(s)\\://)(:subdomain.)(:domain.):tld(\\::port)/:main/:eventId(/*)')
 
                 if (!mainDetailsPattern.match(arg.urlFull)) urlVisited = models.UrlVisitedType.EVENTS;
                 else if (mainDetailsPattern.match(arg.urlFull).eventId !== undefined) {
 
-                    let mainDetailsTickets = new URLPattern('(http(s)\\://)(:subdomain.):domain.:tld(\\::port)/:main/:eventId/ticket(*)')
+                    let mainDetailsTickets = new URLPattern('(http(s)\\://)(:subdomain.)(:domain.):tld(\\::port)/:main/:eventId/ticket(*)')
 
                     if (!mainDetailsTickets.match(arg.urlFull)) urlVisited = models.UrlVisitedType.EVENTS_DETAILS;
                     else urlVisited = models.UrlVisitedType.EVENTS_DETAILS_TICKET;
