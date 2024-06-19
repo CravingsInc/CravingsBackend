@@ -257,9 +257,9 @@ export class UserResolver {
             left join event_tickets et on e.id = et.eventId
             left join event_ticket_buys etb on et.id = etb.eventTicketId
             left join organizers o on e.organizerId = o.id
-            left join users u on u.id = ${user.id}
+            left join users u on u.id = "${user.id}"
             left join organizers_followers oF on oF.userId = u.id
-            where e.visible = TRUE and o.id = oF.followingId
+            where e.visible = TRUE and o.id = oF.organizerId
             group by e.id 
             order by DATE(e.eventDate) DESC, ticketSold DESC
             limit ${limit}
@@ -322,9 +322,9 @@ export class UserResolver {
             left join event_tickets et on e.id = et.eventId
             left join event_ticket_buys etb on et.id = etb.eventTicketId
             left join organizers o on e.organizerId = o.id
-            left join users u on u.id = ${user.id}
+            left join users u on u.id = "${user.id}"
             left join organizers_followers oF on oF.userId = u.id
-            where e.visible = TRUE and o.id = oF.followingId
+            where e.visible = TRUE and o.id = oF.organizerId
             group by e.id 
             order by DATE(e.eventDate) DESC, ticketSold DESC
             limit ${limit}
