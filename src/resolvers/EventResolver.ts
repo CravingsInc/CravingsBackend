@@ -448,14 +448,15 @@ export class EventResolver {
     }
 
     @Mutation( () => String ) 
-    async confirmTicketCheckIn( @Arg('id') id: string ) {
-        let ticket = await models.EventTicketBuys.findOne({ where: { id: id } });
+    async confirmTicketCheckIn( @Arg('payment_intent') payment_intent: string ) {
+        let cart = await models.EventTicketCart.findOne({ where: { stripeTransactionId: payment_intent }, relations: ['tickets'] });
 
-        if ( !ticket ) return new Utils.CustomError("Ticket not found.");
+        if ( !cart ) return new Utils.CustomError("Tickets not found.");
 
-        ticket.checkIn = true;
-
-        await ticket.save();
+        for ( let ticket of cart.tickets ) {
+            ticket.checkIn = true;
+            await ticket.save();
+        }
 
         return "Checked in successfully.";
     }

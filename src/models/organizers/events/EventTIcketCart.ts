@@ -1,10 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, ManyToOne, OneToMany, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, ManyToOne, OneToMany, UpdateDateColumn, OneToOne, JoinColumn } from "typeorm";
 import { EventTicketBuys } from "./EventTicketBuys";
+import { Users } from "../../users";
+import { EventTicketCartReview } from "./EventTicketCartReview";
 
 @Entity()
 export class EventTicketCart extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
+
+    @Column()
+    type: "guest" | "user";
+
+    @Column({ default: "UNKNOWN" })
+    name: string;
+
+    @Column({ default: "UNKNOWN" })
+    email: string;
+    
+    @ManyToOne( () => Users, u => u.eventCarts, { onDelete: 'CASCADE', nullable: true })
+    user?: Users | null;
 
     @Column()
     completed: boolean;
@@ -26,4 +40,14 @@ export class EventTicketCart extends BaseEntity {
 
     @UpdateDateColumn()
     updated: Date;
+
+    @Column({ nullable: true })
+    lastReviewEmailSent?: Date;
+
+    @Column({ default: false })
+    reviewCompleted: boolean;
+
+    @OneToOne(() => EventTicketCartReview)
+    @JoinColumn()
+    review: EventTicketCartReview;
 }
