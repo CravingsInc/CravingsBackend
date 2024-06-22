@@ -35,8 +35,8 @@ app.use(function (req, res, next) {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('event/upload/banner', ( req: any, res: any ) => {
-  const upload = multer().single("banner");
+app.post('/event/upload/banner', ( req: any, res: any ) => {
+  const upload = multer().single("image");
 
   upload( req, res, async function ( err: any ) {
     if ( req.fileValidationError ) return res.send(req.fileValidationError);
@@ -66,8 +66,8 @@ app.post('event/upload/banner', ( req: any, res: any ) => {
   })
 });
 
-app.post('event/upload/gallery', ( req: any, res: any ) => {
-  const upload = multer().single("banner");
+app.post('/event/upload/gallery', ( req: any, res: any ) => {
+  const upload = multer().single("image");
 
   upload( req, res, async function ( err: any ) {
     if ( req.fileValidationError ) return res.send( req.fileValidationError );
@@ -86,17 +86,21 @@ app.post('event/upload/gallery', ( req: any, res: any ) => {
       if ( !event ) return res.json({ error: "Event not found" });
 
       let url = await s3.uploadImage( req.file, req.file.mimetype, "events/gallery" );
-      event.banner = url;
-      await event.save();
+    
+      let photo = await models.EventPhotos.create({
+        picture: url,
+        event: { id: event.id }
+      }).save()
 
-      return res.json({ response: url });
+      return res.json({ url, photoId: photo.id });
     }catch( err ) {
+      console.log( err );
       res.json({ error: "Problem uploading new photo gallery for event" });
     }
   })
 })
 
-app.post("user/upload/image", (req: any, res: any) => {
+app.post("/user/upload/image", (req: any, res: any) => {
   const upload = multer().single("image");
   upload(req, res, async function (err: any) {
     if (req.fileValidationError) return res.send(req.fileValidationError);
