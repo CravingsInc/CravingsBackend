@@ -24,6 +24,7 @@ export class AnalysisResolver {
         else {
 
             if (mainPattern.match(arg.urlFull).main === "change-password") urlVisited = models.UrlVisitedType.CHANGE_PASSWORD;
+            else if (mainPattern.match(arg.urlFull).main === "about") urlVisited = models.UrlVisitedType.ABOUT;
             else if (mainPattern.match(arg.urlFull).main === "contact") urlVisited = models.UrlVisitedType.CONTACT;
             else if (mainPattern.match(arg.urlFull).main === "reserve") urlVisited = models.UrlVisitedType.RESERVE;
             else if (mainPattern.match(arg.urlFull).main === "home") urlVisited = models.UrlVisitedType.USER_HOME;
