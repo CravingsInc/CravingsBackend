@@ -5,6 +5,7 @@ import { Organizers } from "../organizers";
 
 export enum UrlVisitedType {
     HOME = "/",
+    ABOUT = "/about",
     REGISTER = "/register",
     SIGN_IN = "/sign/in",
     EVENTS = "/events",

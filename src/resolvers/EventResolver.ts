@@ -219,6 +219,111 @@ export class EventResolver {
     }
 
     @Query( () => [ models.EventRecommendationResponse ] )
+    async getFeaturedEvents( @Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 } ) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 } ) longitude: number, @Arg('token', { nullable: true } ) token?: string ) {
+
+        let user: models.Users | null = null;
+
+        if ( token ) {
+            try {
+                user = await Utils.getUserFromJsWebToken( token );
+            }catch( e ) { console.log( e) }
+        }
+
+        let events: models.EventRecommendationDatabaseResponse[] = [];
+
+        try {
+            events = await models.Events.query(`
+                select
+                e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
+                o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
+                ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+                COUNT(etb.id) AS ticketSold
+                from events e
+                left join event_tickets et on e.id = et.eventId
+                left join event_ticket_buys etb on et.id = etb.eventTicketId
+                left join organizers o on e.organizerId = o.id
+                ${ user ? `left join users u on u.id = "${user.id}"` : ''}
+                where e.visible = TRUE
+                group by e.id 
+                order by DATE(e.eventDate) DESC, ticketSold DESC
+                limit ${limit}
+            `);
+
+            /* if ( user ) query = query.leftJoin('users', 'u', `u.id = ${user.id}`)
+        
+            /*query.where(
+                user ? `
+                    ( u.searchMilesRadius * u.searchMilesRadius ) - (
+                        (
+                            ( u.longitude - e.longitude ) * ( u.longitude - e.longitude )
+                        ) + 
+                        (
+                            ( u.latitude - e.latitude ) * ( u.latitude - e.latitude )
+                        )
+                    ) >= 0
+                ` : 
+                    (
+                        `
+                            ( 12 * 12 ) - (
+                                (
+                                    ( ${longitude} - e.longitude ) * ( ${longitude} - e.longitude )
+                                ) + 
+                                (
+                                    ( ${latitude} - e.latitude ) * ( ${latitude} - e.latitude )
+                                )
+                            ) >= 0
+                        `
+                    )
+            )*/
+        }catch ( e ) { console.log(e); }
+
+        return (await Promise.all(
+            events.map(async (val) => {
+                let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
+
+                let prices: ( number | null )[] = [];
+
+                try {
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
+                }catch(e) { prices = [0]; }
+
+                let maxPrice, minPrice = 0;
+
+                if (prices && prices.length > 0) {
+                    maxPrice = Math.max(...prices as number[]) / 100;
+                    minPrice = Math.min(...prices as number[]) / 100;
+                }
+
+                return {
+                    id: val.id,
+                    title: val.title,
+                    description: val.description,
+                    banner: val.banner,
+                    costRange: prices.length > 1 ? `$${minPrice}-$${maxPrice}` : `$${minPrice}`,
+                    location: {
+                        latitude: val.eLat,
+                        longitude: val.eLong,
+                        location: val.location
+                    },
+                    eventDate: new Date( val.eventDate ),
+                    miles: Utils.shortenNumericString(miles),
+                    timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
+                    ticketSold: val.ticketSold || 0,
+                    organizer: {
+                        id: val.orgId,
+                        name: val.orgName,
+                        profilePicture: val.orgProfilePicture
+                    },
+                    milesNum: miles
+                };
+            })
+        )).filter( val => 
+            ( val.milesNum <= ( user ? user.searchMilesRadius : 20 ) + Utils.milesFilterLeway )
+            || val.id !== null
+        );
+    }
+
+    @Query( () => [ models.EventRecommendationResponse ] )
     async getUpComingEvents( @Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 } ) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 } ) longitude: number, @Arg('token', { nullable: true } ) token?: string ) {
 
         let user: models.Users | null = null;
