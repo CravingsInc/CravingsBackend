@@ -1,0 +1,13 @@
+import{Notifications} from "./index.ts"
+
+export const NewFollower = async (userId: string ) =>{   
+    
+    return await Notifications.create({
+        name: userId,
+        type: "New follower",
+        message: `${userId} is following you`
+    }) 
+        
+    
+}
+ 
