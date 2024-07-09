@@ -8,7 +8,7 @@ export class EventTicketCart extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column()
+    @Column({ default: 'guest' })
     type: "guest" | "user";
 
     @Column({ default: "UNKNOWN" })
