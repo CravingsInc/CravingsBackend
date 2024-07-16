@@ -33,7 +33,7 @@ app.use(function (req, res, next) {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use( '/event', Api.EventRouter );
+app.use('/event', Api.EventRouter );
 
 app.use('/user', Api.UserRouter );
 
