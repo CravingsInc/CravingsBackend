@@ -12,4 +12,3 @@ function NewFollowerNotification(userId: string) {
         backgroundBottom: "yellowgreen",
     });
 }
- 
