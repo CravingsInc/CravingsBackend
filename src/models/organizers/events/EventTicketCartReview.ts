@@ -5,6 +5,9 @@ export class EventTicketCartReview extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: number
 
+    @Column({ default: '' })
+    name: string;
+
     @Column({ default: 0 })
     rating: number;
 

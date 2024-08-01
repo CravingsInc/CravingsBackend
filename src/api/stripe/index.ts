@@ -1,5 +1,5 @@
 import express from "express";
-import { stripe } from "../../utils/stripe";
+import Stripe from "stripe";
 import { stripeHandler  } from "../../utils";
 
 const router = express.Router();
@@ -28,7 +28,7 @@ router.post('/stripe/webhook', express.raw({ type: 'application/json' }), async 
             let name, email = "";
   
             try {
-              const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+              const charge = ( await stripeHandler.getChargeById(paymentIntent.latest_charge) ) as Stripe.Charge;
   
               let billingDetails = charge.billing_details;
   

@@ -1,4 +1,4 @@
-import { Resolver, Mutation, Arg, Query } from "type-graphql";
+import { Resolver, Mutation, Arg, Query, Args } from "type-graphql";
 
 import * as models from "../models";
 
@@ -526,7 +526,62 @@ export class EventResolver {
         }
     }
 
-    @Query( () => models.EventTiket )
+    @Query( () => models.EventTicketReview )
+    async getTicketReview( @Arg('payment_intent') payment_intent: string ) {
+
+        let paymentIntent = await stripeHandler.getPaymentIntentById( payment_intent, true ) as Stripe.PaymentIntent;
+
+        const latestCharge = ( await stripeHandler.getChargeById( paymentIntent.latest_charge as string ) ) as Stripe.Charge;
+
+        let event = await models.Events.findOne({ where: { id: latestCharge.metadata.eventId }});
+
+        if ( !event ) return new Utils.CustomError("Event not found")
+        
+        let eventTicketCart = await models.EventTicketCart.findOne({
+            where: {
+                id: latestCharge.metadata.cart
+            },
+            relations: [ 'review' ]
+        });
+
+        if ( !eventTicketCart ) return new Utils.CustomError("Ticket Cart not found");
+
+        if ( eventTicketCart.name.length === 0 ) eventTicketCart.name = latestCharge.billing_details.name || '';
+
+        if ( eventTicketCart.email.length === 0 ) eventTicketCart.email = latestCharge.billing_details.email || '';
+
+        let review: models.EventTicketCartReview;
+
+        if ( eventTicketCart.review ) review = eventTicketCart.review;
+        else {
+            eventTicketCart.review = models.EventTicketCartReview.create({
+                name: eventTicketCart.name,
+                rating: 0,
+                photo: '',
+                description: ''
+            });
+
+            review = eventTicketCart.review;
+            await review.save()
+        }
+
+        await eventTicketCart.save();
+        
+        return {
+            eventId: event.id,
+            eventBanner: event.banner,
+            eventTitle: event.title,
+            ratingId: eventTicketCart.review.id,
+            ratingName: eventTicketCart.name,
+            rating: eventTicketCart.review.rating,
+            photo: eventTicketCart.review.photo,
+            description: eventTicketCart.review.description,
+            reviewCompleted: eventTicketCart.reviewCompleted,
+            payment_intent
+        }
+    }
+
+    @Query( () => models.EventTicket )
     async getTicketBuy( @Arg('payment_intent') payment_intent: string ) {
         let paymentIntent = await stripeHandler.getPaymentIntentById(payment_intent, true ) as Stripe.PaymentIntent;
 

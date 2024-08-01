@@ -177,7 +177,7 @@ export class EventTicketBuyer {
 }
 
 @ObjectType()
-export class EventTiket {
+export class EventTicket {
     @Field( () => ID ) id: string;
     
     @Field() name: string;
@@ -189,4 +189,25 @@ export class EventTiket {
     @Field( () => EventTicketBuyer ) buyer: EventTicketBuyer;;
 
     @Field() paymentIntent: string;
+}
+
+@ObjectType()
+export class EventTicketReview {
+    @Field() eventId: string;
+    
+    @Field() eventBanner: string;
+
+    @Field() eventTitle: string;
+
+    @Field() ratingId: string;
+
+    @Field() ratingName: string;
+
+    @Field() photo: string;
+
+    @Field() description: string;
+
+    @Field() reviewCompleted: boolean;
+
+    @Field() payment_intent: string;
 }
