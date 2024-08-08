@@ -581,6 +581,9 @@ export class EventResolver {
         }
     }
 
+    @Mutation( () => String )
+    async submitTicketReview( @Arg('payment_intent') payment_intent: string )
+
     @Query( () => models.EventTicket )
     async getTicketBuy( @Arg('payment_intent') payment_intent: string ) {
         let paymentIntent = await stripeHandler.getPaymentIntentById(payment_intent, true ) as Stripe.PaymentIntent;

@@ -70,7 +70,7 @@ router.post('/picture', async ( req: any, res: any ) => {
       else if ( err ) return res.send( err );
   
       try {
-        const cart = await models.EventTicketCart.findOne({ where: { stripeTransactionId: req.body.payment_intent, completed: true }, relations: [ 'profile' ] });
+        const cart = await models.EventTicketCart.findOne({ where: { stripeTransactionId: req.body.payment_intent, completed: true }, relations: [ 'review' ] });
   
         if ( !cart ) return res.status( 500 ).json({ error: 'Could not find event ticket' });
   
@@ -90,7 +90,7 @@ router.post('/picture', async ( req: any, res: any ) => {
   
         await cart.save();
   
-        return res.status( 200 ).json({ message: 'success' });
+        return res.status( 200 ).json({ message: 'success', url });
       }catch(e) {
         console.log( e );
   
