@@ -199,6 +199,8 @@ export class EventTicketReview {
 
     @Field() eventTitle: string;
 
+    @Field() rating: number;
+
     @Field() ratingId: string;
 
     @Field() ratingName: string;
@@ -210,9 +212,14 @@ export class EventTicketReview {
     @Field() reviewCompleted: boolean;
 
     @Field() payment_intent: string;
+
+    @Field({ nullable: true }) dateReviewCompleted: Date;
 }
 
 @InputType()
 export class EventTicketReviewInput {
-    @Field() rating
+    @Field() rating: number;
+    @Field() name: string;
+    @Field() photo: string;
+    @Field() description: string;
 }

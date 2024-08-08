@@ -562,9 +562,9 @@ export class EventResolver {
             });
 
             review = eventTicketCart.review;
-            await review.save()
         }
 
+        await review.save();
         await eventTicketCart.save();
         
         return {
@@ -577,12 +577,63 @@ export class EventResolver {
             photo: eventTicketCart.review.photo,
             description: eventTicketCart.review.description,
             reviewCompleted: eventTicketCart.reviewCompleted,
+            dateReviewCompleted: review.dateReviewCompleted,
             payment_intent
         }
     }
 
     @Mutation( () => String )
-    async submitTicketReview( @Arg('payment_intent') payment_intent: string )
+    async submitTicketReview( @Arg('payment_intent') payment_intent: string, @Arg('args', () => models.EventTicketReviewInput ) args: models.EventTicketReviewInput ) {
+        let paymentIntent = await stripeHandler.getPaymentIntentById( payment_intent, true ) as Stripe.PaymentIntent;
+
+        const latestCharge = ( await stripeHandler.getChargeById( paymentIntent.latest_charge as string ) ) as Stripe.Charge;
+
+        let event = await models.Events.findOne({ where: { id: latestCharge.metadata.eventId }});
+
+        if ( !event ) return new Utils.CustomError("Event not found")
+        
+        let eventTicketCart = await models.EventTicketCart.findOne({
+            where: {
+                id: latestCharge.metadata.cart
+            },
+            relations: [ 'review' ]
+        });
+
+        if ( !eventTicketCart ) return new Utils.CustomError("Ticket Cart not found");
+
+        eventTicketCart.name = args.name;
+
+        let review: models.EventTicketCartReview;
+
+        if ( eventTicketCart.review ) {
+            review = eventTicketCart.review;
+
+            review.name = eventTicketCart.name;
+            review.rating = args.rating;
+            review.photo = args.photo;
+            review.description = args.description;
+        }
+        else {
+            eventTicketCart.review = models.EventTicketCartReview.create({
+                name: eventTicketCart.name,
+                rating: args.rating,
+                photo: args.photo,
+                description: args.description
+            });
+
+            review = eventTicketCart.review;
+        }
+
+        review.dateReviewCompleted = new Date();
+
+        await review.save();
+
+        eventTicketCart.reviewCompleted = true;
+
+        await eventTicketCart.save();
+
+        return "Saved Successfully";
+    }
 
     @Query( () => models.EventTicket )
     async getTicketBuy( @Arg('payment_intent') payment_intent: string ) {

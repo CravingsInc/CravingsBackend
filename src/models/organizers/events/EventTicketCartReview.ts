@@ -17,6 +17,9 @@ export class EventTicketCartReview extends BaseEntity {
     @Column({ default: '' })
     description: string;
 
+    @Column({ nullable: true })
+    dateReviewCompleted: Date;
+
     @CreateDateColumn()
     dateCreated: Date;
 }
