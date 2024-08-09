@@ -2,15 +2,17 @@ import { Resend } from 'resend'
 import { Utils } from "../Utils";
 import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
 import { TicketBuyProps, ticketBuy } from "./email-templates/ticketBuy";
+import { newFollower, NewFollowerNotificationProps} from './Notifications/newFollower';
 
 export enum EmailTemplates {
     RESERVATION,
     CONTACT,
     PASSWORD_CHANGE,
-    TICKET_BUY
+    TICKET_BUY,
+    NOTIFICATION
 }
 
-type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps;
+type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps | NewFollowerNotificationProps;
 
 const formatMail = ( mail: string, opt : { [ key: string ]: string | number } ) => {
     for ( let key in opt ) mail = mail.replaceAll(`{{${key}}}`, opt[key] + "" )
@@ -27,6 +29,8 @@ const getEmailTemplates = ( template: EmailTemplates, opt: EmailTemplatesOpt ) =
             return formatMail( passwordChange, opt );
         case EmailTemplates.TICKET_BUY:
             return ticketBuy( opt as TicketBuyProps );
+        case EmailTemplates.NOTIFICATION:
+            return formatMail(newFollower, opt)
         default: return "";
     }
 }
@@ -93,6 +97,16 @@ export class Mailer {
             `${opt.email}`,
             `CravingsInc: ${opt.eventName} Ticket Confirmation`,
             getEmailTemplates(EmailTemplates.TICKET_BUY, opt )
+        )
+    }
+
+    async sendNewFollowerNotification(opt: NewFollowerNotificationProps) {
+        return await this.sendEmail(
+            'CravingsInc <dont-reply@cravingsinc.us',
+            `${opt.email}`,
+            `You have a new follower ${opt.username}`,
+            getEmailTemplates(EmailTemplates.NOTIFICATION, opt)
+
         )
     }
 }

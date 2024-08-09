@@ -1,7 +1,7 @@
 import { Resolver, Mutation, Arg, Query } from "type-graphql";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
+import {Mailer} from "../utils/Emails/index"
 import * as models from "../models";
 
 import { Utils, stripeHandler } from "../utils";
@@ -98,8 +98,12 @@ export class UserResolver {
                     )]
                 )
             ).length,
-            searchMilesRadius: user.searchMilesRadius
+            searchMilesRadius: user.searchMilesRadius,
+            notificationUpdates: user.notificationUpdates,
+            notificationNewFollower: user.notificationNewFollower,
         }
+            
+
     }
 
     @Mutation( () => String )
@@ -459,4 +463,42 @@ export class UserResolver {
         }
     }
 
-}
+    @Mutation(() => String)
+    async updateUserNotificationPreferences(
+        @Arg("token") token: string,
+        @Arg("notificationUpdates", { nullable: true }) notificationUpdates?: boolean,
+        @Arg("notificationNewFollower", { nullable: true }) notificationNewFollower?: boolean
+    ): Promise<string> {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+        if (notificationUpdates !== undefined) user.notificationUpdates = notificationUpdates;
+        if (notificationNewFollower !== undefined) user.notificationNewFollower = notificationNewFollower;
+
+        await user.save();
+
+        return "Notification preferences updated successfully";
+    }
+
+    @Mutation(() => String)
+    async sendNotification(
+        @Arg("token") token: string,
+        @Arg("subject") subject: string,
+        @Arg("message") message: string
+    ): Promise<string> {
+        let user = await Utils.getUserFromJsWebToken(token);
+
+         if (user.notificationUpdates) {
+            //const emailSent = await sendEmail(user.email, subject, message);
+           // if (emailSent) {
+                return "Notification sent successfully";
+            } else {
+                throw new Utils.CustomError("Failed to send notification");
+            }
+        } //else {
+            //return "User has disabled notifications";
+        }
+
+        //if (user.notificationNewFollower && )
+    //}
+    
+//}

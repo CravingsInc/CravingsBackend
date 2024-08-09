@@ -23,6 +23,11 @@ export class UserProfileInformation {
     @Field() events: number;
 
     @Field() searchMilesRadius: number;
+
+    @Field() notificationUpdates: boolean;
+
+    @Field() notificationNewFollower: boolean;
+
 }
 
 @InputType()
@@ -38,6 +43,10 @@ export class UserProfileInformationInput {
     @Field({ nullable: true }) username?: string;
 
     @Field({ nullable: true }) searchMilesRadius?: number;
+
+    @Field({nullable: true}) notificationUpdates?: boolean;
+
+    @Field({nullable: true}) notificationNewFollower?: boolean;
 }
 @ObjectType()
 export class UsersFollowing {

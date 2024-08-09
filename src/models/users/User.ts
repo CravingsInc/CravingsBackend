@@ -94,4 +94,12 @@ export class Users extends BaseEntity {
     @UpdateDateColumn()
     dateUpdated: Date;
 
+    @Field()
+    @Column()
+    notificationUpdates: boolean;
+
+    @Field() 
+    @Column()
+    notificationNewFollower: boolean;
+
 }
