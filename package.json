@@ -5,7 +5,8 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --exec ts-node src/index.ts --trace-warnings"
+    "start": "ts-node src/index.ts --trace-warnings",
+    "dev": "nodemon --exec ts-node src/index.ts --trace-warnings"
   },
   "repository": {
     "type": "git",
