@@ -1,4 +1,4 @@
-import { Resend } from 'resend'
+import { Resend } from 'resend';
 import { Utils } from "../Utils";
 import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
 import { TicketBuyProps, ticketBuy } from "./email-templates/ticketBuy";

@@ -50,6 +50,10 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
         }).save()
     }
 
+    user ? cart.user = user : null;
+    cart.type = metadata.customer ? 'user' : 'guest';
+    cart.name = name || 'UNKNOWN';
+    cart.email = email || 'UNKNOWN';
     cart.completed = true;
     await cart.save();
 

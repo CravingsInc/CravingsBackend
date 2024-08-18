@@ -1,4 +1,4 @@
-import { Resolver, Mutation, Arg, Query } from "type-graphql";
+import { Resolver, Mutation, Arg, Query, Args } from "type-graphql";
 
 import * as models from "../models";
 
@@ -526,7 +526,133 @@ export class EventResolver {
         }
     }
 
-    @Query( () => models.EventTiket )
+    @Query( () => [ models.EventReviewCard ])
+    async getEventTicketsReviews( @Arg('event_id') event_id: string ) {
+        let event = await models.Events.findOne({ where: { id: event_id } });
+
+        if ( !event ) return new Utils.CustomError("Event not found");
+
+        let eventTicketCarts = await models.EventTicketCart.find({ where: { eventId: event_id, reviewCompleted: true, completed: true }, relations: [ 'review' ] });
+
+        return eventTicketCarts.map( carts => ({
+            photo: carts.review.photo || event.banner,
+            name: carts.review.name,
+            rating: carts.review.rating,
+            description: carts.review.description,
+            dateCompleted: carts.review.dateReviewCompleted
+        }) )
+    }
+
+    @Query( () => models.EventTicketReview )
+    async getTicketReview( @Arg('payment_intent') payment_intent: string ) {
+
+        let paymentIntent = await stripeHandler.getPaymentIntentById( payment_intent, true ) as Stripe.PaymentIntent;
+
+        const latestCharge = ( await stripeHandler.getChargeById( paymentIntent.latest_charge as string ) ) as Stripe.Charge;
+
+        let event = await models.Events.findOne({ where: { id: latestCharge.metadata.eventId }});
+
+        if ( !event ) return new Utils.CustomError("Event not found")
+        
+        let eventTicketCart = await models.EventTicketCart.findOne({
+            where: {
+                id: latestCharge.metadata.cart
+            },
+            relations: [ 'review' ]
+        });
+
+        if ( !eventTicketCart ) return new Utils.CustomError("Ticket Cart not found");
+
+        if ( eventTicketCart.name.length === 0 ) eventTicketCart.name = latestCharge.billing_details.name || '';
+
+        if ( eventTicketCart.email.length === 0 ) eventTicketCart.email = latestCharge.billing_details.email || '';
+
+        let review: models.EventTicketCartReview;
+
+        if ( eventTicketCart.review ) review = eventTicketCart.review;
+        else {
+            eventTicketCart.review = models.EventTicketCartReview.create({
+                name: eventTicketCart.name,
+                rating: 0,
+                photo: '',
+                description: ''
+            });
+
+            review = eventTicketCart.review;
+        }
+
+        await review.save();
+        await eventTicketCart.save();
+        
+        return {
+            eventId: event.id,
+            eventBanner: event.banner,
+            eventTitle: event.title,
+            ratingId: eventTicketCart.review.id,
+            ratingName: eventTicketCart.name,
+            rating: eventTicketCart.review.rating,
+            photo: eventTicketCart.review.photo,
+            description: eventTicketCart.review.description,
+            reviewCompleted: eventTicketCart.reviewCompleted,
+            dateReviewCompleted: review.dateReviewCompleted,
+            payment_intent
+        }
+    }
+
+    @Mutation( () => String )
+    async submitTicketReview( @Arg('payment_intent') payment_intent: string, @Arg('args', () => models.EventTicketReviewInput ) args: models.EventTicketReviewInput ) {
+        let paymentIntent = await stripeHandler.getPaymentIntentById( payment_intent, true ) as Stripe.PaymentIntent;
+
+        const latestCharge = ( await stripeHandler.getChargeById( paymentIntent.latest_charge as string ) ) as Stripe.Charge;
+
+        let event = await models.Events.findOne({ where: { id: latestCharge.metadata.eventId }});
+
+        if ( !event ) return new Utils.CustomError("Event not found")
+        
+        let eventTicketCart = await models.EventTicketCart.findOne({
+            where: {
+                id: latestCharge.metadata.cart
+            },
+            relations: [ 'review' ]
+        });
+
+        if ( !eventTicketCart ) return new Utils.CustomError("Ticket Cart not found");
+
+        eventTicketCart.name = args.name;
+
+        let review: models.EventTicketCartReview;
+
+        if ( eventTicketCart.review ) {
+            review = eventTicketCart.review;
+
+            review.name = eventTicketCart.name;
+            review.rating = args.rating;
+            review.photo = args.photo;
+            review.description = args.description;
+        }
+        else {
+            eventTicketCart.review = models.EventTicketCartReview.create({
+                name: eventTicketCart.name,
+                rating: args.rating,
+                photo: args.photo,
+                description: args.description
+            });
+
+            review = eventTicketCart.review;
+        }
+
+        review.dateReviewCompleted = new Date();
+
+        await review.save();
+
+        eventTicketCart.reviewCompleted = true;
+
+        await eventTicketCart.save();
+
+        return "Saved Successfully";
+    }
+
+    @Query( () => models.EventTicket )
     async getTicketBuy( @Arg('payment_intent') payment_intent: string ) {
         let paymentIntent = await stripeHandler.getPaymentIntentById(payment_intent, true ) as Stripe.PaymentIntent;
 
@@ -553,14 +679,15 @@ export class EventResolver {
     }
 
     @Mutation( () => String ) 
-    async confirmTicketCheckIn( @Arg('id') id: string ) {
-        let ticket = await models.EventTicketBuys.findOne({ where: { id: id } });
+    async confirmTicketCheckIn( @Arg('payment_intent') payment_intent: string ) {
+        let cart = await models.EventTicketCart.findOne({ where: { stripeTransactionId: payment_intent }, relations: ['tickets'] });
 
-        if ( !ticket ) return new Utils.CustomError("Ticket not found.");
+        if ( !cart ) return new Utils.CustomError("Tickets not found.");
 
-        ticket.checkIn = true;
-
-        await ticket.save();
+        for ( let ticket of cart.tickets ) {
+            ticket.checkIn = true;
+            await ticket.save();
+        }
 
         return "Checked in successfully.";
     }
