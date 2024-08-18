@@ -526,8 +526,8 @@ export class EventResolver {
         }
     }
 
-    @Query( () => [ models.EventTicketReview ])
-    async getEventTicketsReview( @Arg('event_id') event_id: string ) {
+    @Query( () => [ models.EventReviewCard ])
+    async getEventTicketsReviews( @Arg('event_id') event_id: string ) {
         let event = await models.Events.findOne({ where: { id: event_id } });
 
         if ( !event ) return new Utils.CustomError("Event not found");
@@ -535,11 +535,11 @@ export class EventResolver {
         let eventTicketCarts = await models.EventTicketCart.find({ where: { eventId: event_id, reviewCompleted: true, completed: true }, relations: [ 'review' ] });
 
         return eventTicketCarts.map( carts => ({
-            photo: carts.review.photo || event.banner;
-            name: string;
-            rating: number;
-            description: string;
-            dateCompleted: Date | null;
+            photo: carts.review.photo || event.banner,
+            name: carts.review.name,
+            rating: carts.review.rating,
+            description: carts.review.description,
+            dateCompleted: carts.review.dateReviewCompleted
         }) )
     }
 

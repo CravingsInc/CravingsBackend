@@ -216,6 +216,19 @@ export class EventTicketReview {
     @Field({ nullable: true }) dateReviewCompleted: Date;
 }
 
+@ObjectType()
+export class EventReviewCard {
+    @Field() photo: string;
+
+    @Field() name: string;
+
+    @Field() rating: number;
+
+    @Field() description: string;
+
+    @Field({ nullable: true }) dateCompleted: Date;
+}
+
 @InputType()
 export class EventTicketReviewInput {
     @Field() rating: number;
