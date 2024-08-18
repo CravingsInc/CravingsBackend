@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, M
 import { ObjectType, Field, ID } from "type-graphql";
 import { EventTickets } from "./eventTickets";
 import { Users } from "../../users";
-import { EventTicketCart } from "./EventTIcketCart";
+import { EventTicketCart } from "./EventTicketCart";
 
 @Entity()
 @ObjectType()

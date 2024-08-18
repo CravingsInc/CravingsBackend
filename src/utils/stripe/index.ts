@@ -11,3 +11,4 @@ export * from './constructConnectWebHookEvent';
 export * as StripeWebHooks from './webhook';
 export * from './connectAccountVerification';
 export * from './getPaymentIntent';
+export * from './getChargeById';
