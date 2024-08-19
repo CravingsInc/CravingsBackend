@@ -1,6 +1,16 @@
 import { ObjectType, InputType, Field, ID } from "type-graphql";
 
 @ObjectType()
+export class UserNotificationsSettings {
+    
+    /** Whether to notify user when new feature releases */
+    @Field() updates: boolean;
+
+    /** Whether to notify user when new follower */
+    @Field() newFollower: boolean;
+}
+
+@ObjectType()
 export class UserProfileInformation {
     @Field( () => ID ) id: string;
     
@@ -23,6 +33,8 @@ export class UserProfileInformation {
     @Field() events: number;
 
     @Field() searchMilesRadius: number;
+
+    @Field( () => UserNotificationsSettings ) notificationsSettings: UserNotificationsSettings;
 }
 
 @InputType()
@@ -39,6 +51,15 @@ export class UserProfileInformationInput {
 
     @Field({ nullable: true }) searchMilesRadius?: number;
 }
+
+
+@InputType()
+export class UserNotificationsInput {
+    @Field({ nullable: true }) updates?: boolean;
+
+    @Field({ nullable: true }) newFollower?: boolean;
+}
+
 @ObjectType()
 export class UsersFollowing {
     @Field()
