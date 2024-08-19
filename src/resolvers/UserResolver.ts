@@ -98,7 +98,11 @@ export class UserResolver {
                     )]
                 )
             ).length,
-            searchMilesRadius: user.searchMilesRadius
+            searchMilesRadius: user.searchMilesRadius,
+            notificationsSettings: {
+                updates: user.notificationUpdate,
+                newFollower: user.notificationNewFollower
+            }
         }
     }
 
@@ -106,11 +110,24 @@ export class UserResolver {
     async modifyUserProfileInformation( @Arg('token') token: string, @Arg('arg', () => models.UserProfileInformationInput ) arg : models.UserProfileInformationInput ) {
         let user = await Utils.getUserFromJsWebToken(token);
 
-        if ( arg.firstName ) user.firstName = arg.firstName
-        if ( arg.lastName ) user.lastName = arg.lastName
-        if ( arg.username ) user.username = arg.username
-        if ( arg.phoneNumber ) user.phoneNumber = arg.phoneNumber
-        if ( arg.email ) user.email = arg.email
+        if ( arg.firstName != null  ) user.firstName = arg.firstName
+        if ( arg.lastName != null  ) user.lastName = arg.lastName
+        if ( arg.username != null ) user.username = arg.username
+        if ( arg.phoneNumber != null  ) user.phoneNumber = arg.phoneNumber
+        if ( arg.email != null  ) user.email = arg.email
+
+        await user.save();
+
+        return "Modified Properly";
+    }
+
+
+    @Mutation( () => String )
+    async modifyUserNotifications( @Arg('token') token: string, @Arg('arg', () => models.UserNotificationsInput ) arg: models.UserNotificationsInput ) {
+        let user = await Utils.getUserFromJsWebToken( token );
+
+        if ( arg.updates != null ) user.notificationUpdate = arg.updates;
+        if ( arg.newFollower != null  ) user.notificationNewFollower = arg.newFollower;
 
         await user.save();
 
