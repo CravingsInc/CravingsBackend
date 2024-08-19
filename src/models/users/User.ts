@@ -55,6 +55,14 @@ export class Users extends BaseEntity {
     @Column({ default: 12, nullable: true, type: 'float' })
     searchMilesRadius: number;
 
+    @Field()
+    @Column({ default: true })
+    notificationUpdate: boolean;
+
+    @Field()
+    @Column({ default: true })
+    notificationNewFollower: boolean;
+
     @OneToMany( () => UserPasswordChange, pwc => pwc.user )
     passwordChangeHistory: UserPasswordChange[];
 

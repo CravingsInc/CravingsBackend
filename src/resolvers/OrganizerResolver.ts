@@ -267,17 +267,17 @@ export class OrganizerResolver {
 
         if ( !event ) return new Utils.CustomError("Event does not exist");
 
-        if ( args.title ) event.title = args.title;
+        if ( args.title != null  ) event.title = args.title;
 
-        if ( args.description ) event.description = args.description;
+        if ( args.description != null  ) event.description = args.description;
 
-        if ( args.eventDate ) event.eventDate = args.eventDate;
+        if ( args.eventDate != null  ) event.eventDate = args.eventDate;
 
-        if ( args.endDate ) event.endEventDate = args.endDate;
+        if ( args.endDate != null  ) event.endEventDate = args.endDate;
 
-        if ( args.visible ) event.visible = args.visible;
+        if ( args.visible != null  ) event.visible = args.visible;
 
-        if ( args.location ) {
+        if ( args.location != null  ) {
             let loc = await Utils.googleMapsService.getLatitudeLongitude(args.location);
 
             event.location = args.location;
@@ -362,11 +362,11 @@ export class OrganizerResolver {
 
         if ( !eventTicket ) return new Utils.CustomError("Problem changing event ticket");
 
-        if ( args.title ) eventTicket.title = args.title;
+        if ( args.title != null  ) eventTicket.title = args.title;
 
-        if ( args.description ) eventTicket.description = args.description;
+        if ( args.description != null  ) eventTicket.description = args.description;
 
-        if ( args.totalTicketAvailable ) eventTicket.totalTicketAvailable = args.totalTicketAvailable;
+        if ( args.totalTicketAvailable != null  ) eventTicket.totalTicketAvailable = args.totalTicketAvailable;
 
         await eventTicket.save();
 
