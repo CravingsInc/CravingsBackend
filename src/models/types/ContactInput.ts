@@ -16,4 +16,7 @@ export class ContactInput {
 
     @Field()
     phone_number: string;
+
+    @Field({ nullable: true })
+    organizer?: boolean;
 }

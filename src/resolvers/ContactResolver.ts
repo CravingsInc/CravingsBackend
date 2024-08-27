@@ -13,7 +13,7 @@ export class ContactResolver {
 
     @Query( () => String )
     async makeContact( @Arg("contactInput", () => models.ContactInput) opt : models.ContactInput ) {
-        await Utils.Mailer.sendContactEmail(opt);
+        await Utils.Mailer.sendContactEmail({...opt, organizer: opt.organizer ? "Yes" : "No" });
 
         return "Contact Sent";
     }
