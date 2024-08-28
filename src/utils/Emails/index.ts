@@ -63,7 +63,7 @@ export class Mailer {
     async sendContactEmail( opt: ContactProps ) {
         return await this.sendEmail(
             'CravingsInc <outreach@cravingsinc.us>',
-            `${opt.email}, outreach@cravingsinc.us`,
+            `outreach@cravingsinc.us`,
             `CravingsInc Contact by ${opt.first_name}`,
             getEmailTemplates(EmailTemplates.CONTACT, opt)
         )
