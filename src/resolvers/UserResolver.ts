@@ -1,7 +1,6 @@
 import { Resolver, Mutation, Arg, Query } from "type-graphql";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
 import * as models from "../models";
 
 import { Utils, stripeHandler } from "../utils";
@@ -50,6 +49,7 @@ export class UserResolver {
 
     @Mutation( returns => String ) 
     async UserLogIn( @Arg("username") username: string, @Arg("password") password: string ) {
+        
         let user = await models.Users.findOne({ where: { username } });
 
         if ( !user ) user = await models.Users.findOne({ where: { email: username }}) // Just incase they are using there email
@@ -67,7 +67,7 @@ export class UserResolver {
             }
         }
 
-        throw new Utils.CustomError("Invalid credentials. Please try again")
+        throw new Utils.CustomError("invalid email or password. <br> Please try again")
     }
 
     @Query( returns => String )
