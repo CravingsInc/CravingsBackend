@@ -89,4 +89,5 @@ export type ContactProps = {
   email: string;
   phone_number: string;
   organizer: string;
+  waitList?: string;
 }
