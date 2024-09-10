@@ -71,6 +71,11 @@ export const contact = `
           <label>Message </label>
           <p>{{message}}</p>
         </div>
+
+        <div class="label">
+          <label>Organizer </label>
+          <p>{{organizer}}</p>
+        </div>
       </div>
     </div>
   </body>
@@ -83,4 +88,6 @@ export type ContactProps = {
   message: string;
   email: string;
   phone_number: string;
+  organizer: string;
+  waitList?: string;
 }

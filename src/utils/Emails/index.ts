@@ -63,8 +63,8 @@ export class Mailer {
     async sendContactEmail( opt: ContactProps ) {
         return await this.sendEmail(
             'CravingsInc <outreach@cravingsinc.us>',
-            `${opt.email}, outreach@cravingsinc.us`,
-            `CravingsInc Contact by ${opt.first_name}`,
+            `outreach@cravingsinc.us${ opt.organizer === "Yes" ? '': `, ${ opt.email }`}`,
+            `CravingsInc ${ opt.waitList === "Yes" ? 'New WaitList' : 'Contact'} by ${opt.first_name}`,
             getEmailTemplates(EmailTemplates.CONTACT, opt)
         )
     }
