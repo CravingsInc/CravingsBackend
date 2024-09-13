@@ -308,7 +308,9 @@ export const waitList = `
                             <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation">
                              <tr>
                               <td valign="top">
-                               <img src="https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/facebook-icon.png" class="" width="15" height="15" style="display: block; border: 0; outline: 0; line-height: 100%; -ms-interpolation-mode: bicubic; width:15px; height:15px;" alt="" />
+                                <a href="https://www.facebook.com/CravingsInc">
+                                    <img src="https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/facebook-icon.png" class="" width="15" height="15" style="display: block; border: 0; outline: 0; line-height: 100%; -ms-interpolation-mode: bicubic; width:15px; height:15px;" alt="" />
+                                </a>
                               </td>
                              </tr>
                             </table>
@@ -329,8 +331,10 @@ export const waitList = `
                             <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation">
                              <tr>
                               <td valign="top">
-                               <img src="https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/twitter-x.png" class="" width="15" height="15" style="display: block; border: 0; outline: 0; line-height: 100%; -ms-interpolation-mode: bicubic; width:15px; height:15px;" alt="" />
-                              </td>
+                                <a href="https://x.com/_cravingsinc_">
+                                    <img src="https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/twitter-x.png" class="" width="15" height="15" style="display: block; border: 0; outline: 0; line-height: 100%; -ms-interpolation-mode: bicubic; width:15px; height:15px;" alt="" />
+                                </a>
+                               </td>
                              </tr>
                             </table>
                            </td>
@@ -350,7 +354,9 @@ export const waitList = `
                             <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation">
                              <tr>
                               <td valign="top">
-                               <img src="https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/instagram.png" class="" width="15" height="15" style="display: block; border: 0; outline: 0; line-height: 100%; -ms-interpolation-mode: bicubic; width:15px; height:15px;" alt="" />
+                               <a href="https://www.instagram.com/_cravingsinc_/">
+                                    <img src="https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/instagram.png" class="" width="15" height="15" style="display: block; border: 0; outline: 0; line-height: 100%; -ms-interpolation-mode: bicubic; width:15px; height:15px;" alt="" />
+                               </a>
                               </td>
                              </tr>
                             </table>
