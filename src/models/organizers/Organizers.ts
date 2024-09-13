@@ -5,6 +5,7 @@ import { OrganizerPasswordChange } from "./OrganizerPasswordChange";
 import { OrganizersFollowers } from "./OrganizersFollowers";
 import { OrganizerPageVisit } from "../analysis/organizer/OrganizerPageVisit";
 import { SiteHistory } from "../analysis";
+import { OrganizerMembers } from "./OrganizerMembers";
 
 
 @Entity()
@@ -22,7 +23,7 @@ export class Organizers extends BaseEntity {
     password: string;
 
     @Field()
-    @Column({ default: "", nullable: true })
+    @Column({ unique: true, nullable: true })
     orgName: string;
 
     @Field()
@@ -74,6 +75,10 @@ export class Organizers extends BaseEntity {
     @OneToMany( () => SiteHistory, sH => sH.organizer )
     siteHistory: SiteHistory[];
 
+    @Field( () => [ OrganizerMembers ])
+    @OneToMany( () => OrganizerMembers, oM => oM.organizer )
+    members: OrganizerMembers[];
+
     @Field()
     @CreateDateColumn()
     createdDate: Date;
@@ -81,5 +86,13 @@ export class Organizers extends BaseEntity {
     @Field()
     @UpdateDateColumn()
     updatedDate: Date;
+
+    static async loginOrganizer( orgName: string, email: string ): Promise<Organizers|null> {
+        return await this.findOne({ where: { orgName, email } });
+    }
+
+    static async loginOrganizersMembers( orgName: string, email: string ): Promise<OrganizerMembers|null> {
+        return await OrganizerMembers.findOne({ where: { organizer: { orgName: orgName }, email }, relations: ['organizer'] });
+    }
 
 }
