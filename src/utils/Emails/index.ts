@@ -2,15 +2,17 @@ import { Resend } from 'resend';
 import { Utils } from "../Utils";
 import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
 import { TicketBuyProps, ticketBuy } from "./email-templates/ticketBuy";
+import { waitList, WaitlistProps } from './email-templates/waitlist';
 
 export enum EmailTemplates {
     RESERVATION,
     CONTACT,
+    WAITLIST,
     PASSWORD_CHANGE,
     TICKET_BUY
 }
 
-type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps;
+type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps | WaitlistProps;
 
 const formatMail = ( mail: string, opt : { [ key: string ]: string | number } ) => {
     for ( let key in opt ) mail = mail.replaceAll(`{{${key}}}`, opt[key] + "" )
@@ -23,6 +25,8 @@ const getEmailTemplates = ( template: EmailTemplates, opt: EmailTemplatesOpt ) =
             return formatMail( reservation, opt );
         case EmailTemplates.CONTACT:
             return formatMail( contact, opt );
+        case EmailTemplates.WAITLIST:
+            return formatMail( waitList, opt );
         case EmailTemplates.PASSWORD_CHANGE:
             return formatMail( passwordChange, opt );
         case EmailTemplates.TICKET_BUY:
@@ -66,6 +70,17 @@ export class Mailer {
             `outreach@cravingsinc.us${ opt.organizer === "Yes" ? '': `, ${ opt.email }`}`,
             `CravingsInc ${ opt.waitList === "Yes" ? 'New WaitList' : 'Contact'} by ${opt.first_name}`,
             getEmailTemplates(EmailTemplates.CONTACT, opt)
+        )
+    }
+
+    async sendWaitlistEmail( opt: ContactProps ) {
+        await this.sendContactEmail( opt );
+
+        return await this.sendEmail(
+            'CravingsInc <outreach@cravingsinc.us>',
+            opt.email,
+            `Thank You ${opt.first_name}, For Joining Waitlist`,
+            getEmailTemplates(EmailTemplates.WAITLIST, { orgName: opt.first_name })
         )
     }
 
