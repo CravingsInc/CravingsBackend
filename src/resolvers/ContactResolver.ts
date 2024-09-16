@@ -33,7 +33,7 @@ export class ContactResolver {
             phoneNumber: opt.phone_number 
         }).save();
 
-        await Utils.Mailer.sendContactEmail({
+        await Utils.Mailer.sendWaitlistEmail({
             ...opt, organizer: "Yes", message: "SYSTEM: Needs to be added to wait list and emailed", waitList: "Yes"
         });
 
