@@ -18,7 +18,8 @@ export class Utils {
 
     static LOGIN_TOKEN_TYPE = {
         USER: "USER",
-        ORGANIZER: "ORGANIZER"
+        ORGANIZER: "ORGANIZER",
+        ORGANIZER_MEMBERS: "ORGANIZER_MEMBERS",
     } as const;
 
     static CustomError = class extends Error {

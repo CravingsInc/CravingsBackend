@@ -48,25 +48,42 @@ export class OrganizerResolver {
     }
 
     @Mutation( returns => String ) 
-    async OrganizerLogIn( @Arg("username") orgName: string, @Arg("password") password: string ) {
-        let organizer = await models.Organizers.findOne({ where: { orgName } });
-
-        if ( !organizer ) organizer = await models.Organizers.findOne({ where: { email: orgName }}) // Just incase they are using there email
+    async OrganizerLogIn( @Arg("orgName") orgName: string, @Arg('email') email: string, @Arg("password") password: string ) {
+        let organizer = await models.Organizers.loginOrganizer( orgName, email );
 
         if ( organizer ) {
             if ( await bcrypt.compare(password, organizer.password) ) {
                 return jwt.sign(
                     {
                         ...await Utils.generateJsWebToken(organizer.id),
-                        type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER
+                        type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER,
+                        org: organizer.orgName
                     },
                     Utils.SECRET_KEY,
                     { expiresIn: "2w" }
-                );
+                )
+            }
+
+            throw new Utils.CustomError("Invalid credentials. Please try again");
+        }
+
+        let orgMember = await models.Organizers.loginOrganizersMembers( orgName, email );
+
+        if ( orgMember ) {
+            if ( await bcrypt.compare( password, orgMember.password ) ) {
+                return jwt.sign(
+                    {
+                        ...await Utils.generateJsWebToken(orgMember.organizer.id),
+                        type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                        org: orgMember.organizer.orgName
+                    },
+                    Utils.SECRET_KEY,
+                    { expiresIn: "2w" }
+                )
             }
         }
 
-        throw new Utils.CustomError("Invalid credentials. Please try again")
+        throw new Utils.CustomError("Invalid credentials. Please try again");
     }
 
     @Query( returns => models.Organizers )
