@@ -25,6 +25,14 @@ export class OrganizerMembers extends BaseEntity {
     password: string;
 
     @Field()
+    @Column()
+    accepted: boolean;
+
+    @Field()
+    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    dateJoined: Date;
+
+    @Field()
     @Column({ default: '/home-header.png', nullable: true })
     profilePicture: string;
 
