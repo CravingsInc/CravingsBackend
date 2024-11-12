@@ -19,6 +19,10 @@ export class OrganizerMembers extends BaseEntity {
 
     @Field()
     @Column()
+    phoneNumber: string;
+
+    @Field()
+    @Column()
     title: 'Admin' | "Member" | "Guest";
 
     @Field()

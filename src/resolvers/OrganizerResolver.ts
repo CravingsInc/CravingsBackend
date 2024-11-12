@@ -22,7 +22,7 @@ export class OrganizerResolver {
             }).save();
         }catch(e) {
             console.log(e);
-            throw new Utils.CustomError("Food Truck Name Already Exist");
+            throw new Utils.CustomError("Organizer Name Already Exist");
         }
 
         if ( organizer ) {
@@ -33,7 +33,7 @@ export class OrganizerResolver {
                 console.log(e);
 
                 await organizer.remove();
-                throw new Utils.CustomError("Problem Creating Food Truck Account");
+                throw new Utils.CustomError("Problem Creating Organizer Account");
             }
 
             return jwt.sign(
@@ -73,7 +73,7 @@ export class OrganizerResolver {
             if ( await bcrypt.compare( password, orgMember.password ) ) {
                 return jwt.sign(
                     {
-                        ...await Utils.generateJsWebToken(orgMember.organizer.id),
+                        ...await Utils.generateJsWebToken(orgMember.id),
                         type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
                         org: orgMember.organizer.orgName
                     },
@@ -88,7 +88,7 @@ export class OrganizerResolver {
 
     @Query( returns => models.Organizers )
     async getOrganizerProfile( @Arg("token") token: string ) {
-        return await Utils.getOrganizerFromJsWebToken(token);
+        return await Utils.getOrgFromOrgOrMemberJsWebToken(token);
     }
 
     @Mutation( returns => String )
@@ -145,6 +145,67 @@ export class OrganizerResolver {
             )
         }
 
+    }
+
+    @Query( () => models.OrganizerSettingsPageResponse )
+    async getOrganizerSettingsPage( @Arg('token') token: string ) {
+        let org: models.Organizers;
+        let orgMember: models.OrganizerMembers | null = null;
+        let isOrg: boolean;
+
+        try {
+            org = await Utils.getOrganizerFromJsWebToken( token );
+            isOrg = true;
+        }catch(e) {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+            isOrg = false;
+            org = orgMember.organizer;
+        }
+
+        return {
+            isOrg,
+            user: orgMember ? {
+                name: orgMember.name,
+                phoneNumber: orgMember.phoneNumber,
+                profilePicture: orgMember.profilePicture,
+                title: orgMember.title,
+                email: orgMember.email,
+                id: orgMember.id,
+            }: null,
+            organizer: {
+                banner: org.banner,
+                orgName: org.orgName,
+                email: org.email,
+                phoneNumber: org.phoneNumber,
+                location: org.location,
+                profilePicture: org.profilePicture,
+                id: org.id
+            },
+            teams: [
+                {
+                    name: org.orgName,
+                    email: org.email,
+                    type: "Organizer",
+                    joinedDate: org.createdDate,
+                    id: org.id,
+                    profilePicture: org.profilePicture
+                },
+
+                ...(
+                    await models.OrganizerMembers.find({
+                      where: { organizer: { id: org.id } },
+                      relations: ['organizer']
+                    })
+                ).map(member => ({
+                    name: member.name,
+                    email: member.email,
+                    type: member.title,
+                    joinedDate: member.dateJoined,
+                    id: member.id,
+                    profilePicture: member.profilePicture
+                }))
+            ]
+        }
     }
 
     @Mutation( () => String )

@@ -153,6 +153,35 @@ export class Utils {
         throw new Utils.CustomError("User does not exist.");
     }
 
+    static async getOrgFromOrgOrMemberJsWebToken( token: string, relations: string[] = [] ): Promise<models.Organizers> {
+        let org: models.Organizers;
+
+        try {
+            org = await this.getOrganizerFromJsWebToken( token, relations);
+        }catch {
+            org = ( await this.getOrganizerMemberFromJsWebToken( token, relations ) ).organizer ;
+        }
+
+        return org;
+    }
+
+    static async getOrganizerMemberFromJsWebToken( token: string, relations: string[] = [] ): Promise<models.OrganizerMembers> {
+        let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
+
+        if ( unHashedToken ) {
+            if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS ) {
+                let orgMember = await models.OrganizerMembers.findOne({
+                    where: { id: unHashedToken.id },
+                    relations: ['organizer', ...relations.map( val => `organizer.${val}`)]
+                });
+
+                if ( orgMember ) return orgMember;
+            }
+        }
+
+        throw new Utils.CustomError("User does not exist.");
+    }
+
     static getMiles( start: { longitude: number, latitude: number }, end: { longitude: number, latitude: number } ) {
         let km  = Math.acos(
             Math.sin(start.latitude) * Math.sin(end.latitude) + Math.cos(start.latitude) * Math.cos(end.latitude) * Math.cos(end.longitude - start.longitude)
