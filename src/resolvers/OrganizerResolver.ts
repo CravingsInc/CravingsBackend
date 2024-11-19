@@ -147,6 +147,72 @@ export class OrganizerResolver {
 
     }
 
+    @Mutation( () => models.OrganizerSettingsUpdateResponse)
+    async saveOrganizerSettings( @Arg('token') token: string, @Arg('args', () => models.OrganizerSettingsUpdateInput ) args: models.OrganizerSettingsUpdateInput ) {
+        let org = await Utils.getOrganizerFromJsWebToken( token );
+
+        let orgResponse = {
+            id: org.id,
+            banner: org.banner,
+            orgName: org.orgName,
+            email: org.email,
+            phoneNumber: org.phoneNumber,
+            profilePicture: org.profilePicture,
+            location: org.location
+        }
+
+        if ( args.orgName && args.orgName !== org.orgName ) {
+
+            let orgExists = await models.Organizers.findOneBy({ orgName: args.orgName });
+                
+            if ( orgExists ) return { 
+                response: "Unsuccessfull",
+                error: {
+                    message: "Organization name already exists. Please choose a different name.",
+                    code: 404
+                }, 
+                organizer: orgResponse
+            }
+
+            org.orgName = args.orgName;
+        }
+
+        if ( args.email ) {
+            org.email = args.email;
+        }
+
+        if ( args.phoneNumber ) {
+            org.phoneNumber = args.phoneNumber;
+        }
+
+        if ( args.location ) {
+            org.location = args.location;
+        }
+
+        if ( args.profilePicture ) {
+            org.profilePicture = args.profilePicture;
+        }
+
+        if ( args.banner ) {
+            org.banner = args.banner;
+        }
+
+        await org.save();
+
+        orgResponse = {
+            id: org.id,
+            banner: org.banner,
+            orgName: org.orgName,
+            email: org.email,
+            phoneNumber: org.phoneNumber,
+            profilePicture: org.profilePicture,
+            location: org.location
+        }
+
+
+        return { response: "Successfully Updated", organizer: orgResponse }
+    }
+
     @Query( () => models.OrganizerSettingsPageResponse )
     async getOrganizerSettingsPage( @Arg('token') token: string ) {
         let org: models.Organizers;

@@ -1,4 +1,5 @@
-import { ObjectType, Field, ID } from 'type-graphql';
+import { ObjectType, InputType, Field, ID } from 'type-graphql';
+import { ErrorResponse } from '../ErrorResponse';
 
 @ObjectType()
 export class OrganizerSettingsUserResponse {
@@ -56,5 +57,30 @@ export class OrganizerSettingsPageResponse {
     @Field( () => OrganizerSettingsOrgResponse ) organizer: OrganizerSettingsOrgResponse;
 
     @Field( () => [OrganizerSettingsTeamsResponse] ) teams: OrganizerSettingsTeamsResponse[];
+}
 
+@InputType()
+export class OrganizerSettingsUpdateInput {
+    @Field({ nullable: true }) id?: string;
+
+    @Field({ nullable: true }) orgName?: string;
+
+    @Field({ nullable: true }) email?: string;
+
+    @Field({ nullable: true }) phoneNumber?: string;
+
+    @Field({ nullable: true }) location?: string;
+    
+    @Field({ nullable: true }) profilePicture?: string;
+
+    @Field({ nullable: true }) banner?: string;
+}
+
+@ObjectType()
+export class OrganizerSettingsUpdateResponse {
+    @Field() response: string;
+    
+    @Field( () => ErrorResponse, { nullable: true }) error?: ErrorResponse;
+
+    @Field( () => OrganizerSettingsOrgResponse ) organizer: OrganizerSettingsOrgResponse
 }

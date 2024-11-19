@@ -33,13 +33,15 @@ app.use(function (req, res, next) {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/event', Api.EventRouter );
+app.use( '/event', Api.EventRouter );
 
-app.use('/user', Api.UserRouter );
+app.use( '/user', Api.UserRouter );
 
-app.use("/api", Api.ApiRouter)
+app.use( "/api", Api.ApiRouter)
 
-app.use('/stripe', Api.StripeRouter );
+app.use( '/stripe', Api.StripeRouter );
+
+app.use( '/organizer', Api.OrganizerRouter );
 
 const httpServer = http.createServer(app);
 
