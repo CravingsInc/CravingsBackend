@@ -6,7 +6,6 @@ import { EventsPageVisit } from "../../analysis";
 import { Utils } from "../../../utils";
 import { EventPhotos } from "./EventPhotos";
 
-
 @Entity()
 @ObjectType()
 export class Events extends BaseEntity {

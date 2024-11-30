@@ -1,0 +1,255 @@
+{
+    "users": [
+        {
+            "username": "nnajic",
+            "email": "codingwith@gmail.com",
+            "password": "cravingsincNnajic",
+            "phoneNumber": "248-812-6865",
+            "profilePicture": "/about-us-image.png",
+            "stripeCustomerId": "cus_RGymWQ1wCadKSX"
+        },
+
+        {
+            "username": "nwobuc",
+            "email": "christian.nwobu0@gmail.com",
+            "password": "cravingsincNwobuC",
+            "phoneNumber": "5178850808",
+            "profilePicture": "/about-us-image.png",
+            "stripeCustomerId": "cus_RGypQtYshAkLVC"
+        }
+    ],
+
+    "organizers": [
+        {
+            "orgName": "CravingsInc",
+            "email": "admins@cravingsinc.us",
+            "password": "cravingsinc",
+            "profilePicture": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
+            "phoneNumber": "248-812-6865",
+            "stripeConnectId": "acct_1QOQFnQW7yZCr6I7",
+            "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
+            "location": "187 Cherry Valley Dr, Inkster Michigan 48141"
+        },
+
+        {
+            "orgName": "ChristianNwobu",
+            "email": "christian.nwobu0@gmail.com",
+            "password": "ChristianNwobu",
+            "profilePicture": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
+            "phoneNumber": "517-885-0808",
+            "stripeConnectId": "acct_1QOQuOH6hKIPmVsu",
+            "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
+            "location": "187 Cherry Valley Dr, Inkster Michigan 48141"
+        }
+    ],
+
+    "gallery": [
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/b3066bfe-5474-402c-a2e0-eb0e6128375a.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/65992965-a999-486f-953a-d234abe13cb2.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/99c65391-fdb6-4d1b-8272-2ef4b1cfec0d.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/1d3aa0fb-784e-41a7-bbba-5fe8efb8ce89.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/0b456afa-9589-4225-b1ca-d176b9c27b53.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/36eb730e-f748-47ca-b2dd-2d84df2cfeec.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/18b14e1f-411d-4d36-82d3-b76a5dd18e58.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/ca5f864d-2cb8-457a-bf67-66361a1263ce.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/7e97770c-de7c-46e0-9d3b-47e3d23cb654.jpeg",
+        "https://cravings-media.nyc3.digitaloceanspaces.com/events/gallery/image/jpeg/66e8a6af-0c43-42bb-adda-71b4287a6fc8.jpeg"
+    ],
+
+    "events": [
+        {
+            "title": "Detroit Pop Up Shop",
+            "description": [
+                "Join us on March 23, 2024, for an unforgettable celebration marking the launch of our enhanced services! This special event promises to be a vibrant gathering featuring an array of vendors hailing from across Michigan, each offering unique services to enrich your experience.",
+                "From 12 to 4 p.m., immerse yourself in a dynamic atmosphere where you can explore offerings from esteemed vendors such as Lenny's Empanadas, Glazed by Meg, and Roseate Candles, among others. Whether you're seeking artisan crafts, delectable treats, or professional services, there's something for everyone to enjoy.",
+                "As part of the festivities, we're thrilled to present an exciting Easter raffle, offering you the chance to win fantastic prizes while enjoying exclusive discounts from our vendors. Purchase a $10 ticket for the opportunity to win $20 in cash and enjoy a generous 5% discount on all vendor offerings. Opt for the $15 ticket, and you could walk away with a whopping $50 prize, coupled with a fantastic 10% discount. For those looking to up the ante, a $20 ticket grants you the possibility of winning an incredible $100 cash prize, along with an unbeatable 15% discount on all vendor products and services.",
+                "Don't miss out on this fantastic celebration of our enhanced services, where you can indulge in a day of discovery, excitement, and incredible savings. Mark your calendars and join us for an event to remember!"
+            ],
+            "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/banner/image/png/banner.png",
+            "latitude": 42.3765,
+            "longitude": -83.0817,
+            "location": "611 W Phelidephia",
+            "ticketType": "infinite",
+            "tickets": [
+                {
+                    "title": "General Admission",
+                    "amount": 1,
+                    "totalAvailable": 45,
+                    "description": "Suitable for anyone attending the event, offering access to all activities."
+                },
+
+                {
+                    "title": "Premium Admission",
+                    "amount": 20,
+                    "totalAvailable": 45,
+                    "description": "Designed for those eager to maximize their chances of winning, providing access to the raffle with the possibility of winning up to $100. This ticket also offers a 10% discount."
+                },
+
+                {
+                    "title": "Easter Egg Pearl Admission",
+                    "amount": 15,
+                    "totalAvailable": 45,
+                    "description": "Tailored for enthusiasts seeking a higher chance of winning, offering entry into the raffle with the opportunity to win up to $70. This ticket also includes a 10% discount."
+                },
+
+                {
+                    "title": "Easter Egg General Admission",
+                    "amount": 10,
+                    "totalAvailable": 45,
+                    "description": "Perfect for those keen on participating in the Easter egg hunt, with the chance to win up to $50 in the raffle. Additionally, it includes a 5% discount"
+                }
+            ]
+        },
+
+        {
+            "title": "Family Painting Night",
+            "description": [
+                "Gather your loved ones for an evening of creativity and fun at our 'Family Painting Night.' Set in the picturesque South Shelter at Farmington Hills Heritage Park, this event is designed to bring families together through the joy of painting. Whether you're a seasoned artist or a complete beginner, our talented painting instructors will guide you step-by-step to create your own masterpiece.",
+                "With a variety of paints and colors at your disposal, along with painting boards provided, you can let your imagination run wild and create a beautiful piece of art to take home. This is the perfect opportunity to bond with your family, make lasting memories, and discover the artist within you.",
+                "Join us for an hour of artistic expression and family fun. Secure your spot for just $15 and get ready to unleash your inner artist in a supportive and inspiring environment. Don't miss out on this wonderful family activity that promises to be both entertaining and enriching!"
+            ],
+            "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/banner/image/png/family-painting-night.png",
+            "latitude": 42.4742,
+            "longitude": -83.3798,
+            "location": "24915 Farmington Rd, Farmington Hills, MI 48336",
+            "ticketType": "limited",
+            "tickets": [
+                {
+                    "title": "Admission Ticket",
+                    "amount": 15,
+                    "totalAvailable": 45,
+                    "description": "Join us for an unforgettable evening of creativity and family fun at our 'Family Painting Night'! This admission ticket grants you entry to the event, where you'll have access to all the painting supplies you need, including a variety of paint colors and painting boards. Under the guidance of our skilled painting instructors, you'll learn new techniques and create your own masterpiece to take home. The ticket price is just $15 per person, making it an affordable and enriching experience for all ages. Don’t miss out on this opportunity to bond with your family and create lasting memories in a supportive and inspiring environment. Secure your tickets now and get ready to unleash your inner artist!"
+                }
+            ]
+        },
+
+        {
+            "title": "Candle Lit Creations",
+            "description": [
+                "Gather your loved ones for an evening of creativity and fun at our 'Family Painting Night.' Set in the picturesque South Shelter at Farmington Hills Heritage Park, this event is designed to bring families together through the joy of painting. Whether you're a seasoned artist or a complete beginner, our talented painting instructors will guide you step-by-step to create your own masterpiece.",
+                "With a variety of paints and colors at your disposal, along with painting boards provided, you can let your imagination run wild and create a beautiful piece of art to take home. This is the perfect opportunity to bond with your family, make lasting memories, and discover the artist within you.",
+                "Join us for an hour of artistic expression and family fun. Secure your spot for just $15 and get ready to unleash your inner artist in a supportive and inspiring environment. Don't miss out on this wonderful family activity that promises to be both entertaining and enriching!"
+            ],
+            "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/banner/image/png/candle-making-class-banner.png",
+            "latitude": 42.2787,
+            "longitude": -83.7378,
+            "location": "911 N University Ave, Ann Arbor",
+            "ticketType": "infinite",
+            "tickets": [
+                {
+                    "title": "Session 2: Master Candle Crafter",
+                    "amount": 30,
+                    "totalAvailable": 45,
+                    "description": "Elevate your candle making skills to the next level with our 'Master Candle Crafter' ticket. Immerse yourself in a world of scent and creativity as you craft five exquisite candles, each infused with a symphony of three fragrance scents. Delve into the artistry of blending and layering fragrances to create a collection of hand-poured treasures that capture the essence of summer."
+                },
+
+                {
+                    "title": "Session 2: Fragrance Artisian",
+                    "amount": 25,
+                    "totalAvailable": 45,
+                    "description": "Become a true fragrance artisan with our 'Fragrance Artisan' ticket. Dive deeper into the art of candle making as you create three unique candles, each bursting with a carefully curated blend of two fragrance scents. Explore different combinations and unleash your creativity to craft personalized candles that reflect your style and mood."
+                },
+
+                {
+                    "title": "Session 1: Fragrance Artisian",
+                    "amount": 25,
+                    "totalAvailable": 45,
+                    "description": "Become a true fragrance artisan with our 'Fragrance Artisan' ticket. Dive deeper into the art of candle making as you create three unique candles, each bursting with a carefully curated blend of two fragrance scents. Explore different combinations and unleash your creativity to craft personalized candles that reflect your style and mood."
+                },
+
+                {
+                    "title": "Session 1: Master Candle Crafter",
+                    "amount": 30,
+                    "totalAvailable": 45,
+                    "description": "Elevate your candle making skills to the next level with our 'Master Candle Crafter' ticket. Immerse yourself in a world of scent and creativity as you craft five exquisite candles, each infused with a symphony of three fragrance scents. Delve into the artistry of blending and layering fragrances to create a collection of hand-poured treasures that capture the essence of summer."
+                },
+
+                {
+                    "title": "Session 1: Scent Explorer",
+                    "amount": 20,
+                    "totalAvailable": 45,
+                    "description": "Embark on a journey of olfactory discovery with our \"Scent Explorer\" ticket. Unleash your creativity as you learn the basics of candle making and craft one custom candle infused with your chosen fragrance scent. Take home your aromatic masterpiece to enjoy a touch of ambiance and relaxation in your space."
+                },
+
+                {
+                    "title": "Session 1: Scent Explorer",
+                    "amount": 20,
+                    "totalAvailable": 45,
+                    "description": "Embark on a journey of olfactory discovery with our \"Scent Explorer\" ticket. Unleash your creativity as you learn the basics of candle making and craft one custom candle infused with your chosen fragrance scent. Take home your aromatic masterpiece to enjoy a touch of ambiance and relaxation in your space."
+                }
+            ]
+        },
+
+        {
+            "title": "Cravings Food Fest",
+            "description": [
+                "##Event Description:",
+                "Join us for the Cravings Food Festival, a delightful celebration of food and community! Held in the spacious parking lot of Novi High School, this event promises two days filled with mouth-watering flavors, culinary discoveries, and fun for the whole family. Whether you're a foodie looking to explore new tastes or simply want to enjoy a great day out with friends and family, the Cravings Food Festival has something for everyone.",
+                "From gourmet food trucks to local vendors offering a diverse range of cuisines, our festival is set to be a feast for your senses. Don’t miss out on the opportunity to indulge in some of the best food Michigan has to offer. Bring your appetite and get ready for an unforgettable culinary experience!",
+                "##Event Details:",
+                "###Location:",
+                "Parking Lot, Novi High School",
+                "24062 Taft Road, Novi, MI 48375",
+                "###Date & Times:",
+                "Thursday, July 4th, 2024, from 8:00 AM to 8:00 PM",
+                "Friday, July 5th, 2024, from 8:00 AM to 8:00 PM",
+                "##Ticket Information:",
+                "###General Admission:",
+                "Cost: $5 per person",
+                "Includes entry to the festival and access to all food trucks and vendors, and sitting. Food and beverages are available for purchase seperately.",
+                "###Food Truck Admission:",
+                "Cost: $100 per food truck",
+                "Includes a designated space for your food truck, acess to the festival audience, and marketing support from CravingsInc.",
+                "###Vendor Admission:",
+                "Cost: $50 per vendor",
+                "Includes a designated space for your booth, access to the festival audience, and marketing support from CravingsInc.",
+                "##Activities and Highlights:",
+                "- __Gourmet Food Trucks:__ A wide selection of food trucks offering diverse cuisines and unique dishes.",
+                "- __Local Vendors:__ Discover and support local food artisans and producers.",
+                "- __Interactive Activities:__ Fun and engaging activities for all ages, including food-themed games and contests.",
+                "##Safety Measures:",
+                "We are committed to ensuring a safe and enjoyable experience for all attendees. Hand sanitizing stations will be available throughout the festival grounds. We encourage all guests to maintain social distancing and follow any additional guidelines as recommended by health authorities.",
+                "##Parking:",
+                "Free parking (once admission is paid ) is available at the Novi High School parking lot. Additional parking spaces are available at nearby locations with shuttle services provided.",
+                "##Contact Information:",
+                "For more details or inquires, please contact us at:",
+                "Email: outreach@cravingsinc.us",
+                "Phone: (248)-812-6865"
+            ],
+            "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/banner/image/png/cravings-food-fest.png",
+            "latitude": 42.4635,
+            "longitude": -83.4924,
+            "location": "24062 Taft Rd, Novi, MI 48375",
+            "ticketType": "infinite",
+            "tickets": [
+                {
+                    "title": "Food Truck Admission",
+                    "amount": 100,
+                    "totalAvailable": 30,
+                    "description": "Includes a designated space for your food truck, acess to the festival audience, and marketing support from CravingsInc."
+                },
+
+                {
+                    "title": "Vendor Admission",
+                    "amount": 50,
+                    "totalAvailable": 5,
+                    "description": "Includes a designated space for your booth, access to the festival audience, and marketing support from CravingsInc."
+                },
+
+                {
+                    "title": "General Admission",
+                    "amount": 25,
+                    "totalAvailable": 45,
+                    "description": "Includes entry to the festival and access to all food trucks and vendors, and sitting. Food and beverages are available for purchase seperately."
+                },
+
+                {
+                    "title": "Session 1: Master Candle Crafter",
+                    "amount": 5,
+                    "totalAvailable": 45,
+                    "description": "Elevate your candle making skills to the next level with our 'Master Candle Crafter' ticket. Immerse yourself in a world of scent and creativity as you craft five exquisite candles, each infused with a symphony of three fragrance scents. Delve into the artistry of blending and layering fragrances to create a collection of hand-poured treasures that capture the essence of summer."
+                }
+            ]
+        }
+    ]
+}
