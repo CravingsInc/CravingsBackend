@@ -13,9 +13,18 @@
             "username": "nwobuc",
             "email": "christian.nwobu0@gmail.com",
             "password": "cravingsincNwobuC",
-            "phoneNumber": "5178850808",
+            "phoneNumber": "517-885-0808",
             "profilePicture": "/about-us-image.png",
             "stripeCustomerId": "cus_RGypQtYshAkLVC"
+        },
+
+        {
+            "username": "adomaitisa",
+            "email": "adomaitisandrew@gmail.com",
+            "password": "cravingsincAdomaitisA",
+            "phoneNumber": "248-798-7698",
+            "profilePicture": "/about-us-image.png",
+            "stripeCustomerId": "cus_RJXgPuseB0RmgJ"
         }
     ],
 
@@ -38,6 +47,17 @@
             "profilePicture": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
             "phoneNumber": "517-885-0808",
             "stripeConnectId": "acct_1QOQuOH6hKIPmVsu",
+            "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
+            "location": "187 Cherry Valley Dr, Inkster Michigan 48141"
+        },
+
+        {
+            "orgName": "AndrewAdomaitis",
+            "email": "adomaitisandrew@gmail.com",
+            "password": "AndrewAdomaitis",
+            "profilePicture": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
+            "phoneNumber": "248-798-7698",
+            "stripeConnectId": "acct_1QQue4HKUxoqnwgR",
             "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
             "location": "187 Cherry Valley Dr, Inkster Michigan 48141"
         }
