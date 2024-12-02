@@ -25,6 +25,15 @@
             "phoneNumber": "248-798-7698",
             "profilePicture": "/about-us-image.png",
             "stripeCustomerId": "cus_RJXgPuseB0RmgJ"
+        },
+
+        {
+            "username": "yuena",
+            "email": "albertyuen113@gmail.com",
+            "password": "cravingsincYuenA",
+            "phoneNumber": "517-940-5244",
+            "profilePicture": "/about-us-image.png",
+            "stripeCustomerId": "cus_RJb6TneKFKue4e"
         }
     ],
 
@@ -58,6 +67,17 @@
             "profilePicture": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
             "phoneNumber": "248-798-7698",
             "stripeConnectId": "acct_1QQue4HKUxoqnwgR",
+            "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
+            "location": "187 Cherry Valley Dr, Inkster Michigan 48141"
+        },
+
+        {
+            "orgName": "AlbertYuen",
+            "email": "albertyuen113@gmail.com",
+            "password": "AlbertYuen",
+            "profilePicture": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
+            "phoneNumber": "517-940-5244",
+            "stripeConnectId": "acct_1QQxwFQZmpf4hyM2",
             "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png",
             "location": "187 Cherry Valley Dr, Inkster Michigan 48141"
         }
