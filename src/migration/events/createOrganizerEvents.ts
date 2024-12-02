@@ -34,7 +34,7 @@ export const createOrganizerEvents = async ( orgs: CreateOrganizerResponse[], to
             
             // allows for no duplicate of product just to keep stripe test clean as possible
             const existingProduct = existingProducts.data.find(
-                product => product.metadata?.eventIdentifier === `${org.id}-${event.title.replaceAll(" ", "-")}`
+                product => product.metadata?.eventIdentifier === `${org.stripeAccount}-${event.title.replaceAll(" ", "-")}`
             );
 
             let eventSaved = await models.Events.findOneBy({ organizer: { id: org.id }, title: event.title });
@@ -53,7 +53,7 @@ export const createOrganizerEvents = async ( orgs: CreateOrganizerResponse[], to
 
                     try {
                         let stripeProduct = await stripeHandler.createEvent( org.stripeAccount, org.id, eventSaved.id, eventSaved.title, {
-                            eventIdentifier: `${org.id}-${event.title.replaceAll(" ", "-")}`
+                            eventIdentifier: `${org.stripeAccount}-${event.title.replaceAll(" ", "-")}`
                         });
     
                         eventSaved.productId = stripeProduct.id;
