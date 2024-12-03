@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Ba
 import { ObjectType, Field, ID } from "type-graphql";
 import { Organizers } from "./Organizers";
 
+export type OrganizerMembersTitle = 'Admin' | "Member" | "Guest"
+
 @Entity()
 @ObjectType()
 export class OrganizerMembers extends BaseEntity {
@@ -23,7 +25,7 @@ export class OrganizerMembers extends BaseEntity {
 
     @Field()
     @Column()
-    title: 'Admin' | "Member" | "Guest";
+    title: OrganizerMembersTitle;
 
     @Field()
     password: string;
