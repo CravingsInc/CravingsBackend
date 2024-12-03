@@ -1,5 +1,6 @@
 import migrationData from '../migration.json';
 import * as models from '../../models';
+import bcrypt from "bcrypt";
 import { CreateOrganizerResponse } from '../types';
 
 export const createOrganizer = async (): Promise<CreateOrganizerResponse[]> => {
@@ -11,7 +12,7 @@ export const createOrganizer = async (): Promise<CreateOrganizerResponse[]> => {
         let organizer = await models.Organizers.create({
             orgName: testOrganizer.orgName,
             email: testOrganizer.email,
-            password: testOrganizer.password,
+            password: await bcrypt.hash( testOrganizer.password, 12 ),
             profilePicture: testOrganizer.profilePicture,
             phoneNumber: testOrganizer.phoneNumber,
             stripeConnectId: testOrganizer.stripeConnectId,
