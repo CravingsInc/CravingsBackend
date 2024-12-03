@@ -516,4 +516,24 @@ export class OrganizerResolver {
 
         return "Event Ticket updated successfully";
     }
+
+    @Mutation( () => models.OrganizerMembers)
+    async addTeamMember(@Arg('token') token: string, @Arg('organizerId') organizerId: string, @Arg('title') title: string){
+
+        const organizer = await Utils.getOrganizerFromJsWebToken(token);
+        if (!organizer) {
+          throw new Error('Unauthorized: Invalid token');
+        }
+
+        const organizerDetails = await models.OrganizerMembers.findOne({ where:{id: organizerId}});
+        
+        if (!organizerDetails || organizerDetails.title !== 'Admin') {
+          throw new Error('Permission denied: You must be an Admin to add members');
+        }
+       
+
+
+    }
 }
+
+
