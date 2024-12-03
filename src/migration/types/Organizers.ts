@@ -3,4 +3,6 @@ export type CreateOrganizerResponse = {
     stripeAccount: string
 }
 
-export type UserRandomFollowOrganizer = Record<string, string[]>;
+export type UserRandomFollowOrganizerResponse = Record<string, string[]>;
+
+export type createOrganizerTeamMembersResponse = Record<string, string[]>;

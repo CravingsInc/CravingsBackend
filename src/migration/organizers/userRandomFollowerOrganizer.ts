@@ -1,8 +1,8 @@
 import * as models from '../../models';
-import { CreateOrganizerResponse, CreateUsersResponse, UserRandomFollowOrganizer } from '../types';
+import { CreateOrganizerResponse, CreateUsersResponse, UserRandomFollowOrganizerResponse } from '../types';
 
-export const userRandomFollowOrganizer = async ( userIds: CreateUsersResponse, orgIds: CreateOrganizerResponse[], totalFollowers: number = 3 ): Promise<UserRandomFollowOrganizer> => {
-    let followersIds: UserRandomFollowOrganizer = {};
+export const userRandomFollowOrganizer = async ( userIds: CreateUsersResponse, orgIds: CreateOrganizerResponse[], totalFollowers: number = 3 ): Promise<UserRandomFollowOrganizerResponse> => {
+    let followersIds: UserRandomFollowOrganizerResponse = {};
 
     console.log("\nUser following random organizers...");
 

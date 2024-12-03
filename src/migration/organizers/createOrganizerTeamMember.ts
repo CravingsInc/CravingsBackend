@@ -1,9 +1,9 @@
-import { CreateOrganizerResponse } from "../types";
+import { CreateOrganizerResponse, createOrganizerTeamMembersResponse } from "../types";
 import migrationData from '../migration.json';
 import * as models from '../../models';
 import bcrypt from "bcrypt";
 
-export const createOrganizerTeamMembers = async ( orgIds: CreateOrganizerResponse[], totalMembers: number = 5 ) => {
+export const createOrganizerTeamMembers = async ( orgIds: CreateOrganizerResponse[], totalMembers: number = 5 ): Promise<createOrganizerTeamMembersResponse> => {
     let randomPossibleValues : {
         name: string;
         email: string;
@@ -14,7 +14,7 @@ export const createOrganizerTeamMembers = async ( orgIds: CreateOrganizerRespons
 
     let title : models.OrganizerMembersTitle[] = [ 'Admin', "Member", "Guest" ]
 
-    let organizerTeamMembers : Record<string, string[]> = {};
+    let organizerTeamMembers : createOrganizerTeamMembersResponse = {};
 
     for ( let users of migrationData.users ) {
         randomPossibleValues.push({
