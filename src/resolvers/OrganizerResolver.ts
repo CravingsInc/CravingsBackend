@@ -282,11 +282,12 @@ export class OrganizerResolver {
             organizer
         }).save();
 
-        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/org/${
+        let link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/org/${
             jwt.sign(
                 {
                     ...await Utils.generateJsWebToken(organizer.id),
                     type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER,
+                    command: "change-password",
                     pwc: passwordChange.id
                 },
                 Utils.SECRET_KEY,
@@ -328,6 +329,8 @@ export class OrganizerResolver {
 
         await pwc.save();
         await org.save();
+
+        return "Successfully changed your password";
     }
 
     @Mutation( () =>  models.Events )
@@ -517,23 +520,223 @@ export class OrganizerResolver {
         return "Event Ticket updated successfully";
     }
 
-    @Mutation( () => models.OrganizerMembers)
-    async addTeamMember(@Arg('token') token: string, @Arg('organizerId') organizerId: string, @Arg('title') title: string){
+    @Mutation( () => String )
+    async removeTeamMember( @Arg('token') token: string, @Arg('teamMemberId') teamMemberId: string ) {
+        let org: models.Organizers | null = null;
+        let orgMember: models.OrganizerMembers | null = null;
 
-        const organizer = await Utils.getOrganizerFromJsWebToken(token);
-        if (!organizer) {
-          throw new Error('Unauthorized: Invalid token');
+        try {
+            org = await Utils.getOrganizerFromJsWebToken( token );
+        }catch {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+
+            if ( orgMember.title !== "Admin" ) return new Utils.CustomError("Do not have permission to access this") 
         }
 
-        const organizerDetails = await models.OrganizerMembers.findOne({ where:{id: organizerId}});
+        let teamMember = await models.OrganizerMembers.findOne({ where: { id: teamMemberId, organizer: { id: org ? org.id : orgMember?.organizer.id } } });
+
+        if ( teamMember ) await teamMember.remove();
+
+        return "Successfully remove organizer member";
+    }
+
+    @Mutation( () => String ) 
+    async updateTeamMemberTitle( @Arg('token') token: string, @Arg('teamMemberId') teamMemberId: string, @Arg('newTitle') newTitle: 'Admin' | "Member" | "Guest" ) {
+        let org: models.Organizers | null = null;
+        let orgMember: models.OrganizerMembers | null = null;
+
+        try {
+            org = await Utils.getOrganizerFromJsWebToken( token );
+        }catch {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+
+            if ( orgMember.title !== "Admin" ) return new Utils.CustomError("Do not have permission to access this") 
+        }
+
+        let teamMember = await models.OrganizerMembers.findOne({ where: { id: teamMemberId, organizer: { id: org ? org.id : orgMember?.organizer.id } } });
+
+        if ( newTitle in [ 'Admin', "Member", "Guest" ] && teamMember ) {
+            teamMember.title = newTitle;
+            await teamMember.save();
+
+            return "Successfully change team members title";
+        }
+
+        return new Utils.CustomError("Title isn't valid")
+    }
+
+    @Mutation( () => String )
+    async addTeamMember(@Arg('token') token: string, @Arg('args', () => models.CreateOrganizerMemberInput ) args: models.CreateOrganizerMemberInput ){
+
+        let org: models.Organizers | null = null;
+        let orgMember: models.OrganizerMembers | null = null;
         
-        if (!organizerDetails || organizerDetails.title !== 'Admin') {
-          throw new Error('Permission denied: You must be an Admin to add members');
+        let newMember: models.OrganizerMembers | null = null;
+
+        try {
+            org = await Utils.getOrganizerFromJsWebToken( token );
+        }catch {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
         }
-       
 
+        let localMemberCreation = async () => await models.OrganizerMembers.create({
+            name: args.name,
+            email: args.email,
+            phoneNumber: args.phoneNumber,
+            title: args.role,
+            password: await bcrypt.hash('', 12),
+            accepted: false,
+            organizer: { id: org ? org.id : orgMember?.id }
+        }).save();
 
+        let emailProps = {
+            link_to_open: '',
+            invitorName: '',
+            orgName: '',
+            email: '',
+            username: ''
+        }
+
+        if ( org ) {
+            newMember = await localMemberCreation();
+            emailProps.orgName = org.orgName;
+            emailProps.invitorName = org.orgName;
+        }
+
+        else if ( orgMember ) {
+
+            if ( orgMember.title === `Admin` ) newMember = await localMemberCreation();
+
+            emailProps.orgName = orgMember.organizer.orgName;
+            emailProps.invitorName = orgMember.name;
+
+        }else {
+            return new Utils.CustomError("Unauthorized access");
+        }
+
+        emailProps.link_to_open = `${Utils.getCravingsWebUrl()}/org/accept-invite/${
+            jwt.sign(
+                {
+                    ...await Utils.generateJsWebToken(newMember!.id),
+                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                    command: "invite-team-member",
+                },
+                Utils.SECRET_KEY,
+                { expiresIn: ( ( 60 * 60 ) * 24 ) * 7 } // Expires in 1 week
+            )
+        }`;
+
+        emailProps.email = newMember!.email;
+        emailProps.username = newMember!.name;
+
+        let sentSuccessfully = await Utils.Mailer.sendTeamMemberInviteEmail(emailProps);
+
+        if ( !sentSuccessfully ) await newMember!.remove(); // We don't want to overload database creating unclose password changes
+
+        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
+    }
+
+    @Query( () => String )
+    async resendOrganizerTeamInviteToken( @Arg('token') token: string, @Arg('orgTeamId') orgTeamId: string ) {
+        let org: models.Organizers | null = null;
+        let orgMember: models.OrganizerMembers | null = null;
+        
+        let newMember: models.OrganizerMembers | null = null;
+
+        try {
+            org = await Utils.getOrganizerFromJsWebToken( token );
+        }catch {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+        }
+
+        let emailProps = {
+            link_to_open: '',
+            invitorName: '',
+            orgName: '',
+            email: '',
+            username: ''
+        }
+
+        if ( org ) {
+            newMember = await models.OrganizerMembers.findOneBy({ id: orgTeamId });
+            emailProps.orgName = org.orgName;
+            emailProps.invitorName = org.orgName;
+        }
+
+        else if ( orgMember ) {
+
+            if ( orgMember.title === `Admin` ) newMember = await models.OrganizerMembers.findOneBy({ id: orgTeamId });
+
+            emailProps.orgName = orgMember.organizer.orgName;
+            emailProps.invitorName = orgMember.name;
+
+        }else {
+            return new Utils.CustomError("Unauthorized access");
+        }
+
+        emailProps.link_to_open = `${Utils.getCravingsWebUrl()}/org/accept-invite/${
+            jwt.sign(
+                {
+                    ...await Utils.generateJsWebToken(newMember!.id),
+                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                    command: "invite-team-member",
+                },
+                Utils.SECRET_KEY,
+                { expiresIn: ( ( 60 * 60 ) * 24 ) * 7 } // Expires in 1 week
+            )
+        }`;
+
+        emailProps.email = newMember!.email;
+        emailProps.username = newMember!.name;
+
+        let sentSuccessfully = await Utils.Mailer.sendTeamMemberInviteEmail(emailProps);
+
+        if ( !sentSuccessfully ) await newMember!.remove(); // We don't want to overload database creating unclose password changes
+
+        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
+    }
+
+    @Query( () => String )
+    async verifyOrganizerTeamInviteToken( @Arg('token') token: string ) {
+        let teamMember = await Utils.verifyOrgTeamMemberInviteToken(token);
+
+        if ( teamMember.accepted ) return "Invitation Already Accepted";
+
+        return "Token is valid";
+    }
+
+    @Query( () => String )
+    async confirmOrganizerTeamMemberAddition( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
+
+        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return "Can't add you to team";
+
+        if ( newPassword !== confirmNewPassword ) return "Can't add you to team";
+
+        let teamMember = await Utils.verifyOrgTeamMemberInviteToken(token);
+
+        console.log(teamMember)
+
+        if ( teamMember.accepted ) return jwt.sign(
+            {
+                ...await Utils.generateJsWebToken(teamMember.id),
+                type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                org: teamMember.organizer.orgName
+            },
+            Utils.SECRET_KEY,
+            { expiresIn: "2w" }
+        )
+
+        teamMember.accepted = true;
+        teamMember.password = await bcrypt.hash(newPassword, 12)
+
+        return jwt.sign(
+            {
+                ...await Utils.generateJsWebToken(teamMember.id),
+                type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                org: teamMember.organizer.orgName
+            },
+            Utils.SECRET_KEY,
+            { expiresIn: "2w" }
+        )
     }
 }
-
-

@@ -136,6 +136,22 @@ export class Utils {
         throw new Utils.CustomError("Token is not valid");
     }
 
+    static async verifyOrgTeamMemberInviteToken( token: string ) {
+        try {
+            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+
+            if ( unHashedToken ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS && unHashedToken.command === 'invite-team-member' ) {
+                    let teamMember = await models.OrganizerMembers.findOne({ where: { id: unHashedToken.id }, relations: [ 'organizer' ] });
+
+                    if ( teamMember ) return teamMember;
+                }
+            }
+        }catch( e ) {}
+
+        throw new Utils.CustomError("Token is not valid");
+    }
+
     static async getOrganizerFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Organizers> {
         let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
