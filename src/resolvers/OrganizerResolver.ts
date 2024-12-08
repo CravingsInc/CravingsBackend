@@ -555,7 +555,7 @@ export class OrganizerResolver {
 
         let teamMember = await models.OrganizerMembers.findOne({ where: { id: teamMemberId, organizer: { id: org ? org.id : orgMember?.organizer.id } } });
 
-        if ( newTitle in [ 'Admin', "Member", "Guest" ] && teamMember ) {
+        if ( [ 'Admin', "Member", "Guest" ].includes(newTitle) && teamMember ) {
             teamMember.title = newTitle;
             await teamMember.save();
 
