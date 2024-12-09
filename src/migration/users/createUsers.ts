@@ -1,5 +1,6 @@
 import migrationData from '../migration.json';
 import * as models from '../../models';
+import bcrypt from "bcrypt";
 import { CreateUsersResponse } from '../types';
 
 export const createUsers = async (): Promise<CreateUsersResponse> => {
@@ -11,7 +12,7 @@ export const createUsers = async (): Promise<CreateUsersResponse> => {
         let user = await models.Users.create({
             username: testUser.username,
             email: testUser.email,
-            password: testUser.password,
+            password: await bcrypt.hash( testUser.password, 12 ),
             profilePicture: testUser.profilePicture,
             phoneNumber: testUser.phoneNumber,
             stripeCustomerId: testUser.stripeCustomerId,
