@@ -71,6 +71,12 @@ export class OrganizerResolver {
 
         if ( orgMember ) {
             if ( await bcrypt.compare( password, orgMember.password ) ) {
+
+                // If they haven't accepted but logged in, then they want to be apart of the team.
+                if ( orgMember.accepted ) orgMember.accepted = true;
+
+                await orgMember.save();
+
                 return jwt.sign(
                     {
                         ...await Utils.generateJsWebToken(orgMember.id),
