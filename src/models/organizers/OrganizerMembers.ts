@@ -27,7 +27,7 @@ export class OrganizerMembers extends BaseEntity {
     @Column()
     title: OrganizerMembersTitle;
 
-    @Field()
+    @Column()
     password: string;
 
     @Field()

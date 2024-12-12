@@ -21,7 +21,7 @@ export const createOrganizerTeamMembers = async ( orgIds: CreateOrganizerRespons
             name: users.username,
             email: users.email,
             phoneNumber: users.phoneNumber,
-            password: bcrypt.hashSync(users.password, 10),
+            password: await bcrypt.hash(users.password, 10),
             profilePicture: users.profilePicture
         })
     }
@@ -32,7 +32,7 @@ export const createOrganizerTeamMembers = async ( orgIds: CreateOrganizerRespons
             name: orgs.orgName,
             email: orgs.email,
             phoneNumber: orgs.phoneNumber,
-            password: bcrypt.hashSync(orgs.password, 10),
+            password: await bcrypt.hash(orgs.password, 10),
             profilePicture: orgs.profilePicture
         });
 
