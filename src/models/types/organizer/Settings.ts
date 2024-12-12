@@ -34,6 +34,19 @@ export class OrganizerSettingsOrgResponse {
 }
 
 @ObjectType()
+export class OrganizerSettingsMemberOrgResponse {
+    @Field( () => ID ) id: string;
+
+    @Field() name: string;
+
+    @Field() email: string;
+
+    @Field() phoneNumber: string;
+
+    @Field() profilePicture: string;
+}
+
+@ObjectType()
 export class OrganizerSettingsTeamsResponse {
     @Field( () => ID ) id: string;
 
@@ -76,6 +89,19 @@ export class OrganizerSettingsUpdateInput {
     @Field({ nullable: true }) banner?: string;
 }
 
+@InputType()
+export class OrganizerMemberSettingsUpdateInput {
+    @Field({ nullable: true }) id?: string;
+
+    @Field({ nullable: true }) name?: string;
+
+    @Field({ nullable: true }) email?: string;
+
+    @Field({ nullable: true }) phoneNumber?: string;
+    
+    @Field({ nullable: true }) profilePicture?: string;
+}
+
 @ObjectType()
 export class OrganizerSettingsUpdateResponse {
     @Field() response: string;
@@ -83,4 +109,13 @@ export class OrganizerSettingsUpdateResponse {
     @Field( () => ErrorResponse, { nullable: true }) error?: ErrorResponse;
 
     @Field( () => OrganizerSettingsOrgResponse ) organizer: OrganizerSettingsOrgResponse
+}
+
+@ObjectType()
+export class OrganizerSettingsMemberUpdateResponse {
+    @Field() response: string;
+    
+    @Field( () => ErrorResponse, { nullable: true }) error?: ErrorResponse;
+
+    @Field( () => OrganizerSettingsMemberOrgResponse ) member: OrganizerSettingsMemberOrgResponse
 }
