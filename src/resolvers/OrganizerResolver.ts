@@ -720,8 +720,6 @@ export class OrganizerResolver {
 
         let teamMember = await Utils.verifyOrgTeamMemberInviteToken(token);
 
-        console.log(teamMember)
-
         if ( teamMember.accepted ) return jwt.sign(
             {
                 ...await Utils.generateJsWebToken(teamMember.id),
