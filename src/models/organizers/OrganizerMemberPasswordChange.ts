@@ -1,14 +1,14 @@
 import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Organizers } from "./Organizers";
+import { OrganizerMembers } from "./OrganizerMembers";
 
 @Entity()
 @Entity()
-export class OrganizerPasswordChange extends BaseEntity {
+export class OrganizerMemberPasswordChange extends BaseEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @ManyToOne( () => Organizers, o => o.passwordChangeHistory, { onDelete: "CASCADE" } )
-    organizer: Organizers;
+    @ManyToOne( () => OrganizerMembers, o => o.passwordChangeHistory, { onDelete: "CASCADE" } )
+    member: OrganizerMembers;
 
     @Column({ default: false })
     tokenUsed: boolean;

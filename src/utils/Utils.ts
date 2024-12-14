@@ -136,6 +136,22 @@ export class Utils {
         throw new Utils.CustomError("Token is not valid");
     }
 
+    static async verifyOrgMemberPasswordChangeToken( token: string ) {
+        try {
+            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+
+            if ( unHashedToken ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS && unHashedToken.command === 'change-password' ) {
+                    let pwc = await models.OrganizerMemberPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: ['member'] });
+
+                    if ( pwc ) return pwc;
+                }
+            }
+        }catch( e ) {}
+
+        throw new Utils.CustomError("Token is not valid");
+    }
+
     static async verifyOrgTeamMemberInviteToken( token: string ) {
         try {
             let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );

@@ -153,6 +153,48 @@ export class OrganizerResolver {
 
     }
 
+    @Mutation( () => models.OrganizerSettingsMemberUpdateResponse)
+    async saveOrganizerMemberSettings( @Arg('token') token: string, @Arg('args', () => models.OrganizerMemberSettingsUpdateInput ) args: models.OrganizerMemberSettingsUpdateInput ) {
+        let member = await Utils.getOrganizerMemberFromJsWebToken( token );
+
+        let memberResponse = {
+            id: member.id,
+            name: member.name,
+            email: member.email,
+            phoneNumber: member.phoneNumber,
+            profilePicture: member.profilePicture
+        }
+
+        if ( args.name ) {
+            member.name = args.name;
+        }
+
+        if ( args.email ) {
+            member.email = args.email;
+        }
+
+        if ( args.phoneNumber ) {
+            member.phoneNumber = args.phoneNumber;
+        }
+
+        if ( args.profilePicture ) {
+            member.profilePicture = args.profilePicture;
+        }
+
+        await member.save();
+
+        memberResponse = {
+            id: member.id,
+            name: member.name,
+            email: member.email,
+            phoneNumber: member.phoneNumber,
+            profilePicture: member.profilePicture
+        }
+
+
+        return { response: "Successfully Updated", member: memberResponse }
+    }
+
     @Mutation( () => models.OrganizerSettingsUpdateResponse)
     async saveOrganizerSettings( @Arg('token') token: string, @Arg('args', () => models.OrganizerSettingsUpdateInput ) args: models.OrganizerSettingsUpdateInput ) {
         let org = await Utils.getOrganizerFromJsWebToken( token );
@@ -335,6 +377,65 @@ export class OrganizerResolver {
 
         await pwc.save();
         await org.save();
+
+        return "Successfully changed your password";
+    }
+
+    @Mutation( () => String )
+    async changeOrganizerMemberPassword( @Arg('token') token: string ) {
+        let member = await Utils.getOrganizerMemberFromJsWebToken(token);
+
+        let passwordChange = await models.OrganizerMemberPasswordChange.create({
+            member
+        }).save();
+
+        let link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/member/${
+            jwt.sign(
+                {
+                    ...await Utils.generateJsWebToken(member.id),
+                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                    command: "change-password",
+                    pwc: passwordChange.id
+                },
+                Utils.SECRET_KEY,
+                { expiresIn: 10 * 60 } // Expires in 10 minutes
+            )
+        }`;
+
+        let sentSuccessfully = await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: member.email, username: member.name });
+
+        if ( !sentSuccessfully ) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
+
+        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
+    }
+
+    @Query( () => String )
+    async verifyOrganizerMemberPasswordChangeToken( @Arg('token') token: string ) {
+        let pwc = await Utils.verifyOrgMemberPasswordChangeToken(token);
+
+        if ( pwc.tokenUsed ) return "Token is not valid";
+
+        return "Token is valid"
+    }
+
+    @Query( () => String )
+    async confirmOrganizerMemberPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
+        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return new Utils.CustomError("Can't change your password");
+
+        if ( newPassword !== confirmNewPassword ) return new Utils.CustomError("Can't change your password");
+
+        let pwc = await Utils.verifyOrgMemberPasswordChangeToken(token);
+
+        if ( pwc.tokenUsed ) return new Utils.CustomError("Can't change password");
+
+        let member = pwc.member;
+
+        member.password = await bcrypt.hash(newPassword, 12);
+
+        pwc.tokenUsed = true;
+
+        await pwc.save();
+        await member.save();
 
         return "Successfully changed your password";
     }
