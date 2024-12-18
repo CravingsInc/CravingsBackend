@@ -740,7 +740,7 @@ export class OrganizerResolver {
 
         if ( !sentSuccessfully ) await newMember!.remove(); // We don't want to overload database creating unclose password changes
 
-        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
+        return sentSuccessfully && newMember ? newMember.id : "Problem sending team member invitation";
     }
 
     @Query( () => String )
