@@ -759,6 +759,40 @@ export class OrganizerResolver {
     }
 
     @Query( () => String )
+    async loadAllEventsPage( @Arg('token') token: string, @Arg('pageLength') pageLength: number = 7, @Arg('lastIndex') lastIndex: number = 0 ) {
+
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+
+        let events = await models.Events.find({ where: { organizer: { id: org.id } } });
+
+        let endIndex = lastIndex + pageLength;
+
+        let newEventData = events.slice( lastIndex, endIndex );
+        
+        return {
+            endIndex,
+            loadMore: events.length - 1 > endIndex,
+            events: await Promise.all(
+                newEventData.map( async ( e ) => {
+                    return {
+                        id: e.id,
+                        title: e.title,
+                        banner: e.banner,
+                        visibility: e.visible ? "Public" : "Private",
+                        views: await models.EventsPageVisit.count({ where: { event: { id: e.id } } }),
+                        dateCreated: e.createdAt,
+                        eventDate: {
+                            startDate: e.eventDate,
+                            endDate: e.endEventDate
+                        }
+                    }
+                })
+            )
+        }
+
+    }
+
+    @Query( () => String )
     async resendOrganizerTeamInviteToken( @Arg('token') token: string, @Arg('orgTeamId') orgTeamId: string ) {
         let org: models.Organizers | null = null;
         let orgMember: models.OrganizerMembers | null = null;
