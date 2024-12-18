@@ -47,7 +47,7 @@ export class OrganizerSettingsMemberOrgResponse {
 }
 
 @ObjectType()
-export class OrganizerSettingsTeamsResponse {
+export class OrganizerSettingsTeamsDataResponse {
     @Field( () => ID ) id: string;
 
     @Field() name: string;
@@ -62,6 +62,12 @@ export class OrganizerSettingsTeamsResponse {
 }
 
 @ObjectType()
+export class OrganizerSettingsTeamsResponse {
+    @Field( () => [OrganizerSettingsTeamsDataResponse] ) accepted: OrganizerSettingsTeamsDataResponse[];
+    @Field( () => [OrganizerSettingsTeamsDataResponse] ) pending: OrganizerSettingsTeamsDataResponse[];
+}
+
+@ObjectType()
 export class OrganizerSettingsPageResponse {
     @Field() isOrg: boolean;
 
@@ -69,7 +75,7 @@ export class OrganizerSettingsPageResponse {
 
     @Field( () => OrganizerSettingsOrgResponse ) organizer: OrganizerSettingsOrgResponse;
 
-    @Field( () => [OrganizerSettingsTeamsResponse] ) teams: OrganizerSettingsTeamsResponse[];
+    @Field( () => OrganizerSettingsTeamsResponse ) teams: OrganizerSettingsTeamsResponse;
 }
 
 @InputType()

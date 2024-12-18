@@ -295,19 +295,10 @@ export class OrganizerResolver {
                 profilePicture: org.profilePicture,
                 id: org.id
             },
-            teams: [
-                {
-                    name: org.orgName,
-                    email: org.email,
-                    type: "Organizer",
-                    joinedDate: org.createdDate,
-                    id: org.id,
-                    profilePicture: org.profilePicture
-                },
-
-                ...(
+            teams: {
+                pending: (
                     await models.OrganizerMembers.find({
-                      where: { organizer: { id: org.id } },
+                      where: { organizer: { id: org.id }, accepted: false },
                       relations: ['organizer']
                     })
                 ).map(member => ({
@@ -317,8 +308,32 @@ export class OrganizerResolver {
                     joinedDate: member.dateJoined,
                     id: member.id,
                     profilePicture: member.profilePicture
-                }))
-            ]
+                })),
+                accepted: [
+                    {
+                        name: org.orgName,
+                        email: org.email,
+                        type: "Organizer",
+                        joinedDate: org.createdDate,
+                        id: org.id,
+                        profilePicture: org.profilePicture
+                    },
+    
+                    ...(
+                        await models.OrganizerMembers.find({
+                          where: { organizer: { id: org.id }, accepted: true },
+                          relations: ['organizer']
+                        })
+                    ).map(member => ({
+                        name: member.name,
+                        email: member.email,
+                        type: member.title,
+                        joinedDate: member.dateJoined,
+                        id: member.id,
+                        profilePicture: member.profilePicture
+                    }))
+                ]
+            }
         }
     }
 
@@ -693,7 +708,7 @@ export class OrganizerResolver {
             title: args.role,
             password: await bcrypt.hash('', 12),
             accepted: false,
-            organizer: { id: org ? org.id : orgMember?.id }
+            organizer: { id: org ? org.id : orgMember?.organizer.id }
         }).save();
 
         let emailProps = {
