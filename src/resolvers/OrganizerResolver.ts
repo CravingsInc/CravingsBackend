@@ -740,7 +740,7 @@ export class OrganizerResolver {
 
         if ( !sentSuccessfully ) await newMember!.remove(); // We don't want to overload database creating unclose password changes
 
-        return sentSuccessfully && newMember ? newMember.id : "Problem sending team member invitation";
+        return sentSuccessfully && newMember ? newMember.id : new Utils.CustomError("Problem sending team member invitation");
     }
 
     @Query( () => String )
