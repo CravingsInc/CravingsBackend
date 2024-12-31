@@ -185,13 +185,19 @@ export class Utils {
         throw new Utils.CustomError("User does not exist.");
     }
 
-    static async getOrgFromOrgOrMemberJsWebToken( token: string, relations: string[] = [] ): Promise<models.Organizers> {
+    static async getOrgFromOrgOrMemberJsWebToken( token: string, relations: string[] = [], adminRequirement: boolean = false ): Promise<models.Organizers> {
         let org: models.Organizers;
 
         try {
             org = await this.getOrganizerFromJsWebToken( token, relations);
         }catch {
-            org = ( await this.getOrganizerMemberFromJsWebToken( token, relations ) ).organizer ;
+            let orgMember = await this.getOrganizerMemberFromJsWebToken( token, relations );
+
+            if ( adminRequirement && orgMember.title !== 'Admin' ) {
+                throw new Utils.CustomError("User does not have the correct permissions.");
+            }
+
+            org = orgMember.organizer;
         }
 
         return org;

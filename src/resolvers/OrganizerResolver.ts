@@ -457,7 +457,7 @@ export class OrganizerResolver {
 
     @Mutation( () =>  models.Events )
     async createEvent( @Arg('token') token: string, @Arg('title') title: string, @Arg('description') description: string ) {
-        let org = await Utils.getOrganizerFromJsWebToken(token);
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
 
         let event = await models.Events.create({
             title,
