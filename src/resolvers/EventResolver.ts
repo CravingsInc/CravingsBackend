@@ -535,7 +535,7 @@ export class EventResolver {
         let eventTicketCarts = await models.EventTicketCart.find({ where: { eventId: event_id, reviewCompleted: true, completed: true }, relations: [ 'review' ] });
 
         return eventTicketCarts.map( carts => ({
-            photo: carts.review.photo || event.banner,
+            photo: carts.review.photo || event?.banner,
             name: carts.review.name,
             rating: carts.review.rating,
             description: carts.review.description,
