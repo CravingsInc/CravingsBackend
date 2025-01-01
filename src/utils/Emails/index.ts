@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { Utils } from "../Utils";
-import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps } from "./email-templates";
+import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps, TeamMemberInviteProps, teamMemberInvite } from "./email-templates";
 import { TicketBuyProps, ticketBuy } from "./email-templates/ticketBuy";
 import { waitList, WaitlistProps } from './email-templates/waitlist';
 
@@ -9,10 +9,11 @@ export enum EmailTemplates {
     CONTACT,
     WAITLIST,
     PASSWORD_CHANGE,
-    TICKET_BUY
+    TICKET_BUY,
+    TEAM_MEMBER_INVITE
 }
 
-type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps | WaitlistProps;
+type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps | WaitlistProps | TeamMemberInviteProps;
 
 const formatMail = ( mail: string, opt : { [ key: string ]: string | number } ) => {
     for ( let key in opt ) mail = mail.replaceAll(`{{${key}}}`, opt[key] + "" )
@@ -31,6 +32,10 @@ const getEmailTemplates = ( template: EmailTemplates, opt: EmailTemplatesOpt ) =
             return formatMail( passwordChange, opt );
         case EmailTemplates.TICKET_BUY:
             return ticketBuy( opt as TicketBuyProps );
+        case EmailTemplates.TEAM_MEMBER_INVITE:
+            return formatMail( teamMemberInvite, opt );
+
+        // Add more cases as needed for other email templates
         default: return "";
     }
 }
@@ -58,6 +63,7 @@ export class Mailer {
     async sendEmail( from: string, to: string, subject: string, html: string ) {
         try {
             await this.mailer.emails.send({ from, to, subject, html });
+            return true;
         }catch(e) {
             console.log(e);
             return false;
@@ -99,6 +105,15 @@ export class Mailer {
             `${opt.email}`,
             `${opt.username} you requested a password change on CravingsInc`,
             getEmailTemplates(EmailTemplates.PASSWORD_CHANGE, opt)
+        )
+    }
+
+    async sendTeamMemberInviteEmail( opt: TeamMemberInviteProps ) {
+        return await this.sendEmail(
+            'CravingsInc <dont-reply@cravingsinc.us>',
+            `${opt.email}`,
+            `${opt.username} you were invite to join ${opt.orgName} team`,
+            getEmailTemplates(EmailTemplates.TEAM_MEMBER_INVITE, opt)
         )
     }
 

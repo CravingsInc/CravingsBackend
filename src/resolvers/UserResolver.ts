@@ -142,7 +142,7 @@ export class UserResolver {
             user
         }).save();
 
-        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/user/${
+        let link_to_open = `${Utils.getCravingsWebUrl()}/change-password/${
             jwt.sign(
                 {
                     ...await Utils.generateJsWebToken(user.id),
