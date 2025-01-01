@@ -136,6 +136,38 @@ export class Utils {
         throw new Utils.CustomError("Token is not valid");
     }
 
+    static async verifyOrgMemberPasswordChangeToken( token: string ) {
+        try {
+            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+
+            if ( unHashedToken ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS && unHashedToken.command === 'change-password' ) {
+                    let pwc = await models.OrganizerMemberPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: ['member'] });
+
+                    if ( pwc ) return pwc;
+                }
+            }
+        }catch( e ) {}
+
+        throw new Utils.CustomError("Token is not valid");
+    }
+
+    static async verifyOrgTeamMemberInviteToken( token: string ) {
+        try {
+            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+
+            if ( unHashedToken ) {
+                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS && unHashedToken.command === 'invite-team-member' ) {
+                    let teamMember = await models.OrganizerMembers.findOne({ where: { id: unHashedToken.id }, relations: [ 'organizer' ] });
+
+                    if ( teamMember ) return teamMember;
+                }
+            }
+        }catch( e ) {}
+
+        throw new Utils.CustomError("Token is not valid");
+    }
+
     static async getOrganizerFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Organizers> {
         let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
@@ -147,6 +179,41 @@ export class Utils {
                 });
 
                 if ( organizer ) return organizer;
+            }
+        }
+
+        throw new Utils.CustomError("User does not exist.");
+    }
+
+    static async getOrgFromOrgOrMemberJsWebToken( token: string, relations: string[] = [], adminRequirement: boolean = false ): Promise<models.Organizers> {
+        let org: models.Organizers;
+
+        try {
+            org = await this.getOrganizerFromJsWebToken( token, relations);
+        }catch {
+            let orgMember = await this.getOrganizerMemberFromJsWebToken( token, relations );
+
+            if ( adminRequirement && orgMember.title !== 'Admin' ) {
+                throw new Utils.CustomError("User does not have the correct permissions.");
+            }
+
+            org = orgMember.organizer;
+        }
+
+        return org;
+    }
+
+    static async getOrganizerMemberFromJsWebToken( token: string, relations: string[] = [] ): Promise<models.OrganizerMembers> {
+        let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
+
+        if ( unHashedToken ) {
+            if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS ) {
+                let orgMember = await models.OrganizerMembers.findOne({
+                    where: { id: unHashedToken.id },
+                    relations: ['organizer', ...relations.map( val => `organizer.${val}`)]
+                });
+
+                if ( orgMember ) return orgMember;
             }
         }
 

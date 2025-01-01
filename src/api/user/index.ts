@@ -18,12 +18,14 @@ router.post("/upload/image", (req: any, res: any) => {
       else if (err) return res.send(err);
   
       try {
-        let user: models.Users | models.Organizers | undefined = undefined;
+        let user: models.Users | models.Organizers | models.OrganizerMembers | undefined = undefined;
   
         if ( req.body.craving === 'events' ) {
-          user = ( await Utils.getUserFromJsWebToken(req.body.token) );
+          user = await Utils.getUserFromJsWebToken(req.body.token);
+        }else if ( req.body.craving === 'org' ) {
+          user = await Utils.getOrganizerFromJsWebToken(req.body.token);
         }else {
-          user = ( await Utils.getOrganizerFromJsWebToken(req.body.token) );
+          user = await Utils.getOrganizerMemberFromJsWebToken( req.body.token );
         }
   
         let url = await s3.uploadImage(req.file, req.file.mimetype);

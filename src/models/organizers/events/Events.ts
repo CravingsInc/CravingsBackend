@@ -6,7 +6,6 @@ import { EventsPageVisit } from "../../analysis";
 import { Utils } from "../../../utils";
 import { EventPhotos } from "./EventPhotos";
 
-
 @Entity()
 @ObjectType()
 export class Events extends BaseEntity {
@@ -19,7 +18,7 @@ export class Events extends BaseEntity {
     title: string;
 
     @Field()
-    @Column({ type: Utils.AppConfig.TEST_SERVER ? "longtext" : undefined })
+    @Column({ type: Utils?.AppConfig.TEST_SERVER ? "longtext" : undefined })
     description: string;
 
     @Field()

@@ -17,6 +17,11 @@ export const createConnectAccount = async ( email: string, userId: string, type:
             userId,
             type: ConnectAccountType.ORGANIZER,
             dateJoined: ( new Date() ).getTime() 
+        },
+        business_type: "individual",
+
+        business_profile: {
+            url: `https://www.cravingsinc.us/organizers/${userId}`
         }
-    })
+    });
 }
