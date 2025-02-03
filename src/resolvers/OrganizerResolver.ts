@@ -758,7 +758,7 @@ export class OrganizerResolver {
         return sentSuccessfully && newMember ? newMember.id : new Utils.CustomError("Problem sending team member invitation");
     }
 
-    @Query( () => String )
+    @Query( () => models.LoadAllEventsPageResponse )
     async loadAllEventsPage( @Arg('token') token: string, @Arg('pageLength') pageLength: number = 7, @Arg('lastIndex') lastIndex: number = 0 ) {
 
         let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );

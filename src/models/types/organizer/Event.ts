@@ -229,6 +229,37 @@ export class EventReviewCard {
     @Field({ nullable: true }) dateCompleted: Date;
 }
 
+@ObjectType()
+export class EventDate {
+    @Field() startDate: Date;
+    
+    @Field() endDate: Date;
+}
+
+@ObjectType()
+export class LoadAllEventsPageEventResponse {
+    @Field( () => ID ) id: string;
+
+    @Field() title: string;
+
+    @Field() banner: string;
+    
+    @Field() visibility: "Public" | "Private"
+
+    @Field() views: number;
+
+    @Field() dateCreated: Date;
+
+    @Field( () => EventDate ) eventDate: EventDate;
+}
+
+@ObjectType()
+export class LoadAllEventsPageResponse {
+    @Field() endIndex: number;
+    @Field() loadMore: boolean;
+    @Field( () => [LoadAllEventsPageEventResponse] ) events: LoadAllEventsPageEventResponse[];
+}
+
 @InputType()
 export class EventTicketReviewInput {
     @Field() rating: number;
