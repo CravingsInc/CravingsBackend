@@ -29,7 +29,7 @@ let SpaceKeysConfig: SpaceKeys = !process.env.production ? require("../../SpaceK
 
 interface BasicAppConfig {
     GmailServicePassword: string;
-    GoogleMapsApiKey: string;
+    RadarMapsApiKey: string;
     StripeKey: string;
     SeceretKey: string;
     PORT: number;
@@ -42,7 +42,7 @@ interface BasicAppConfig {
 }
 
 const BasicConfig: BasicAppConfig = {
-    GoogleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+    RadarMapsApiKey: process.env.RADAR_MAPS_API_KEY || "",
 
     GmailServicePassword: process.env.gmailPWD || "",
 

@@ -43,7 +43,7 @@ export class ModifyEventInputType {
 
     @Field({ nullable: true }) banner?: string;
 
-    @Field({ nullable: true }) eventDate?: Date;
+    @Field({ nullable: true }) startDate?: Date;
 
     @Field({ nullable: true }) endDate?: Date;
 }
@@ -251,6 +251,33 @@ export class LoadAllEventsPageEventResponse {
     @Field() dateCreated: Date;
 
     @Field( () => EventDate ) eventDate: EventDate;
+}
+
+@ObjectType()
+export class LoadEventDetailsPageResponse extends LoadAllEventsPageEventResponse {
+    @Field() description: string;
+
+    @Field() location: string;
+
+    @Field() totalTicketSold: number;
+}
+
+@ObjectType()
+export class GalleryPageResponse {
+    @Field( () => ID ) id: string;
+
+    @Field() url: string;
+
+    @Field() dateUploaded: Date;
+}
+
+@ObjectType()
+export class LoadAllEventsGalleryPageResponse {
+    @Field() endIndex: number;
+    
+    @Field() loadMore: boolean;
+
+    @Field( () => [ GalleryPageResponse ]) gallery: GalleryPageResponse[];
 }
 
 @ObjectType()

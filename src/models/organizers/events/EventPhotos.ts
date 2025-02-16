@@ -16,4 +16,8 @@ export class EventPhotos extends BaseEntity {
     @Field( () => Events )
     @ManyToOne( () => Events, e => e.photoGallery, { onDelete: "CASCADE" })
     event: Events;
+
+    @Field()
+    @CreateDateColumn()
+    createdAt: Date;
 }
