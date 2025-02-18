@@ -20,7 +20,7 @@ router.post('/upload/banner', ( req: any, res: any ) => {
         let organizer: models.Organizers;
         let event: models.Events | null;
   
-        organizer = await Utils.getOrganizerFromJsWebToken(req.body.token);
+        organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( req.body.token, [], true );
         event = await models.Events.findOne({ where: { id: req.body.eventId, organizer: { id: organizer.id } } });
   
         if ( !event ) return res.json({ error: "Event not found" });
@@ -51,7 +51,7 @@ router.post('/upload/gallery', ( req: any, res: any ) => {
         let organizer: models.Organizers;
         let event: models.Events | null;
   
-        organizer = await Utils.getOrganizerFromJsWebToken( req.body.token );
+        organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( req.body.token, [], true );
         event = await models.Events.findOne({ where: { id: req.body.eventId, organizer: { id: organizer.id }} });
   
         if ( !event ) return res.json({ error: "Event not found" });
@@ -61,9 +61,9 @@ router.post('/upload/gallery', ( req: any, res: any ) => {
         let photo = await models.EventPhotos.create({
           picture: url,
           event: { id: event.id }
-        }).save()
+        }).save();
   
-        return res.json({ url, photoId: photo.id });
+        return res.json({ url, id: photo.id });
       }catch( err ) {
         console.log( err );
         res.json({ error: "Problem uploading new photo gallery for event" });

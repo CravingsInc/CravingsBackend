@@ -48,7 +48,7 @@ export const updatePaymentIntent = async ( id: string, prices: models.TicketBuyC
     return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
   }) );
 
-  const totalPrice = priceList.reduce( ( prev, curr ) => prev + ( curr.amount || 0 ), 0 );
+  const totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
 
   const intent = await stripe.paymentIntents.update(
     paymentIntent.id,

@@ -530,7 +530,7 @@ export class OrganizerResolver {
 
     @Mutation( () => String )
     async modifyEvent( @Arg('token') token: string, @Arg('args', () =>  models.ModifyEventInputType ) args: models.ModifyEventInputType ) {
-        let organizer = await Utils.getOrganizerFromJsWebToken( token );
+        let organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true ); // Only admins and organizer can change event details
 
         let event = await models.Events.findOne({ where: { id: args.id, organizer: { id: organizer.id } } });
 
@@ -540,14 +540,16 @@ export class OrganizerResolver {
 
         if ( args.description != null  ) event.description = args.description;
 
-        if ( args.eventDate != null  ) event.eventDate = args.eventDate;
+        if ( args.startDate != null  ) event.eventDate = args.startDate;
 
         if ( args.endDate != null  ) event.endEventDate = args.endDate;
 
         if ( args.visible != null  ) event.visible = args.visible;
 
         if ( args.location != null  ) {
-            let loc = await Utils.googleMapsService.getLatitudeLongitude(args.location);
+            let loc = await Utils.radarMapsService.getLatitudeLongitude(args.location);
+
+            if ( loc === null ) return new Utils.CustomError("Problem finding location");
 
             event.location = args.location;
             event.latitude = loc.lat;
@@ -758,22 +760,25 @@ export class OrganizerResolver {
         return sentSuccessfully && newMember ? newMember.id : new Utils.CustomError("Problem sending team member invitation");
     }
 
-    @Query( () => String )
+    @Query( () => models.LoadAllEventsPageResponse )
     async loadAllEventsPage( @Arg('token') token: string, @Arg('pageLength') pageLength: number = 7, @Arg('lastIndex') lastIndex: number = 0 ) {
 
         let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
 
-        let events = await models.Events.find({ where: { organizer: { id: org.id } } });
+        let [ events, totalCount ] = await models.Events.findAndCount({ 
+            where: { organizer: { id: org.id } },
+            order: { createdAt: "DESC" },
+            take: pageLength,
+            skip: lastIndex
+        });
 
         let endIndex = lastIndex + pageLength;
-
-        let newEventData = events.slice( lastIndex, endIndex );
         
         return {
             endIndex,
-            loadMore: events.length - 1 > endIndex,
+            loadMore: endIndex < totalCount,
             events: await Promise.all(
-                newEventData.map( async ( e ) => {
+                events.map( async ( e ) => {
                     return {
                         id: e.id,
                         title: e.title,
@@ -790,6 +795,59 @@ export class OrganizerResolver {
             )
         }
 
+    }
+
+    @Query( () => models.LoadAllEventsGalleryPageResponse )
+    async loadAllEventsGalleryPage( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('pageLength') pageLength: number = 6, @Arg("lastIndex") lastIndex: number = 0 ) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+
+        let event = await models.Events.findOne({ where: { organizer: { id: org.id }, id: eventId } });
+
+        if ( !event ) return new Utils.CustomError("Event does not exist");
+
+        let [ gallery, totalCount ] = await models.EventPhotos.findAndCount({ 
+            where: { event: { id: eventId } },
+            order: { createdAt: "DESC" },
+            take: pageLength,
+            skip: lastIndex
+        });
+
+        let endIndex = lastIndex + pageLength;
+
+        return {
+            endIndex,
+            loadMore: endIndex < totalCount,
+            gallery: gallery.map( g => ({
+                id: g.id,
+                url: g.picture,
+                dateUploaded: g.createdAt
+            }))
+        }
+    }
+
+    @Query( () => models.LoadEventDetailsPageResponse )
+    async loadEventDetails( @Arg('token') token: string, @Arg('eventId') eventId: string ) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+
+        let event = await models.Events.findOne({ where: { organizer: { id: org.id }, id: eventId }, relations: ['prices'] });
+
+        if ( !event ) return new Utils.CustomError("Problem loading event details");
+
+        return {
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            location: event.location,
+            banner: event.banner,
+            eventDate: {
+                startDate: event.eventDate,
+                endDate: event.endEventDate
+            },
+            visibility: event.visible ? "Public" : "Private",
+            dateCreated: event.createdAt,
+            views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
+            totalTicketSold: await models.EventTicketCart.count({ where: { eventId, completed: true }})
+        }
     }
 
     @Query( () => String )

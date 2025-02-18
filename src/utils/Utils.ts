@@ -1,7 +1,7 @@
 import * as models from "../models";
 import jwt from "jsonwebtoken";
 import { Mailer } from "./Emails";
-import { GoogleMapsUtils } from "./GoogleMapsUtils";
+import { RadarMapsUtils } from "./RadarMapsUtils";
 import { AppConfig } from "./Config";
 
 export class Utils {
@@ -14,7 +14,7 @@ export class Utils {
 
     static SECRET_KEY = Utils.AppConfig.BasicConfig.SeceretKey;
 
-    static googleMapsService = GoogleMapsUtils.getMaps( Utils.AppConfig.BasicConfig.GoogleMapsApiKey );
+    static radarMapsService = RadarMapsUtils.getMaps( Utils.AppConfig.BasicConfig.RadarMapsApiKey );
 
     static LOGIN_TOKEN_TYPE = {
         USER: "USER",
