@@ -20,7 +20,7 @@ router.post('/upload/banner', ( req: any, res: any ) => {
         let organizer: models.Organizers;
         let event: models.Events | null;
   
-        organizer = await Utils.getOrganizerFromJsWebToken(req.body.token);
+        organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( req.body.token, [], true );
         event = await models.Events.findOne({ where: { id: req.body.eventId, organizer: { id: organizer.id } } });
   
         if ( !event ) return res.json({ error: "Event not found" });
