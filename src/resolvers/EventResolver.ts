@@ -428,9 +428,9 @@ export class EventResolver {
         );
     }
 
-    @Query( () => models.PhotoGallery )
+    @Mutation( () => models.PhotoGallery )
     async addPhotoGallery( @Arg('token') token: string, @Arg('photoUrl') photoUrl: string, @Arg('eventId') eventId: string ) {
-        let org = await Utils.getOrganizerFromJsWebToken( token );
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
 
@@ -443,9 +443,23 @@ export class EventResolver {
 
         return {
             id: photo.id,
-            picture: photo.picture,
-            eventId
+            url: photo.picture
         }
+    }
+
+    @Mutation( () => String )
+    async deletePhotoGallery( @Arg('token') token: string, @Arg('photoId') photoId: string ) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
+
+        let photo = await models.EventPhotos.findOne({ where: { id: photoId }, relations: [ 'event', 'event.organizer' ] });
+
+        if ( !photo ) return "Couldn't find photo";
+
+        if ( photo.event.organizer.id !== org.id ) return "You don't have permission to delete this photo";
+
+        await photo.remove();
+
+        return "Photo deleted successfully";
     }
 
     @Query( () => models.EventsPage )
