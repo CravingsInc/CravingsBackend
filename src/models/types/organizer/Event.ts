@@ -43,7 +43,7 @@ export class ModifyEventInputType {
 
     @Field({ nullable: true }) banner?: string;
 
-    @Field({ nullable: true }) eventDate?: Date;
+    @Field({ nullable: true }) startDate?: Date;
 
     @Field({ nullable: true }) endDate?: Date;
 }
@@ -227,6 +227,64 @@ export class EventReviewCard {
     @Field() description: string;
 
     @Field({ nullable: true }) dateCompleted: Date;
+}
+
+@ObjectType()
+export class EventDate {
+    @Field() startDate: Date;
+    
+    @Field() endDate: Date;
+}
+
+@ObjectType()
+export class LoadAllEventsPageEventResponse {
+    @Field( () => ID ) id: string;
+
+    @Field() title: string;
+
+    @Field() banner: string;
+    
+    @Field() visibility: "Public" | "Private"
+
+    @Field() views: number;
+
+    @Field() dateCreated: Date;
+
+    @Field( () => EventDate ) eventDate: EventDate;
+}
+
+@ObjectType()
+export class LoadEventDetailsPageResponse extends LoadAllEventsPageEventResponse {
+    @Field() description: string;
+
+    @Field() location: string;
+
+    @Field() totalTicketSold: number;
+}
+
+@ObjectType()
+export class GalleryPageResponse {
+    @Field( () => ID ) id: string;
+
+    @Field() url: string;
+
+    @Field() dateUploaded: Date;
+}
+
+@ObjectType()
+export class LoadAllEventsGalleryPageResponse {
+    @Field() endIndex: number;
+    
+    @Field() loadMore: boolean;
+
+    @Field( () => [ GalleryPageResponse ]) gallery: GalleryPageResponse[];
+}
+
+@ObjectType()
+export class LoadAllEventsPageResponse {
+    @Field() endIndex: number;
+    @Field() loadMore: boolean;
+    @Field( () => [LoadAllEventsPageEventResponse] ) events: LoadAllEventsPageEventResponse[];
 }
 
 @InputType()

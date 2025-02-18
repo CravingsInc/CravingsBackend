@@ -46,7 +46,7 @@ export class Events extends BaseEntity {
     location: string;
 
     @Field()
-    @Column({ default: 'infinite' })
+    @Column({ default: 'limited' })
     ticketType: 'infinite' | 'limited';
 
     @Field()
