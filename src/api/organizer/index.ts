@@ -21,6 +21,10 @@ router.post('/upload/banner', ( req: any, res: any ) => {
         try {
             let org: models.Organizers | undefined = undefined;
 
+            console.log( req.body );
+            
+            Utils.verifyRequestParams( req.body, [ "token" ]);
+
             org = await Utils.getOrganizerFromJsWebToken( req.body.token );
 
             let url = await s3.uploadImage( req.file, req.file.mimetype );

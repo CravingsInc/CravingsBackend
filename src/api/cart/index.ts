@@ -2,7 +2,7 @@ import express from "express";
 const multer = require("multer");
 
 import * as models from '../../models';
-import { s3 } from "../../utils";
+import { s3, Utils } from "../../utils";
 
 import ReviewRouter from './review';
 
@@ -21,6 +21,9 @@ router.get('/QrCode', async ( req: any, res: any ) => {
       else if (err) return res.send(err);
   
       try {
+        
+        Utils.verifyRequestParams( req.body, [ "payment_intent" ]);
+
         const cart = await models.EventTicketCart.findOne({ where: { stripeTransactionId: req.body.payment_intent } });
   
         if ( !cart ) return res.status(500).json({ error: 'Could not find Cart', param: req.body });

@@ -20,6 +20,9 @@ router.post("/upload/image", (req: any, res: any) => {
       try {
         let user: models.Users | models.Organizers | models.OrganizerMembers | undefined = undefined;
   
+        
+        Utils.verifyRequestParams( req.body, [ "token" ]);
+
         if ( req.body.craving === 'events' ) {
           user = await Utils.getUserFromJsWebToken(req.body.token);
         }else if ( req.body.craving === 'org' ) {

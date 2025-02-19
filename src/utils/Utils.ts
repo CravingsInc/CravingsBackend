@@ -255,4 +255,13 @@ export class Utils {
             return `${div > 1 ? div : 1}w`;
         }
     }
+
+    static verifyRequestParams( reqBody: any, params: string[] ) {
+
+        for ( let param of params ) {
+            if ( !reqBody[param] ) {
+                throw new Utils.CustomError(`Missing parameter ${param}`);
+            }
+        }
+    }
 }
