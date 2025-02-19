@@ -16,7 +16,7 @@ export class EventTickets extends BaseEntity {
     title: string;
 
     @Field()
-    @Column({ type: Utils?.AppConfig.TEST_SERVER ? "longtext" : undefined, default: "" })
+    @Column({ type: Utils?.AppConfig.TEST_SERVER ? "longtext" : undefined })
     description: string;
 
     @Field()

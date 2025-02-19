@@ -70,6 +70,9 @@ router.post('/picture', async ( req: any, res: any ) => {
       else if ( err ) return res.send( err );
   
       try {
+        
+        Utils.verifyRequestParams( req.body, [ "payment_intent" ]);
+        
         const cart = await models.EventTicketCart.findOne({ where: { stripeTransactionId: req.body.payment_intent, completed: true }, relations: [ 'review' ] });
   
         if ( !cart ) return res.status( 500 ).json({ error: 'Could not find event ticket' });
