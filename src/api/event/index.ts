@@ -19,11 +19,13 @@ router.post('/upload/banner', ( req: any, res: any ) => {
       try {
         let organizer: models.Organizers;
         let event: models.Events | null;
+        
+        Utils.verifyRequestParams( req.body, [ "token", "eventId" ]);
   
         organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( req.body.token, [], true );
         event = await models.Events.findOne({ where: { id: req.body.eventId, organizer: { id: organizer.id } } });
-  
-        if ( !event ) return res.json({ error: "Event not found" });
+
+        if ( !event || event === null ) return res.json({ error: "Event not found" });
   
         let url = await s3.uploadImage(req.file, req.file.mimetype, "events/banner");
         event.banner = url;
@@ -50,6 +52,8 @@ router.post('/upload/gallery', ( req: any, res: any ) => {
       try {
         let organizer: models.Organizers;
         let event: models.Events | null;
+
+        Utils.verifyRequestParams( req.body, [ "token", "eventId" ]);
   
         organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( req.body.token, [], true );
         event = await models.Events.findOne({ where: { id: req.body.eventId, organizer: { id: organizer.id }} });
