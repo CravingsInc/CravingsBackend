@@ -2254,7 +2254,7 @@ cors@^2.8.5, cors@~2.8.5:
     vary "^1"
 
 "cravingsbackend@file:":
-  version "1.0.0"
+  version "1.0.1"
   resolved "file:"
   dependencies:
     "@aws-sdk/client-s3" "^3.515.0"
