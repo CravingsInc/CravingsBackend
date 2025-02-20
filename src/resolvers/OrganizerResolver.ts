@@ -547,6 +547,9 @@ export class OrganizerResolver {
         if ( args.visible != null  ) event.visible = args.visible;
 
         if ( args.location != null  ) {
+
+            if ( args.location.length === 0 ) return;
+
             let loc = await Utils.radarMapsService.getLatitudeLongitude(args.location);
 
             if ( loc === null ) return new Utils.CustomError("Problem finding location");
