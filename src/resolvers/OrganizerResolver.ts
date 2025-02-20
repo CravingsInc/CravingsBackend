@@ -548,7 +548,15 @@ export class OrganizerResolver {
 
         if ( args.location != null  ) {
 
-            if ( args.location.length === 0 ) return;
+            if ( args.location.length === 0 ) {
+                event.latitude = -1;
+                event.longitude = -1;
+                event.location = "";
+
+                await event.save();
+
+                return "Modified Properly";
+            };
 
             let loc = await Utils.radarMapsService.getLatitudeLongitude(args.location);
 
