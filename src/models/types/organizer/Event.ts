@@ -167,6 +167,24 @@ export class TicketBuyClientSecretUpdate {
 
     @Field() quantity: number;
 }
+
+@InputType()
+export class RegisterFreeEventInput {
+    @Field() eventId: string;
+
+    @Field() name: string;
+
+    @Field() email: string;
+
+    @Field() phoneNumber: string;
+
+    @Field({ nullable: true }) userToken?: string;
+
+    @Field() cartId: string;
+
+    @Field( () => [TicketBuyClientSecretUpdate] ) tickets: TicketBuyClientSecretUpdate[];
+}
+
 @ObjectType()
 export class EventTicketBuyer {
     @Field() name: string;
@@ -188,7 +206,7 @@ export class EventTicket {
     
     @Field( () => EventTicketBuyer ) buyer: EventTicketBuyer;;
 
-    @Field() paymentIntent: string;
+    @Field() cart_id: string;
 }
 
 @ObjectType()
@@ -211,7 +229,7 @@ export class EventTicketReview {
 
     @Field() reviewCompleted: boolean;
 
-    @Field() payment_intent: string;
+    @Field() cart_id: string;
 
     @Field({ nullable: true }) dateReviewCompleted: Date;
 }
@@ -285,6 +303,12 @@ export class LoadAllEventsPageResponse {
     @Field() endIndex: number;
     @Field() loadMore: boolean;
     @Field( () => [LoadAllEventsPageEventResponse] ) events: LoadAllEventsPageEventResponse[];
+}
+
+@ObjectType()
+export class CreateTicketSellClientSecretResponse {
+    @Field() client_secret: string;
+    @Field() cartId: string;
 }
 
 @InputType()
