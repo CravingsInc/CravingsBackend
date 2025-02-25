@@ -1,6 +1,6 @@
 {
   "name": "cravingsbackend",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Backend For Cravings",
   "main": "index.ts",
   "scripts": {

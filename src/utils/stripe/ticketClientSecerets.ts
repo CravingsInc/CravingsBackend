@@ -7,14 +7,22 @@ export enum PAYMENT_INTENT_TYPE {
   TICKET = "TICKET"
 }
 
-export const createPaymentIntent = async ( stripeAccount: string, eventId: string, customer?: string ) => {
+export const createPaymentIntent = async ( stripeAccount: string, eventId: string, prices: models.TicketBuyClientSecretUpdate[], customer?: string ) => {
   const cart = await models.EventTicketCart.create({
     completed: false,
     eventId
   }).save();
+
+  let priceList = await Promise.all( prices.map( async ( price ) => {
+    const p = await stripe.prices.retrieve( price.id, { stripeAccount } );
+
+    return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
+  }) );
+
+  const totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
   
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: 50,
+    amount: totalPrice > 0.5 ? totalPrice : 0.5,
     currency: 'usd',
     automatic_payment_methods: {
       enabled: true,
@@ -24,19 +32,24 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
     transfer_data: {
       destination: stripeAccount
     },
+    application_fee_amount: totalPrice * 0.1,
 
     metadata: {
       customer: customer || null,
       type: PAYMENT_INTENT_TYPE.TICKET,
       eventId,
-      cart: cart.id
+      cart: cart.id,
+      priceList: JSON.stringify( priceList )
     }
   });
 
   cart.stripeTransactionId = paymentIntent.id;
   cart.save();
 
-  return paymentIntent;
+  return {
+    client_secret: paymentIntent.client_secret,
+    cartId: cart.id
+  };
 }
 
 export const updatePaymentIntent = async ( id: string, prices: models.TicketBuyClientSecretUpdate[], stripeAccount: string ) => {
