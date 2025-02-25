@@ -43,7 +43,6 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
             name: name || 'UNKNOWN USER',
             email: email || 'UNKNOWN EMAIL',
             quantity: price.quantity,
-            checkIn: false,
             user: user || undefined,
             eventTicket,
             cart: { id: cart.id }
@@ -55,9 +54,11 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
     cart.name = name || 'UNKNOWN';
     cart.email = email || 'UNKNOWN';
     cart.completed = true;
+    cart.dateCompleted = new Date();
+    cart.checkIn = false;
     await cart.save();
 
-    if ( email ) Utils.Mailer.sendTicketBuyConfirmation({ name: name || 'UNKNOWN USER', eventName: event.title, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?payment_intent=${cart.stripeTransactionId}`, qrCode: cart.qrCode, email })
+    if ( email ) Utils.Mailer.sendTicketBuyConfirmation({ name: name || 'UNKNOWN USER', eventName: event.title, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?cart_id=${cart.id}`, qrCode: cart.qrCode, email })
 
     return { status: 200, message: 'Event Tickets Created Successfully' };
 }

@@ -56,7 +56,79 @@ export class ModifyEventTicketInputType {
 
     @Field({ nullable: true }) description?: string;
 
+    @Field({ nullable: true }) amount?: number;
+    
+    @Field({ nullable: true, defaultValue: "usd" }) currency?: string;
+
     @Field({ nullable: true }) totalTicketAvailable?: number;
+}
+
+@ObjectType()
+export class GetSalesPageResponseTicketsShortened {
+    @Field( () => ID ) id: string;
+
+    @Field() title: string;
+
+    @Field() description: string;
+
+    @Field() quantity: number;
+
+    @Field() price: number;
+}
+
+@ObjectType()
+export class GetSalesPageResponseTickets {
+    @Field( () => ID ) id: string;
+
+    @Field() title: string;
+
+    @Field() description: string;
+    
+    @Field() totalTickets: number;
+
+    @Field() ticketSold: number;
+
+    @Field() ticketPrice: number;
+}
+
+@ObjectType() 
+export class SalesCheckIn {
+    @Field() checkIn: boolean;
+
+    @Field() date: Date;
+}
+
+@ObjectType() 
+export class SalesCompleted {
+    @Field() completed: boolean;
+
+    @Field() date: Date;
+}
+
+@ObjectType()
+export class GetSalesPageResponseSales {
+    @Field( () => ID ) id: string;
+
+    @Field() name: string;
+
+    @Field() amount: number;
+
+    @Field() dateCreated: Date;
+
+    @Field() currency: string;
+
+    @Field( () => SalesCheckIn ) checkIn: SalesCheckIn;
+
+    @Field( () => SalesCompleted ) completed: SalesCompleted;
+
+    @Field( () => [GetSalesPageResponseTicketsShortened] ) tickets: GetSalesPageResponseTicketsShortened[];
+}
+
+@ObjectType()
+export class GetSalesPageResponse {
+    @Field( () => [ GetSalesPageResponseTickets ]) tickets: GetSalesPageResponseTickets[];
+
+    @Field( () => [ GetSalesPageResponseSales ]) sales: GetSalesPageResponseSales[];
 }
 
 @InputType()
@@ -167,6 +239,24 @@ export class TicketBuyClientSecretUpdate {
 
     @Field() quantity: number;
 }
+
+@InputType()
+export class RegisterFreeEventInput {
+    @Field() eventId: string;
+
+    @Field() name: string;
+
+    @Field() email: string;
+
+    @Field() phoneNumber: string;
+
+    @Field({ nullable: true }) userToken?: string;
+
+    @Field() cartId: string;
+
+    @Field( () => [TicketBuyClientSecretUpdate] ) tickets: TicketBuyClientSecretUpdate[];
+}
+
 @ObjectType()
 export class EventTicketBuyer {
     @Field() name: string;
@@ -188,7 +278,7 @@ export class EventTicket {
     
     @Field( () => EventTicketBuyer ) buyer: EventTicketBuyer;;
 
-    @Field() paymentIntent: string;
+    @Field() cart_id: string;
 }
 
 @ObjectType()
@@ -211,7 +301,7 @@ export class EventTicketReview {
 
     @Field() reviewCompleted: boolean;
 
-    @Field() payment_intent: string;
+    @Field() cart_id: string;
 
     @Field({ nullable: true }) dateReviewCompleted: Date;
 }
@@ -285,6 +375,12 @@ export class LoadAllEventsPageResponse {
     @Field() endIndex: number;
     @Field() loadMore: boolean;
     @Field( () => [LoadAllEventsPageEventResponse] ) events: LoadAllEventsPageEventResponse[];
+}
+
+@ObjectType()
+export class CreateTicketSellClientSecretResponse {
+    @Field() client_secret: string;
+    @Field() cartId: string;
 }
 
 @InputType()

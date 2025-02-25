@@ -558,29 +558,22 @@ export class EventResolver {
     }
 
     @Query( () => models.EventTicketReview )
-    async getTicketReview( @Arg('payment_intent') payment_intent: string ) {
+    async getTicketReview( @Arg('cart_id') cart_id: string ) {
 
-        let paymentIntent = await stripeHandler.getPaymentIntentById( payment_intent, true ) as Stripe.PaymentIntent;
-
-        const latestCharge = ( await stripeHandler.getChargeById( paymentIntent.latest_charge as string ) ) as Stripe.Charge;
-
-        let event = await models.Events.findOne({ where: { id: latestCharge.metadata.eventId }});
-
-        if ( !event ) return new Utils.CustomError("Event not found")
-        
         let eventTicketCart = await models.EventTicketCart.findOne({
             where: {
-                id: latestCharge.metadata.cart
+                id: cart_id
             },
             relations: [ 'review' ]
         });
 
+
         if ( !eventTicketCart ) return new Utils.CustomError("Ticket Cart not found");
 
-        if ( eventTicketCart.name.length === 0 ) eventTicketCart.name = latestCharge.billing_details.name || '';
+        let event = await models.Events.findOne({ where: { id: eventTicketCart?.eventId } });
 
-        if ( eventTicketCart.email.length === 0 ) eventTicketCart.email = latestCharge.billing_details.email || '';
-
+        if ( !event ) return new Utils.CustomError('Couldn\'t find event find event');
+        
         let review: models.EventTicketCartReview;
 
         if ( eventTicketCart.review ) review = eventTicketCart.review;
@@ -609,23 +602,15 @@ export class EventResolver {
             description: eventTicketCart.review.description,
             reviewCompleted: eventTicketCart.reviewCompleted,
             dateReviewCompleted: review.dateReviewCompleted,
-            payment_intent
+            cart_id
         }
     }
 
     @Mutation( () => String )
-    async submitTicketReview( @Arg('payment_intent') payment_intent: string, @Arg('args', () => models.EventTicketReviewInput ) args: models.EventTicketReviewInput ) {
-        let paymentIntent = await stripeHandler.getPaymentIntentById( payment_intent, true ) as Stripe.PaymentIntent;
-
-        const latestCharge = ( await stripeHandler.getChargeById( paymentIntent.latest_charge as string ) ) as Stripe.Charge;
-
-        let event = await models.Events.findOne({ where: { id: latestCharge.metadata.eventId }});
-
-        if ( !event ) return new Utils.CustomError("Event not found")
-        
+    async submitTicketReview( @Arg('cart_id') cart_id: string, @Arg('args', () => models.EventTicketReviewInput ) args: models.EventTicketReviewInput ) {
         let eventTicketCart = await models.EventTicketCart.findOne({
             where: {
-                id: latestCharge.metadata.cart
+                id: cart_id
             },
             relations: [ 'review' ]
         });
@@ -667,16 +652,14 @@ export class EventResolver {
     }
 
     @Query( () => models.EventTicket )
-    async getTicketBuy( @Arg('payment_intent') payment_intent: string ) {
-        let paymentIntent = await stripeHandler.getPaymentIntentById(payment_intent, true ) as Stripe.PaymentIntent;
+    async getTicketBuy( @Arg('cart_id') cart_id: string ) {
+        let cart = await models.EventTicketCart.findOne({ where: { id: cart_id }, relations: [ 'tickets' ] });
 
-        if ( !paymentIntent.metadata || !paymentIntent.metadata.eventId || paymentIntent.metadata.type != PAYMENT_INTENT_TYPE.TICKET ) return new Utils.CustomError('Problem Retrieving Ticket');
+        if ( !cart ) return new Utils.CustomError("Couldn't find purchase");
 
-        let event = await models.Events.findOne({ where: { id: paymentIntent.metadata.eventId } });
+        let event = await models.Events.findOne({ where: { id: cart?.eventId } });
 
         if ( !event ) return new Utils.CustomError('Couldn\'t find event find event');
-
-        let tickets = await models.EventTicketBuys.find({ where: { cart: { stripeTransactionId: paymentIntent.id } } });
 
         return {
             id: event.id,
@@ -684,43 +667,66 @@ export class EventResolver {
             banner: event.banner,
             date: event.eventDate,
             buyer: {
-                name: tickets[0].name,
-                email: tickets[0].email,
-                admitCount: tickets.reduce( (a, b) => a + b.quantity, 0)
+                name: cart.name ? cart.name : "GUEST",
+                email: cart.email ? cart.email : "GUEST_EMAIL",
+                admitCount: cart.tickets.reduce( (a, b) => a + b.quantity, 0)
             },
-            paymentIntent: paymentIntent.id
+            cart_id: cart_id
         }
     }
 
     @Mutation( () => String ) 
-    async confirmTicketCheckIn( @Arg('payment_intent') payment_intent: string ) {
-        let cart = await models.EventTicketCart.findOne({ where: { stripeTransactionId: payment_intent }, relations: ['tickets'] });
+    async confirmTicketCheckIn( @Arg('cart_id') cart_id: string ) {
+        let cart = await models.EventTicketCart.findOne({ where: { id: cart_id }, relations: ['tickets'] });
 
         if ( !cart ) return new Utils.CustomError("Tickets not found.");
 
-        for ( let ticket of cart.tickets ) {
-            ticket.checkIn = true;
-            await ticket.save();
-        }
+        cart.checkIn = true;
+        cart.dateCheckIn = new Date();
 
         return "Checked in successfully.";
     }
 
-    @Mutation( () => String )
-    async createTicketSellClientSecret( @Arg('eventId') eventId: string, @Arg('userToken', { nullable: true } ) userToken?: string ) {
+    @Mutation( () => models.CreateTicketSellClientSecretResponse )
+    async createTicketSellClientSecret( @Arg('eventId') eventId: string,  @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] } ) prices: models.TicketBuyClientSecretUpdate[], @Arg('userToken', { nullable: true } ) userToken?: string ) {
         let user: models.Users | null = null;
 
         try {
             user = await Utils.getUserFromJsWebToken( userToken || "" );
         }catch (e) { console.log(e); }
 
-        let event = await models.Events.findOne({ where: { id: eventId }, relations: [ 'organizer' ] });
+        let event = await models.Events.findOne({ where: { id: eventId }, relations: [ 'organizer', 'prices' ] });
 
         if ( !event ) return new Utils.CustomError("Event not found.");
 
-        if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
+        if ( !event.visible ) return new Utils.CustomError("Event not found.");
 
-        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId, event.id ) ).client_secret
+        let items = event.prices.filter( price => prices.find( p => p.id === price.priceId ) );
+
+        if ( items.reduce( ( prev, curr ) => prev + curr.amount, 0 ) === 0 ) {
+            let cart = await models.EventTicketCart.create({
+                completed: false,
+                eventId: event.id
+            }).save();
+
+            return {
+                client_secret: '',
+                cartId: cart.id
+            }
+        } // We don't need to create a payment intent for free events
+        else if ( !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found."); // organizer not verified means no money being paid either
+
+        for ( let price of prices ) {
+            let ticket = await models.EventTickets.findOneBy({ priceId: price.id });
+
+            if ( !ticket ) return new Utils.CustomError('Ticket not found');
+
+            let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { id: ticket.id }, cart: { completed: true } });
+
+            if ( ticketSold + price.quantity > ticket.totalTicketAvailable ) return new Utils.CustomError('Ticket not available for sale.');
+        }
+
+        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId, event.id, prices, user ? user.stripeCustomerId : undefined ) )
     }
 
     @Mutation( ( ) => String )
@@ -731,20 +737,80 @@ export class EventResolver {
 
         if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
         
-        if ( event.ticketType === 'limited' ) {
-            for ( let price of prices ) {
-                let ticket = await models.EventTickets.findOneBy({ priceId: price.id });
+        for ( let price of prices ) {
+            let ticket = await models.EventTickets.findOneBy({ priceId: price.id });
 
-                if ( !ticket ) return new Utils.CustomError('Ticket not found');
+            if ( !ticket ) return new Utils.CustomError('Ticket not found');
 
-                let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { id: ticket.id }, cart: { completed: true } });
+            let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { id: ticket.id }, cart: { completed: true } });
 
-                if ( ticketSold + price.quantity > ticket.totalTicketAvailable ) return new Utils.CustomError('Ticket not available for sale.');
-            }
+            if ( ticketSold + price.quantity > ticket.totalTicketAvailable ) return new Utils.CustomError('Ticket not available for sale.');
         }
         
         const intent = await stripeHandler.updatePaymentIntent( id, prices, event.organizer.stripeConnectId );
 
         return intent.status;
+    }
+
+    @Mutation( () => String )
+    async registerFreeEventTickets( @Arg('args') args: models.RegisterFreeEventInput ) {
+        
+        let event = await models.Events.findOne({ where: { id: args.eventId }, relations: [ 'organizer', "prices" ] });
+
+        if ( !event ) return new Utils.CustomError("Event not found");
+
+        let cart = await models.EventTicketCart.findOne({ where: { id: args.cartId }, relations: [ 'tickets' ] });
+
+        if ( !cart ) {
+            cart = await models.EventTicketCart.create({
+                completed: false,
+                eventId: event.id
+            }).save()
+        };
+
+        if ( cart.completed ) return new Utils.CustomError("Cart already completed");
+
+        let user : models.Users | null = null;
+        try {
+            user = await Utils.getUserFromJsWebToken( args.userToken || "" );
+        }catch{ user = null }
+
+        for ( let i = 0; i < args.tickets.length; i++ ) {
+            let ticket = args.tickets[ i ];
+
+            let eventTicket = await models.EventTickets.findOne({ where: { priceId: ticket.id }});
+
+            if ( !eventTicket ) return new Utils.CustomError("Ticket not found");
+
+            if ( eventTicket.amount !== 0 ) return new Utils.CustomError("Ticket not free");
+
+            let ticketBuy = models.EventTicketBuys.create({
+                type: user ? 'guest' : "user",
+                name: args.name,
+                email: args.email,
+                quantity: ticket.quantity,
+                user: user ? { id: user.id } : null,
+                eventTicket,
+                cart
+            });
+            
+            await ticketBuy.save(); // Ensure ticket buy is saved
+
+            if (!cart.tickets) cart.tickets = [];
+            cart.tickets.push(ticketBuy);
+        }
+
+        user ? cart.user = user : null;
+        cart.type = user ? 'user' : 'guest';
+        cart.name = args.name;
+        cart.email = args.email;
+        cart.completed = true;
+        cart.dateCompleted = new Date();
+
+        await cart.save();
+
+        if ( args.email ) Utils.Mailer.sendTicketBuyConfirmation({ name: args.name, eventName: event.title, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?cart_id=${cart.id}`, qrCode: cart.qrCode, email: args.email });
+
+        return "Registered For Event Successfully"
     }
 }

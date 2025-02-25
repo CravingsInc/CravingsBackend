@@ -1,4 +1,4 @@
-import { Resolver, Mutation, Query, Arg } from "type-graphql";
+import { Resolver, Mutation, Query, Arg, Args } from "type-graphql";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -597,17 +597,20 @@ export class OrganizerResolver {
 
             await eventTicket.save();
         }catch(err) {
+
+            console.log( err );
+
             await eventTicket.remove(); // want to self clean database
 
             return new Utils.CustomError("Problem creating event ticket")
         }
 
-        return "Event Ticket created successfully";
+        return eventTicket.id;
     }
 
     @Mutation( () => String ) 
     async modifyEventTicketPrice( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketPriceInputType ) args: models.ModifyEventTicketPriceInputType ) {
-        let org = await Utils.getOrganizerFromJsWebToken( token );
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
 
@@ -634,7 +637,7 @@ export class OrganizerResolver {
 
     @Mutation( () => String )
     async modifyEventTicket( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketInputType ) args: models.ModifyEventTicketInputType ) {
-        let org = await Utils.getOrganizerFromJsWebToken( token );
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
 
@@ -648,11 +651,69 @@ export class OrganizerResolver {
 
         if ( args.description != null  ) eventTicket.description = args.description;
 
+        if ( args.amount != null ) {
+            let newStripeTicket = await stripeHandler.modifyEventPrice( org.stripeConnectId, org.id, eventId, event.productId, eventTicket.priceId, args.amount, args.currency );
+
+            eventTicket.priceId = newStripeTicket.id;
+            eventTicket.amount = args.amount;
+            eventTicket.currency = args.currency || 'usd';
+        }
+
         if ( args.totalTicketAvailable != null  ) eventTicket.totalTicketAvailable = args.totalTicketAvailable;
 
         await eventTicket.save();
 
         return "Event Ticket updated successfully";
+    }
+
+    @Query( () => models.GetSalesPageResponse ) 
+    async getSalesPage( @Arg('token') token: string, @Arg('eventId') eventId: string ) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
+
+        if ( !event ) return new Utils.CustomError("Event does not exist");
+
+        let tickets = await models.EventTickets.find({ where: { event: { id: eventId } } });
+
+        let cart = await models.EventTicketCart.find({ where: { completed: true, eventId: eventId }, relations: [ 'tickets', "tickets.eventTicket" ] });
+
+        return {
+            tickets: await Promise.all(
+                tickets.map( async ticket => ({
+                    id: ticket.id,
+                    title: ticket.title,
+                    description: ticket.description,
+                    totalTickets: ticket.totalTicketAvailable,
+                    ticketSold: await models.EventTicketBuys.count({ where: { eventTicket: { id: ticket.id } }}),
+                    ticketPrice: ticket.amount
+                }))
+            ),
+            sales: await Promise.all(
+                cart.map( async cart => ({
+                    id: cart.id,
+                    name: cart.name,
+                    amount: cart.tickets.reduce( ( sum, item ) => sum + ( item.eventTicket.amount * item.quantity ), 0 ),
+                    dateCreated: cart.created,
+                    currency: 'usd',
+                    checkIn: {
+                        checkIn: cart.checkIn || false,
+                        date: cart.dateCheckIn || new Date(),
+                    },
+                    completed: {
+                        completed: cart.completed || false,
+                        date: cart.dateCompleted || new Date()
+                    },
+                    tickets: cart.tickets.map( ticket => ({
+                        id: ticket.id,
+                        title: ticket.eventTicket.title,
+                        description: ticket.eventTicket.description,
+                        quantity: ticket.quantity,
+                        price: ticket.eventTicket.amount
+                    }))
+                }))
+            )
+        }
     }
 
     @Mutation( () => String )

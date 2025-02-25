@@ -44,6 +44,15 @@ export const createOrganizerEvents = async ( orgs: CreateOrganizerResponse[], to
                 if ( !eventSaved ) {
                     eventSaved = await createEvent( org.id, event );
 
+                    eventSaved.productId = existingProduct.id;
+                    await eventSaved.save();
+
+                    orgsEventsIds[ org.id ] = orgsEventsIds[ org.id ] || [];
+                    orgsEventsIds[ org.id ].push( eventSaved.id );
+                }else {
+                    eventSaved.productId = existingProduct.id;
+                    await eventSaved.save();
+
                     orgsEventsIds[ org.id ] = orgsEventsIds[ org.id ] || [];
                     orgsEventsIds[ org.id ].push( eventSaved.id );
                 }
@@ -62,10 +71,13 @@ export const createOrganizerEvents = async ( orgs: CreateOrganizerResponse[], to
                         orgsEventsIds[ org.id ] = orgsEventsIds[ org.id ] || [];
                         orgsEventsIds[ org.id ].push( eventSaved.id );
                     }catch( e ) {
+                        console.error( e );
                         await eventSaved.remove(); // want to self clean database
 
                         eventSaved = null;
                     }
+                }else {
+                    console.log( eventSaved, 'saved' );
                 }
             }
 

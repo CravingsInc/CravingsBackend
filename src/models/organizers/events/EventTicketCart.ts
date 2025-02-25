@@ -23,6 +23,15 @@ export class EventTicketCart extends BaseEntity {
     @Column()
     completed: boolean;
 
+    @Column({ nullable: true })
+    dateCompleted: Date;
+
+    @Column({ nullable: true })
+    checkIn: boolean;
+
+    @Column({ nullable: true })
+    dateCheckIn: Date;
+
     @Column({ default: '' })
     qrCode: string;
 
