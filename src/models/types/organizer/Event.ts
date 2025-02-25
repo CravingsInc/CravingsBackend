@@ -56,7 +56,79 @@ export class ModifyEventTicketInputType {
 
     @Field({ nullable: true }) description?: string;
 
+    @Field({ nullable: true }) amount?: number;
+    
+    @Field({ nullable: true, defaultValue: "usd" }) currency?: string;
+
     @Field({ nullable: true }) totalTicketAvailable?: number;
+}
+
+@ObjectType()
+export class GetSalesPageResponseTicketsShortened {
+    @Field( () => ID ) id: string;
+
+    @Field() title: string;
+
+    @Field() description: string;
+
+    @Field() quantity: number;
+
+    @Field() price: number;
+}
+
+@ObjectType()
+export class GetSalesPageResponseTickets {
+    @Field( () => ID ) id: string;
+
+    @Field() title: string;
+
+    @Field() description: string;
+    
+    @Field() totalTickets: number;
+
+    @Field() ticketSold: number;
+
+    @Field() ticketPrice: number;
+}
+
+@ObjectType() 
+export class SalesCheckIn {
+    @Field() checkIn: boolean;
+
+    @Field() date: Date;
+}
+
+@ObjectType() 
+export class SalesCompleted {
+    @Field() completed: boolean;
+
+    @Field() date: Date;
+}
+
+@ObjectType()
+export class GetSalesPageResponseSales {
+    @Field( () => ID ) id: string;
+
+    @Field() name: string;
+
+    @Field() amount: number;
+
+    @Field() dateCreated: Date;
+
+    @Field() currency: string;
+
+    @Field( () => SalesCheckIn ) checkIn: SalesCheckIn;
+
+    @Field( () => SalesCompleted ) completed: SalesCompleted;
+
+    @Field( () => [GetSalesPageResponseTicketsShortened] ) tickets: GetSalesPageResponseTicketsShortened[];
+}
+
+@ObjectType()
+export class GetSalesPageResponse {
+    @Field( () => [ GetSalesPageResponseTickets ]) tickets: GetSalesPageResponseTickets[];
+
+    @Field( () => [ GetSalesPageResponseSales ]) sales: GetSalesPageResponseSales[];
 }
 
 @InputType()

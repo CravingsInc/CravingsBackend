@@ -661,17 +661,15 @@ export class EventResolver {
 
         if ( !event ) return new Utils.CustomError('Couldn\'t find event find event');
 
-        let tickets = await models.EventTicketBuys.find({ where: { cart: { id: cart_id } } });
-
         return {
             id: event.id,
             name: event.title,
             banner: event.banner,
             date: event.eventDate,
             buyer: {
-                name: tickets.length > 0 ? tickets[0].name : "",
-                email: tickets.length > 0 ? tickets[0].email : "",
-                admitCount: tickets.reduce( (a, b) => a + b.quantity, 0)
+                name: cart.name ? cart.name : "GUEST",
+                email: cart.email ? cart.email : "GUEST_EMAIL",
+                admitCount: cart.tickets.reduce( (a, b) => a + b.quantity, 0)
             },
             cart_id: cart_id
         }
@@ -683,10 +681,8 @@ export class EventResolver {
 
         if ( !cart ) return new Utils.CustomError("Tickets not found.");
 
-        for ( let ticket of cart.tickets ) {
-            ticket.checkIn = true;
-            await ticket.save();
-        }
+        cart.checkIn = true;
+        cart.dateCheckIn = new Date();
 
         return "Checked in successfully.";
     }
@@ -705,7 +701,19 @@ export class EventResolver {
 
         if ( !event.visible ) return new Utils.CustomError("Event not found.");
 
-        if ( event.prices.reduce( ( prev, curr ) => prev + curr.amount, 0 ) === 0 ) return "FREE_EVENT"; // We don't need to create a payment intent for free events
+        let items = event.prices.filter( price => prices.find( p => p.id === price.priceId ) );
+
+        if ( items.reduce( ( prev, curr ) => prev + curr.amount, 0 ) === 0 ) {
+            let cart = await models.EventTicketCart.create({
+                completed: false,
+                eventId: event.id
+            }).save();
+
+            return {
+                client_secret: '',
+                cartId: cart.id
+            }
+        } // We don't need to create a payment intent for free events
         else if ( !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found."); // organizer not verified means no money being paid either
 
         for ( let price of prices ) {
@@ -746,15 +754,21 @@ export class EventResolver {
 
     @Mutation( () => String )
     async registerFreeEventTickets( @Arg('args') args: models.RegisterFreeEventInput ) {
-        let cart = await models.EventTicketCart.findOne({ where: { id: args.cartId }, relations: [ 'tickets' ] });
-
-        if ( !cart ) return new Utils.CustomError("Cart not found");
-
-        if ( cart.completed ) return new Utils.CustomError("Cart already completed");
-
-        let event = await models.Events.findOne({ where: { id: cart.eventId }, relations: [ 'organizer', "prices" ] });
+        
+        let event = await models.Events.findOne({ where: { id: args.eventId }, relations: [ 'organizer', "prices" ] });
 
         if ( !event ) return new Utils.CustomError("Event not found");
+
+        let cart = await models.EventTicketCart.findOne({ where: { id: args.cartId }, relations: [ 'tickets' ] });
+
+        if ( !cart ) {
+            cart = await models.EventTicketCart.create({
+                completed: false,
+                eventId: event.id
+            }).save()
+        };
+
+        if ( cart.completed ) return new Utils.CustomError("Cart already completed");
 
         let user : models.Users | null = null;
         try {
@@ -770,16 +784,20 @@ export class EventResolver {
 
             if ( eventTicket.amount !== 0 ) return new Utils.CustomError("Ticket not free");
 
-            let ticketBuy = await models.EventTicketBuys.create({
-                type: 'guest',
+            let ticketBuy = models.EventTicketBuys.create({
+                type: user ? 'guest' : "user",
                 name: args.name,
                 email: args.email,
                 quantity: ticket.quantity,
-                checkIn: false,
                 user: user ? { id: user.id } : null,
                 eventTicket,
-                cart: { id: cart.id }
-            }).save();
+                cart
+            });
+            
+            await ticketBuy.save(); // Ensure ticket buy is saved
+
+            if (!cart.tickets) cart.tickets = [];
+            cart.tickets.push(ticketBuy);
         }
 
         user ? cart.user = user : null;
@@ -787,6 +805,7 @@ export class EventResolver {
         cart.name = args.name;
         cart.email = args.email;
         cart.completed = true;
+        cart.dateCompleted = new Date();
 
         await cart.save();
 

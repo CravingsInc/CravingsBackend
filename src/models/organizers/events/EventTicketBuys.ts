@@ -27,10 +27,6 @@ export class EventTicketBuys extends BaseEntity {
     @Column()
     quantity: number;
 
-    @Field()
-    @Column()
-    checkIn: boolean;
-
     @ManyToOne( () => EventTicketCart, eTC => eTC.tickets )
     cart: EventTicketCart;
 
