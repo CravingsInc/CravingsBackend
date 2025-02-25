@@ -43,6 +43,8 @@
     "@types/mime-types": "^2.1.4",
     "@types/nodemailer": "^6.4.8",
     "@types/uuid": "^9.0.8",
+    "apollo-server-core": "^3.13.0",
+    "apollo-server-express": "^3.13.0",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
