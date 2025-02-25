@@ -4,6 +4,10 @@
   "description": "Backend For Cravings",
   "main": "index.ts",
   "packageManager": "yarn@3.6.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "yarn": ">=3.6.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec ts-node src/index.ts --trace-warnings",
