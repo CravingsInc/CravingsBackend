@@ -21,7 +21,7 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
         }catch( e ) { console.log( e ); }
     }
 
-    let cart = await models.EventTicketCart.findOne({ where: { id: metadata.cart } })
+    let cart = await models.EventTicketCart.findOne({ where: { id: metadata.cart }, relations: [ 'tickets' ]  })
 
     if ( !cart ) return { status: 500, message: 'Cart not found' };
 
@@ -45,8 +45,11 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
             quantity: price.quantity,
             user: user || undefined,
             eventTicket,
-            cart: { id: cart.id }
-        }).save()
+            cart
+        }).save();
+
+        if (!cart.tickets) cart.tickets = [];
+        cart.tickets.push(ticketBuy);
     }
 
     user ? cart.user = user : null;

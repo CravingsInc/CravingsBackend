@@ -9,6 +9,7 @@ import Stripe from "stripe";
 import { stripe } from "../../utils/stripe";
 import { stripeHandler } from '../../utils';
 import { CreateOrganizerEventResponse, CreateOrganizerResponse } from '../types';
+import { createTicketCarts } from './createTicketCarts';
 
 
 export const createOrganizerEvents = async ( orgs: CreateOrganizerResponse[], totalEvent: number = 4 ) => {
@@ -86,14 +87,18 @@ export const createOrganizerEvents = async ( orgs: CreateOrganizerResponse[], to
                 // Create event tickets in parallel to speed up the run time
                 console.log(`\n\t\t\tCreating event tickets for: ${eventSaved.id}`);
 
-                await Promise.all( event.tickets.map(
+                let tickets = await Promise.all( event.tickets.map(
                     async ( price ) => {
-                        await createEventTicket( price, eventSaved, org)
+                        return await createEventTicket( price, eventSaved, org)
                     }
                 ));
 
+                console.log( "tickets", tickets );
+
+                await createTicketCarts( eventSaved.id, ( tickets || [] ) as models.EventTickets[], org.stripeAccount, Math.random() )
+
                 // Create event gallery randomly
-                createEventsGallery( eventSaved.id );
+                await createEventsGallery( eventSaved.id );
             }
         }
     }
