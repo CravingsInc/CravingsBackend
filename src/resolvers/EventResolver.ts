@@ -534,7 +534,7 @@ export class EventResolver {
             prices: await Promise.all(
                 event.prices.map( async prices => ({ 
                     id: prices.priceId, title: prices.title, description: prices.description, amount: prices.amount,
-                    ticketAvailable: prices.totalTicketAvailable - ( await models.EventTicketBuys.countBy({ eventTicket: { id: prices.id }, cart: { completed: true } }) )
+                    ticketAvailable: prices.totalTicketAvailable - ( await models.EventTicketBuys.find({ where: { eventTicket: { id: prices.id }, cart: { completed: true } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 )
                 }))
             )
         }

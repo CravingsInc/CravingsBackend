@@ -685,7 +685,7 @@ export class OrganizerResolver {
                     title: ticket.title,
                     description: ticket.description,
                     totalTickets: ticket.totalTicketAvailable,
-                    ticketSold: await models.EventTicketBuys.count({ where: { eventTicket: { id: ticket.id } }}),
+                    ticketSold: ( await models.EventTicketBuys.find({ where: { eventTicket: { id: ticket.id }, cart: { completed: true } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
                     ticketPrice: ticket.amount
                 }))
             ),
@@ -918,7 +918,7 @@ export class OrganizerResolver {
             visibility: event.visible ? "Public" : "Private",
             dateCreated: event.createdAt,
             views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
-            totalTicketSold: await models.EventTicketCart.count({ where: { eventId, completed: true }})
+            totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 )
         }
     }
 
