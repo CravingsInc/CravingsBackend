@@ -366,54 +366,84 @@ export class OrganizerResolver {
     }
 
     @Mutation(() => String)
-    async requestPasswordReset( @Arg("email") email: string, @Arg("username") orgName: string ) {
-        // Find the organizer by email and orgName (username)
-        let organizer : models.Organizers | models.OrganizerMembers | null = null;
-        let typeOrg : "organizer" | "member" = "organizer";
-
-        organizer = await models.Organizers.loginOrganizer( orgName, email );
-
-        if ( !organizer ) {
-            organizer = await models.Organizers.loginOrganizersMembers( orgName, email );
-
-            if ( !organizer ) {
-                throw new Utils.CustomError("Invalid credentials. Please try again");
+    async requestPasswordReset(
+        @Arg("email") email: string,
+        @Arg("username") orgName: string
+    ) {
+        // Properly type our user variable from the start
+        let user: models.Organizers | models.OrganizerMembers | null;
+        let typeOrg: "organizer" | "member" = "organizer";
+    
+        // First try to find as Organizer
+        user = await models.Organizers.findOne({ where: { email, orgName } });
+    
+        // If not found as organizer, try as member
+        if (!user) {
+            user = await models.OrganizerMembers.findOne({ 
+                where: { 
+                    email,
+                    organizer: { orgName }
+                },
+                relations: ["organizer"]
+            });
+            
+            if (!user) {
+                throw new Utils.CustomError("No account found with these credentials");
             }
-
             typeOrg = "member";
         }
     
-        // Create a password change request in the database
-        const passwordChange = await models.OrganizerPasswordChange.create({
-            organizer
-        }).save();
-        
-        // Generate a secure token containing organizer info and the request ID
-        const token = jwt.sign(
-            {
-                ...(await Utils.generateJsWebToken(organizer.id)),
-                type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER,
-                command: "change-password",
-                pwc: passwordChange.id
-            },
-            Utils.SECRET_KEY,
-            { expiresIn: 10 * 60 } // 10 minutes
-        );
-        
-        // Construct the reset URL with the token
-        const link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/org/${ typeOrg === "member" ? "member/" : "" }${token}`;
-        
-        // Send the reset email
+        // Create password change record that allowed for both Organizer and Organizermember
+        let passwordChange;
+        if (typeOrg === "organizer") {
+            const organizer = user as models.Organizers;
+            passwordChange = await models.OrganizerPasswordChange.create({
+                organizer
+            }).save();
+        } else {
+            const member = user as models.OrganizerMembers;
+            passwordChange = await models.OrganizerMemberPasswordChange.create({
+                member
+            }).save();
+        }
+    
+        // Generate token with proper user info
+        const tokenPayload = {
+            id: user.id,
+            type: typeOrg === "organizer" 
+                ? Utils.LOGIN_TOKEN_TYPE.ORGANIZER 
+                : Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+            command: "change-password",
+            pwc: passwordChange.id
+        };
+    
+        const token = jwt.sign(tokenPayload, Utils.SECRET_KEY, { expiresIn: '10m' });
+
+        let link_to_open;
+        if (typeOrg === "member") {
+            link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/member/${token}`;
+        } else {
+            link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/org/${token}`;
+        }
+    
+        // Get appropriate username
+        const username = typeOrg === "organizer" 
+            ? (user as models.Organizers).orgName 
+            : (user as models.OrganizerMembers).name;
+    
+        // Send email
         const sentSuccessfully = await Utils.Mailer.sendPasswordChangeEmail({
             link_to_open,
-            email: organizer.email,
-            username: typeOrg === "organizer" ? ( organizer! as models.Organizers ).orgName : ( organizer! as models.OrganizerMembers).name
+            email: user.email,
+            username
         });
-        
-        // Remove request if email failed
+    
+        // Clean up if email failed
         if (!sentSuccessfully) await passwordChange.remove();
-        
-        return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
+    
+        return sentSuccessfully 
+            ? "Password reset email sent successfully" 
+            : "Failed to send password reset email";
     }
     
 
