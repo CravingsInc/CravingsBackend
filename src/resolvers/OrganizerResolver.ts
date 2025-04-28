@@ -368,7 +368,7 @@ export class OrganizerResolver {
     @Mutation(() => String)
     async requestPasswordReset(
         @Arg("email") email: string,
-        @Arg("username") orgName: string
+        @Arg("orgName") orgName: string
     ) {
         // Properly type our user variable from the start
         let user: models.Organizers | models.OrganizerMembers | null;
