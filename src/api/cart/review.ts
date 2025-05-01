@@ -27,7 +27,7 @@ router.get('/all/incomplete', async ( req, res ) => {
       left join events e on e.id = etc.eventId
       where etc.reviewCompleted = FALSE and etc.completed = TRUE 
       and ( etc.lastReviewEmailSent < '${formattedTwoDaysAgo}' or etc.lastReviewEmailSent is null )
-      and e.endEventDate >= '${formattedTwoWeeksAgo}';
+      and e.endEventDate >= '${formattedTwoWeeksAgo}' and e.endEventDate <= '${formattedTwoDaysAgo}';
     `)
 
     res.json(incompleteReviews)
