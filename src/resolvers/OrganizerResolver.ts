@@ -748,6 +748,29 @@ export class OrganizerResolver {
         return "Event Ticket updated successfully";
     }
 
+    @Query( () => [ models.SalesReview ])
+    async getReviewPage( @Arg('token') token: string, @Arg('eventId') eventId: string ) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
+
+        if ( !event ) return new Utils.CustomError("Event does not exist");
+
+        let carts = await models.EventTicketCart.find({ where: { completed: true, eventId: eventId, reviewCompleted: true }, relations: [ 'review'] });
+
+        return await Promise.all(
+            carts.map( async cart => ({
+                id: cart.review.id,
+                name: cart.review.name,
+                profile: cart.review.photo || '',
+                rating: cart.review.rating || 0,
+                description: cart.review.description || '',
+                completed: cart.reviewCompleted,
+                date: cart.review.dateReviewCompleted || new Date()
+            }))
+        )
+    }
+
     @Query( () => models.GetSalesPageResponse ) 
     async getSalesPage( @Arg('token') token: string, @Arg('eventId') eventId: string ) {
         let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
@@ -758,7 +781,7 @@ export class OrganizerResolver {
 
         let tickets = await models.EventTickets.find({ where: { event: { id: eventId } } });
 
-        let cart = await models.EventTicketCart.find({ where: { completed: true, eventId: eventId }, relations: [ 'tickets', "tickets.eventTicket" ] });
+        let carts = await models.EventTicketCart.find({ where: { completed: true, eventId: eventId }, relations: [ 'tickets', "tickets.eventTicket", "review" ] });
 
         return {
             tickets: await Promise.all(
@@ -772,7 +795,7 @@ export class OrganizerResolver {
                 }))
             ),
             sales: await Promise.all(
-                cart.map( async cart => ({
+                carts.map( async cart => ({
                     id: cart.id,
                     name: cart.name,
                     amount: cart.tickets.reduce( ( sum, item ) => sum + ( item.eventTicket.amount * item.quantity ), 0 ),
@@ -792,7 +815,16 @@ export class OrganizerResolver {
                         description: ticket.eventTicket.description,
                         quantity: ticket.quantity,
                         price: ticket.eventTicket.amount
-                    }))
+                    })),
+                    review: {
+                        id: cart.review.id,
+                        name: cart.review.name,
+                        profile: cart.review.photo || "",
+                        rating: cart.review.rating || 0,
+                        description: cart.review.description || "",
+                        completed: cart.reviewCompleted,
+                        date: cart.review.dateReviewCompleted || new Date()
+                    }
                 }))
             )
         }

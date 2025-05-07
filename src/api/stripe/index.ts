@@ -4,7 +4,7 @@ import { stripeHandler  } from "../../utils";
 
 const router = express.Router();
 
-router.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
   
