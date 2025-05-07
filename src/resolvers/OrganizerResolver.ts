@@ -816,15 +816,15 @@ export class OrganizerResolver {
                         quantity: ticket.quantity,
                         price: ticket.eventTicket.amount
                     })),
-                    review: {
-                        id: cart.review.id,
-                        name: cart.review.name,
+                    review: cart.review ? {
+                        id: cart.review.id || "",
+                        name: cart.review.name || '',
                         profile: cart.review.photo || "",
                         rating: cart.review.rating || 0,
                         description: cart.review.description || "",
-                        completed: cart.reviewCompleted,
+                        completed: cart.reviewCompleted || false,
                         date: cart.review.dateReviewCompleted || new Date()
-                    }
+                    } : undefined
                 }))
             )
         }
