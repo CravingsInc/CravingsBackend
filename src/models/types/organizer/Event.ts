@@ -106,6 +106,23 @@ export class SalesCompleted {
 }
 
 @ObjectType()
+export class SalesReview {
+    @Field() id: string;
+    
+    @Field() name: string;
+
+    @Field() profile: string;
+
+    @Field() rating: number;
+
+    @Field() description: string;
+
+    @Field() completed: boolean;
+
+    @Field() date: Date;
+}
+
+@ObjectType()
 export class GetSalesPageResponseSales {
     @Field( () => ID ) id: string;
 
@@ -122,6 +139,8 @@ export class GetSalesPageResponseSales {
     @Field( () => SalesCompleted ) completed: SalesCompleted;
 
     @Field( () => [GetSalesPageResponseTicketsShortened] ) tickets: GetSalesPageResponseTicketsShortened[];
+
+    @Field( () => SalesReview, { nullable: true }) review?: SalesReview;
 }
 
 @ObjectType()

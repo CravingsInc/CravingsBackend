@@ -570,7 +570,7 @@ export class EventResolver {
 
         if ( !eventTicketCart ) return new Utils.CustomError("Ticket Cart not found");
 
-        let event = await models.Events.findOne({ where: { id: eventTicketCart?.eventId } });
+        let event = await models.Events.findOne({ where: { id: eventTicketCart.eventId } });
 
         if ( !event ) return new Utils.CustomError('Couldn\'t find event find event');
         
