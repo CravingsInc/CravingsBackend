@@ -396,6 +396,23 @@ export class LoadAllEventsPageResponse {
     @Field( () => [LoadAllEventsPageEventResponse] ) events: LoadAllEventsPageEventResponse[];
 }
 
+@InputType()
+export class LoadAllEventsPageFilterOptions {
+    @Field({ nullable: true }) upcoming?: boolean;
+    @Field({ nullable: true }) completed?: boolean;
+    @Field({ nullable: true }) ongoing?: boolean;
+    @Field({ nullable: true }) private?: boolean;
+    @Field({ nullable: true }) public?: boolean;
+}
+
+@InputType()
+export class LoadAllEventPageInput {
+    @Field({ defaultValue: 7 }) pageLength: number;
+    @Field({ defaultValue: 0 }) lastIndex: number;
+    @Field({ defaultValue: '' }) search?: string;
+    @Field( () => LoadAllEventsPageFilterOptions, { nullable: true }) filter?: LoadAllEventsPageFilterOptions;
+}
+
 @ObjectType()
 export class CreateTicketSellClientSecretResponse {
     @Field() client_secret: string;

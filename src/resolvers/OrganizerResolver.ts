@@ -1,4 +1,5 @@
 import { Resolver, Mutation, Query, Arg, Args } from "type-graphql";
+import { LessThanOrEqual, Like, MoreThan, MoreThanOrEqual } from "typeorm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -947,18 +948,48 @@ export class OrganizerResolver {
     }
 
     @Query( () => models.LoadAllEventsPageResponse )
-    async loadAllEventsPage( @Arg('token') token: string, @Arg('pageLength') pageLength: number = 7, @Arg('lastIndex') lastIndex: number = 0 ) {
+    async loadAllEventsPage( @Arg('token') token: string, @Arg('args', () => models.LoadAllEventPageInput ) args: models.LoadAllEventPageInput ) {
 
         let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
 
+        let where = {
+            // Filter Query
+            visible: args.filter?.public ? true : 
+                args.filter?.private ? false : undefined,
+            
+            eventDate: args.filter?.upcoming ? MoreThan(new Date()) :
+                args.filter?.ongoing ? LessThanOrEqual(new Date()) : undefined,
+            
+            endEventDate: args.filter?.completed ? MoreThan(new Date()) :
+                args.filter?.ongoing ? MoreThanOrEqual(new Date()) : undefined,
+            
+            organizer: { id: org.id },
+        }
+
         let [ events, totalCount ] = await models.Events.findAndCount({ 
-            where: { organizer: { id: org.id } },
+            where: args.search && args.search.trim() !== '' ? [
+                { 
+                    // Search Query
+                    title: Like(`%${args.search}%`),
+                    ...where    
+                },
+
+                {
+                    description: Like(`%${args.search}%`),
+                    ...where
+                },
+                    
+                {
+                    location: Like(`%${args.search}%`),
+                    ...where
+                }
+            ] : where,
             order: { createdAt: "DESC" },
-            take: pageLength,
-            skip: lastIndex
+            take: args.pageLength,
+            skip: args.lastIndex
         });
 
-        let endIndex = lastIndex + pageLength;
+        let endIndex = args.lastIndex + args.pageLength;
         
         return {
             endIndex,
