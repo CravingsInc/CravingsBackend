@@ -647,7 +647,10 @@ export class OrganizerResolver {
             event.location = args.location;
             event.latitude = loc.lat;
             event.longitude = loc.lng;
+            event.timezone = loc.timezone;
         }
+
+        if ( args.timezonePreference != null  ) event.timezonePreference = args.timezonePreference;
 
         if ( args.banner ) event.banner = args.banner;
 

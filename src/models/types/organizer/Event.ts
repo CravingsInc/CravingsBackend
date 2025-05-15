@@ -46,6 +46,8 @@ export class ModifyEventInputType {
     @Field({ nullable: true }) startDate?: Date;
 
     @Field({ nullable: true }) endDate?: Date;
+
+    @Field({ nullable: true }) timezonePreference?: 'event' | 'browser';
 }
 
 @InputType()
