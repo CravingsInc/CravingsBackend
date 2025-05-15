@@ -369,6 +369,10 @@ export class LoadEventDetailsPageResponse extends LoadAllEventsPageEventResponse
     @Field() location: string;
 
     @Field() totalTicketSold: number;
+
+    @Field() timezone: string;
+
+    @Field() timezonePreference: string;
 }
 
 @ObjectType()

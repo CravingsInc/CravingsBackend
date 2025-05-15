@@ -1032,7 +1032,9 @@ export class OrganizerResolver {
             visibility: event.visible ? "Public" : "Private",
             dateCreated: event.createdAt,
             views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
-            totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 )
+            totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
+            timezone: event.timezone,
+            timezonePreference: event.timezonePreference,
         }
     }
 
