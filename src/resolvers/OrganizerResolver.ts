@@ -647,10 +647,9 @@ export class OrganizerResolver {
             event.location = args.location;
             event.latitude = loc.lat;
             event.longitude = loc.lng;
-            event.timezone = loc.timezone;
         }
 
-        if ( args.timezonePreference != null  ) event.timezonePreference = args.timezonePreference;
+        if ( args.timezone != null  ) event.timezone = args.timezone;
 
         if ( args.banner ) event.banner = args.banner;
 
@@ -1036,8 +1035,7 @@ export class OrganizerResolver {
             dateCreated: event.createdAt,
             views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
             totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
-            timezone: event.timezone,
-            timezonePreference: event.timezonePreference,
+            timezone: event.timezone
         }
     }
 

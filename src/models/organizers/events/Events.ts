@@ -54,10 +54,6 @@ export class Events extends BaseEntity {
     timezone: string;
 
     @Field()
-    @Column({ default: "browser" })
-    timezonePreference: 'event' | 'browser';
-
-    @Field()
     @Column({ default: () => "CURRENT_TIMESTAMP" })
     eventDate: Date;
 
