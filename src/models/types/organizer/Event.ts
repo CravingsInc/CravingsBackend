@@ -46,6 +46,8 @@ export class ModifyEventInputType {
     @Field({ nullable: true }) startDate?: Date;
 
     @Field({ nullable: true }) endDate?: Date;
+
+    @Field({ nullable: true }) timezone?: string;
 }
 
 @InputType()
@@ -369,6 +371,8 @@ export class LoadEventDetailsPageResponse extends LoadAllEventsPageEventResponse
     @Field() location: string;
 
     @Field() totalTicketSold: number;
+
+    @Field() timezone: string;
 }
 
 @ObjectType()
