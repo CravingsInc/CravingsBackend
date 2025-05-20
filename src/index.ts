@@ -14,6 +14,7 @@ const bodyParser = require("body-parser");
 
 import { IoServer } from "./io";
 import { Utils } from "./utils";
+import { DateNormalizerSubscriber } from "./subscribers/DateNormalizerSubscriber";
 
 const app = express();
 
@@ -52,12 +53,14 @@ async function main() {
           type: "mysql",
           url: Utils.AppConfig.BasicConfig.CLEARDB_DATABASE_NEW_URL,
           entities: ["src/models/*.ts"],
+          subscribers: [ DateNormalizerSubscriber ],
           synchronize: true,
         }
       : {
           type: "sqlite",
           database: "./db.sqlite3",
           entities: ["src/models/*.ts"],
+          subscribers: [ DateNormalizerSubscriber ],
           synchronize: true,
         }
   );
