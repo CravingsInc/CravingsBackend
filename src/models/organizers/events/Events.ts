@@ -30,6 +30,10 @@ export class Events extends BaseEntity {
     visible: boolean;
 
     @Field()
+    @Column({ default: false })
+    ticketTypes: boolean;
+
+    @Field()
     @Column({ default: "" })
     productId: string;
 

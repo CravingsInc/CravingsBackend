@@ -39,6 +39,8 @@ export class ModifyEventInputType {
 
     @Field({ nullable: true }) visible?: boolean;
 
+    @Field({ nullable: true }) ticketTypes?: boolean;
+
     @Field({ nullable: true }) location?: string;
 
     @Field({ nullable: true }) banner?: string;
@@ -356,6 +358,8 @@ export class LoadAllEventsPageEventResponse {
     @Field() banner: string;
     
     @Field() visibility: "Public" | "Private"
+
+    @Field() ticketType: "Custom" | "Donation";
 
     @Field() views: number;
 

@@ -13,6 +13,7 @@ export const createEvent = async ( orgId: string, event: typeof migrationData.ev
         organizer: { id: orgId },
         banner: event.banner,
         visible: true,
+        ticketTypes: true,
         location: event.location,
     }).save();
 

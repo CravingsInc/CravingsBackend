@@ -629,6 +629,8 @@ export class OrganizerResolver {
 
         if ( args.visible != null  ) event.visible = args.visible;
 
+        if ( args.ticketTypes != null  ) event.ticketTypes = args.ticketTypes;
+
         if ( args.location != null  ) {
 
             if ( args.location.length === 0 ) {
@@ -1003,6 +1005,7 @@ export class OrganizerResolver {
                         title: e.title,
                         banner: e.banner,
                         visibility: e.visible ? "Public" : "Private",
+                        ticketType: e.ticketType ? "Custom" : "Donation",
                         views: await models.EventsPageVisit.count({ where: { event: { id: e.id } } }),
                         dateCreated: e.createdAt,
                         eventDate: {
@@ -1063,6 +1066,7 @@ export class OrganizerResolver {
                 endDate: event.endEventDate
             },
             visibility: event.visible ? "Public" : "Private",
+            ticketType: event.ticketType ? "Custom" : "Donation",
             dateCreated: event.createdAt,
             views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
             totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
