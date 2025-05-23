@@ -411,6 +411,8 @@ export class LoadAllEventsPageFilterOptions {
     @Field({ nullable: true }) ongoing?: boolean;
     @Field({ nullable: true }) private?: boolean;
     @Field({ nullable: true }) public?: boolean;
+    @Field({ nullable: true }) custom?: boolean;
+    @Field({ nullable: true }) donation?: boolean;
 }
 
 @InputType()

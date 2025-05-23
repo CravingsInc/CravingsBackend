@@ -960,6 +960,9 @@ export class OrganizerResolver {
             // Filter Query
             visible: args.filter?.public ? true : 
                 args.filter?.private ? false : undefined,
+
+            ticketTypes: args.filter?.donation ? false :
+                args.filter?.custom ? true : undefined,
             
             eventDate: args.filter?.upcoming ? MoreThan(new Date()) :
                 args.filter?.ongoing ? LessThanOrEqual(new Date()) : undefined,
