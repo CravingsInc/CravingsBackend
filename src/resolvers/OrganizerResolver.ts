@@ -1,19 +1,20 @@
 import { Resolver, Mutation, Query, Arg, Args } from "type-graphql";
-import { LessThanOrEqual, Like, MoreThan, MoreThanOrEqual } from "typeorm";
+import { Equal, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual } from "typeorm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 import * as models from "../models";
 
 import { Utils, stripeHandler } from "../utils";
+import { stripe } from "../utils/stripe";
 
 @Resolver()
 export class OrganizerResolver {
-    @Mutation( returns => String )
-    async CreateOrganizerAccount( @Arg("orgName") orgName: string, @Arg("email") email: string, @Arg("password") password: string ) {
-        let organizer : models.Organizers;
+    @Mutation(returns => String)
+    async CreateOrganizerAccount(@Arg("orgName") orgName: string, @Arg("email") email: string, @Arg("password") password: string) {
+        let organizer: models.Organizers;
 
-        if ( orgName.length < 1 || email.length < 1 || password.length < 1 || !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/).test(email)) throw new Utils.CustomError("Please fill out form correctly");
+        if (orgName.length < 1 || email.length < 1 || password.length < 1 || !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/).test(email)) throw new Utils.CustomError("Please fill out form correctly");
 
         try {
             organizer = await models.Organizers.create({
@@ -21,16 +22,16 @@ export class OrganizerResolver {
                 email,
                 password: await bcrypt.hash(password, 12)
             }).save();
-        }catch(e) {
+        } catch (e) {
             console.log(e);
             throw new Utils.CustomError("Organizer Name Already Exist");
         }
 
-        if ( organizer ) {
+        if (organizer) {
             try {
-                organizer.stripeConnectId = ( await stripeHandler.createConnectAccount(email, organizer.id ) ).id;
+                organizer.stripeConnectId = (await stripeHandler.createConnectAccount(email, organizer.id)).id;
                 await organizer.save();
-            }catch(e) {
+            } catch (e) {
                 console.log(e);
 
                 await organizer.remove();
@@ -48,12 +49,12 @@ export class OrganizerResolver {
         }
     }
 
-    @Mutation( returns => String ) 
-    async OrganizerLogIn( @Arg("orgName") orgName: string, @Arg('email') email: string, @Arg("password") password: string ) {
-        let organizer = await models.Organizers.loginOrganizer( orgName, email );
+    @Mutation(returns => String)
+    async OrganizerLogIn(@Arg("orgName") orgName: string, @Arg('email') email: string, @Arg("password") password: string) {
+        let organizer = await models.Organizers.loginOrganizer(orgName, email);
 
-        if ( organizer ) {
-            if ( await bcrypt.compare(password, organizer.password) ) {
+        if (organizer) {
+            if (await bcrypt.compare(password, organizer.password)) {
                 return jwt.sign(
                     {
                         ...await Utils.generateJsWebToken(organizer.id),
@@ -68,13 +69,13 @@ export class OrganizerResolver {
             throw new Utils.CustomError("Invalid credentials. Please try again");
         }
 
-        let orgMember = await models.Organizers.loginOrganizersMembers( orgName, email );
+        let orgMember = await models.Organizers.loginOrganizersMembers(orgName, email);
 
-        if ( orgMember ) {
-            if ( await bcrypt.compare( password, orgMember.password ) ) {
+        if (orgMember) {
+            if (await bcrypt.compare(password, orgMember.password)) {
 
                 // If they haven't accepted but logged in, then they want to be apart of the team.
-                if ( orgMember.accepted ) orgMember.accepted = true;
+                if (orgMember.accepted) orgMember.accepted = true;
 
                 await orgMember.save();
 
@@ -93,18 +94,18 @@ export class OrganizerResolver {
         throw new Utils.CustomError("Invalid credentials. Please try again");
     }
 
-    @Query( returns => models.Organizers )
-    async getOrganizerProfile( @Arg("token") token: string ) {
+    @Query(returns => models.Organizers)
+    async getOrganizerProfile(@Arg("token") token: string) {
         return await Utils.getOrgFromOrgOrMemberJsWebToken(token);
     }
 
-    @Mutation( returns => String )
-    async getOrganizerPage( @Arg('organizerId') organizerId: string, @Arg("userToken", { nullable: true }) userToken?: string ) {
+    @Mutation(returns => String)
+    async getOrganizerPage(@Arg('organizerId') organizerId: string, @Arg("userToken", { nullable: true }) userToken?: string) {
         let user = userToken ? await Utils.getUserFromJsWebToken(userToken) : null;
 
         let organizer = await models.Organizers.findOneBy({ id: organizerId });
 
-        if ( !organizer ) throw new Utils.CustomError("Invalid organizer. Please try again.")
+        if (!organizer) throw new Utils.CustomError("Invalid organizer. Please try again.")
 
         await models.OrganizerPageVisit.create({
             guest: user == null,
@@ -121,20 +122,20 @@ export class OrganizerResolver {
             events: await Promise.all(
                 (
                     await models.Events.find({ where: { organizer: { id: organizer.id } } })
-                ).map( async e => {
-                    let prices: ( number | null )[] = [];
+                ).map(async e => {
+                    let prices: (number | null)[] = [];
 
                     try {
-                        prices = (await stripeHandler.getEventTicketPrices(e.productId, organizer!.stripeConnectId ))?.data.map(v => v.unit_amount);
-                    }catch(e) { prices = [0]; }
-    
+                        prices = (await stripeHandler.getEventTicketPrices(e.productId, organizer!.stripeConnectId))?.data.map(v => v.unit_amount);
+                    } catch (e) { prices = [0]; }
+
                     let maxPrice, minPrice = 0;
-    
+
                     if (prices && prices.length > 0) {
                         maxPrice = Math.max(...prices as number[]) / 100;
                         minPrice = Math.min(...prices as number[]) / 100;
                     }
-    
+
                     return {
                         id: e.id,
                         name: e.title,
@@ -154,9 +155,9 @@ export class OrganizerResolver {
 
     }
 
-    @Mutation( () => models.OrganizerSettingsMemberUpdateResponse)
-    async saveOrganizerMemberSettings( @Arg('token') token: string, @Arg('args', () => models.OrganizerMemberSettingsUpdateInput ) args: models.OrganizerMemberSettingsUpdateInput ) {
-        let member = await Utils.getOrganizerMemberFromJsWebToken( token );
+    @Mutation(() => models.OrganizerSettingsMemberUpdateResponse)
+    async saveOrganizerMemberSettings(@Arg('token') token: string, @Arg('args', () => models.OrganizerMemberSettingsUpdateInput) args: models.OrganizerMemberSettingsUpdateInput) {
+        let member = await Utils.getOrganizerMemberFromJsWebToken(token);
 
         let memberResponse = {
             id: member.id,
@@ -166,19 +167,19 @@ export class OrganizerResolver {
             profilePicture: member.profilePicture
         }
 
-        if ( args.name ) {
+        if (args.name) {
             member.name = args.name;
         }
 
-        if ( args.email ) {
+        if (args.email) {
             member.email = args.email;
         }
 
-        if ( args.phoneNumber ) {
+        if (args.phoneNumber) {
             member.phoneNumber = args.phoneNumber;
         }
 
-        if ( args.profilePicture ) {
+        if (args.profilePicture) {
             member.profilePicture = args.profilePicture;
         }
 
@@ -196,9 +197,9 @@ export class OrganizerResolver {
         return { response: "Successfully Updated", member: memberResponse }
     }
 
-    @Mutation( () => models.OrganizerSettingsUpdateResponse)
-    async saveOrganizerSettings( @Arg('token') token: string, @Arg('args', () => models.OrganizerSettingsUpdateInput ) args: models.OrganizerSettingsUpdateInput ) {
-        let org = await Utils.getOrganizerFromJsWebToken( token );
+    @Mutation(() => models.OrganizerSettingsUpdateResponse)
+    async saveOrganizerSettings(@Arg('token') token: string, @Arg('args', () => models.OrganizerSettingsUpdateInput) args: models.OrganizerSettingsUpdateInput) {
+        let org = await Utils.getOrganizerFromJsWebToken(token);
 
         let orgResponse = {
             id: org.id,
@@ -210,39 +211,39 @@ export class OrganizerResolver {
             location: org.location
         }
 
-        if ( args.orgName && args.orgName !== org.orgName ) {
+        if (args.orgName && args.orgName !== org.orgName) {
 
             let orgExists = await models.Organizers.findOneBy({ orgName: args.orgName });
-                
-            if ( orgExists ) return { 
+
+            if (orgExists) return {
                 response: "Unsuccessfull",
                 error: {
                     message: "Organization name already exists. Please choose a different name.",
                     code: 404
-                }, 
+                },
                 organizer: orgResponse
             }
 
             org.orgName = args.orgName;
         }
 
-        if ( args.email ) {
+        if (args.email) {
             org.email = args.email;
         }
 
-        if ( args.phoneNumber ) {
+        if (args.phoneNumber) {
             org.phoneNumber = args.phoneNumber;
         }
 
-        if ( args.location ) {
+        if (args.location) {
             org.location = args.location;
         }
 
-        if ( args.profilePicture ) {
+        if (args.profilePicture) {
             org.profilePicture = args.profilePicture;
         }
 
-        if ( args.banner ) {
+        if (args.banner) {
             org.banner = args.banner;
         }
 
@@ -262,17 +263,17 @@ export class OrganizerResolver {
         return { response: "Successfully Updated", organizer: orgResponse }
     }
 
-    @Query( () => models.OrganizerSettingsPageResponse )
-    async getOrganizerSettingsPage( @Arg('token') token: string ) {
+    @Query(() => models.OrganizerSettingsPageResponse)
+    async getOrganizerSettingsPage(@Arg('token') token: string) {
         let org: models.Organizers;
         let orgMember: models.OrganizerMembers | null = null;
         let isOrg: boolean;
 
         try {
-            org = await Utils.getOrganizerFromJsWebToken( token );
+            org = await Utils.getOrganizerFromJsWebToken(token);
             isOrg = true;
-        }catch(e) {
-            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+        } catch (e) {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken(token);
             isOrg = false;
             org = orgMember.organizer;
         }
@@ -286,7 +287,7 @@ export class OrganizerResolver {
                 title: orgMember.title,
                 email: orgMember.email,
                 id: orgMember.id,
-            }: null,
+            } : null,
             organizer: {
                 banner: org.banner,
                 orgName: org.orgName,
@@ -299,8 +300,8 @@ export class OrganizerResolver {
             teams: {
                 pending: (
                     await models.OrganizerMembers.find({
-                      where: { organizer: { id: org.id }, accepted: false },
-                      relations: ['organizer']
+                        where: { organizer: { id: org.id }, accepted: false },
+                        relations: ['organizer']
                     })
                 ).map(member => ({
                     name: member.name,
@@ -319,11 +320,11 @@ export class OrganizerResolver {
                         id: org.id,
                         profilePicture: org.profilePicture
                     },
-    
+
                     ...(
                         await models.OrganizerMembers.find({
-                          where: { organizer: { id: org.id }, accepted: true },
-                          relations: ['organizer']
+                            where: { organizer: { id: org.id }, accepted: true },
+                            relations: ['organizer']
                         })
                     ).map(member => ({
                         name: member.name,
@@ -338,30 +339,29 @@ export class OrganizerResolver {
         }
     }
 
-    @Mutation( () => String )
-    async changeOrganizerPassword( @Arg('token') token: string ) {
+    @Mutation(() => String)
+    async changeOrganizerPassword(@Arg('token') token: string) {
         let organizer = await Utils.getOrganizerFromJsWebToken(token);
 
         let passwordChange = await models.OrganizerPasswordChange.create({
             organizer
         }).save();
 
-        let link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/org/${
-            jwt.sign(
-                {
-                    ...await Utils.generateJsWebToken(organizer.id),
-                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER,
-                    command: "change-password",
-                    pwc: passwordChange.id
-                },
-                Utils.SECRET_KEY,
-                { expiresIn: 10 * 60 } // Expires in 10 minutes
-            )
-        }`;
+        let link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/org/${jwt.sign(
+            {
+                ...await Utils.generateJsWebToken(organizer.id),
+                type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER,
+                command: "change-password",
+                pwc: passwordChange.id
+            },
+            Utils.SECRET_KEY,
+            { expiresIn: 10 * 60 } // Expires in 10 minutes
+        )
+            }`;
 
         let sentSuccessfully = await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: organizer.email, username: organizer.orgName });
 
-        if ( !sentSuccessfully ) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
+        if (!sentSuccessfully) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
 
         return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
     }
@@ -374,14 +374,14 @@ export class OrganizerResolver {
         // Properly type our user variable from the start
         let user: models.Organizers | models.OrganizerMembers | null;
         let typeOrg: "organizer" | "member" = "organizer";
-        
+
         // Create password change record that allowed for both Organizer and Organizermember
         let passwordChange: models.OrganizerPasswordChange | models.OrganizerMemberPasswordChange | null = null;
 
         // First try to find as Organizer
         user = await models.Organizers.findOne({ where: { email, orgName } });
 
-        if ( user ) {
+        if (user) {
             passwordChange = await models.OrganizerPasswordChange.create({
                 organizer: user as models.Organizers
             }).save();
@@ -389,8 +389,8 @@ export class OrganizerResolver {
 
         // If not found as organizer, try as member
         if (!user) {
-            user = await models.OrganizerMembers.findOne({ 
-                where: { 
+            user = await models.OrganizerMembers.findOne({
+                where: {
                     email,
                     organizer: { orgName }
                 },
@@ -411,8 +411,8 @@ export class OrganizerResolver {
         // Generate token with proper user info
         const tokenPayload = {
             id: user.id,
-            type: typeOrg === "organizer" 
-                ? Utils.LOGIN_TOKEN_TYPE.ORGANIZER 
+            type: typeOrg === "organizer"
+                ? Utils.LOGIN_TOKEN_TYPE.ORGANIZER
                 : Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
             command: "change-password",
             pwc: passwordChange?.id
@@ -429,8 +429,8 @@ export class OrganizerResolver {
         }
 
         // Get appropriate username
-        const username = typeOrg === "organizer" 
-            ? (user as models.Organizers).orgName 
+        const username = typeOrg === "organizer"
+            ? (user as models.Organizers).orgName
             : (user as models.OrganizerMembers).name;
 
         // Send email
@@ -441,31 +441,31 @@ export class OrganizerResolver {
         });
 
         // Clean up if email failed
-        if ( !sentSuccessfully && passwordChange ) await passwordChange.remove();
+        if (!sentSuccessfully && passwordChange) await passwordChange.remove();
 
-        return sentSuccessfully 
-            ? "Password reset email sent successfully" 
+        return sentSuccessfully
+            ? "Password reset email sent successfully"
             : "Failed to send password reset email";
     }
-    
-    @Query( () => String )
-    async verifyOrganizerPasswordChangeToken( @Arg('token') token: string ) {
+
+    @Query(() => String)
+    async verifyOrganizerPasswordChangeToken(@Arg('token') token: string) {
         let pwc = await Utils.verifyOrgPasswordChangeToken(token);
 
-        if ( pwc.tokenUsed ) return "Token is not valid";
+        if (pwc.tokenUsed) return "Token is not valid";
 
         return "Token is valid"
     }
 
-    @Query( () => String )
-    async confirmOrgPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
-        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return new Utils.CustomError("Can't change your password");
+    @Query(() => String)
+    async confirmOrgPasswordChange(@Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string) {
+        if (newPassword.length < 1 || confirmNewPassword.length < 1) return new Utils.CustomError("Can't change your password");
 
-        if ( newPassword !== confirmNewPassword ) return new Utils.CustomError("Can't change your password");
+        if (newPassword !== confirmNewPassword) return new Utils.CustomError("Can't change your password");
 
         let pwc = await Utils.verifyOrgPasswordChangeToken(token);
 
-        if ( pwc.tokenUsed ) return new Utils.CustomError("Can't change password");
+        if (pwc.tokenUsed) return new Utils.CustomError("Can't change password");
 
         let org = pwc.organizer;
 
@@ -479,52 +479,51 @@ export class OrganizerResolver {
         return "Successfully changed your password";
     }
 
-    @Mutation( () => String )
-    async changeOrganizerMemberPassword( @Arg('token') token: string ) {
+    @Mutation(() => String)
+    async changeOrganizerMemberPassword(@Arg('token') token: string) {
         let member = await Utils.getOrganizerMemberFromJsWebToken(token);
 
         let passwordChange = await models.OrganizerMemberPasswordChange.create({
             member
         }).save();
 
-        let link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/member/${
-            jwt.sign(
-                {
-                    ...await Utils.generateJsWebToken(member.id),
-                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
-                    command: "change-password",
-                    pwc: passwordChange.id
-                },
-                Utils.SECRET_KEY,
-                { expiresIn: 10 * 60 } // Expires in 10 minutes
-            )
-        }`;
+        let link_to_open = `${Utils.getCravingsWebUrl()}/org/change-password/member/${jwt.sign(
+            {
+                ...await Utils.generateJsWebToken(member.id),
+                type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                command: "change-password",
+                pwc: passwordChange.id
+            },
+            Utils.SECRET_KEY,
+            { expiresIn: 10 * 60 } // Expires in 10 minutes
+        )
+            }`;
 
         let sentSuccessfully = await Utils.Mailer.sendPasswordChangeEmail({ link_to_open, email: member.email, username: member.name });
 
-        if ( !sentSuccessfully ) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
+        if (!sentSuccessfully) await passwordChange.remove(); // We don't want to overload database creating unclose password changes
 
         return sentSuccessfully ? "Password change email sent successfully" : "Problem sending password change email";
     }
 
-    @Query( () => String )
-    async verifyOrganizerMemberPasswordChangeToken( @Arg('token') token: string ) {
+    @Query(() => String)
+    async verifyOrganizerMemberPasswordChangeToken(@Arg('token') token: string) {
         let pwc = await Utils.verifyOrgMemberPasswordChangeToken(token);
 
-        if ( pwc.tokenUsed ) return "Token is not valid";
+        if (pwc.tokenUsed) return "Token is not valid";
 
         return "Token is valid"
     }
 
-    @Query( () => String )
-    async confirmOrganizerMemberPasswordChange( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
-        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return new Utils.CustomError("Can't change your password");
+    @Query(() => String)
+    async confirmOrganizerMemberPasswordChange(@Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string) {
+        if (newPassword.length < 1 || confirmNewPassword.length < 1) return new Utils.CustomError("Can't change your password");
 
-        if ( newPassword !== confirmNewPassword ) return new Utils.CustomError("Can't change your password");
+        if (newPassword !== confirmNewPassword) return new Utils.CustomError("Can't change your password");
 
         let pwc = await Utils.verifyOrgMemberPasswordChangeToken(token);
 
-        if ( pwc.tokenUsed ) return new Utils.CustomError("Can't change password");
+        if (pwc.tokenUsed) return new Utils.CustomError("Can't change password");
 
         let member = pwc.member;
 
@@ -538,9 +537,9 @@ export class OrganizerResolver {
         return "Successfully changed your password";
     }
 
-    @Mutation( () =>  models.Events )
-    async createEvent( @Arg('token') token: string, @Arg('title') title: string, @Arg('description') description: string ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
+    @Mutation(() => models.Events)
+    async createEvent(@Arg('token') token: string, @Arg('title') title: string, @Arg('description') description: string) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true);
 
         let event = await models.Events.create({
             title,
@@ -549,7 +548,7 @@ export class OrganizerResolver {
             organizer: { id: org.id }
         }).save();
 
-        let stripeEvent = await stripeHandler.createEvent(org.stripeConnectId, org.id, event.id, title );
+        let stripeEvent = await stripeHandler.createEvent(org.stripeConnectId, org.id, event.id, title);
 
         event.productId = stripeEvent.id;
 
@@ -558,13 +557,13 @@ export class OrganizerResolver {
         return event;
     }
 
-    @Mutation( () => models.Events )
-    async repeatEvent( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('ticket') ticket?: boolean ) {
-        let org = await Utils.getOrganizerFromJsWebToken( token );
+    @Mutation(() => models.Events)
+    async repeatEvent(@Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('ticket') ticket?: boolean) {
+        let org = await Utils.getOrganizerFromJsWebToken(token);
 
         let parentEvent = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }, relations: ['parent', 'prices'] });
 
-        if ( !parentEvent ) return new Utils.CustomError("Event Couldn't be repeated, please try again.");
+        if (!parentEvent) return new Utils.CustomError("Event Couldn't be repeated, please try again.");
 
         let event = await models.Events.create({
             title: parentEvent.title,
@@ -579,12 +578,12 @@ export class OrganizerResolver {
             parent: { id: parentEvent.parent ? parentEvent.parent.id : parentEvent.id },
         }).save();
 
-        let stripeEvent = await stripeHandler.createEvent( org.stripeConnectId, org.id, event.id, event.title );
+        let stripeEvent = await stripeHandler.createEvent(org.stripeConnectId, org.id, event.id, event.title);
 
         event.productId = stripeEvent.id;
 
-        if ( ticket ) {
-            for ( let price of parentEvent.prices ) {
+        if (ticket) {
+            for (let price of parentEvent.prices) {
                 let eventTicket = await models.EventTickets.create({
                     title: price.title,
                     description: price.description,
@@ -595,43 +594,43 @@ export class OrganizerResolver {
                 try {
                     eventTicket.save();
 
-                    let stripeTicket = await stripeHandler.createEventPrice( org.stripeConnectId, org.id, event.id, event.productId, price.amount, price.currency );
-                    
+                    let stripeTicket = await stripeHandler.createEventPrice(org.stripeConnectId, org.id, event.id, event.productId, price.amount, price.currency);
+
                     eventTicket.priceId = stripeTicket.id;
-        
+
                     await eventTicket.save();
-                }catch(err) {
+                } catch (err) {
                     await eventTicket.remove(); // want to self clean database
                 }
             }
         }
 
         await event.save();
-        
+
         return event;
     }
 
-    @Mutation( () => String )
-    async modifyEvent( @Arg('token') token: string, @Arg('args', () =>  models.ModifyEventInputType ) args: models.ModifyEventInputType ) {
-        let organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true ); // Only admins and organizer can change event details
+    @Mutation(() => String)
+    async modifyEvent(@Arg('token') token: string, @Arg('args', () => models.ModifyEventInputType) args: models.ModifyEventInputType) {
+        let organizer = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true); // Only admins and organizer can change event details
 
         let event = await models.Events.findOne({ where: { id: args.id, organizer: { id: organizer.id } } });
 
-        if ( !event ) return new Utils.CustomError("Event does not exist");
+        if (!event) return new Utils.CustomError("Event does not exist");
 
-        if ( args.title != null  ) event.title = args.title;
+        if (args.title != null) event.title = args.title;
 
-        if ( args.description != null  ) event.description = args.description;
+        if (args.description != null) event.description = args.description;
 
-        if ( args.startDate != null  ) event.eventDate = args.startDate;
+        if (args.startDate != null) event.eventDate = args.startDate;
 
-        if ( args.endDate != null  ) event.endEventDate = args.endDate;
+        if (args.endDate != null) event.endEventDate = args.endDate;
 
-        if ( args.visible != null  ) event.visible = args.visible;
+        if (args.visible != null) event.visible = args.visible;
 
-        if ( args.location != null  ) {
+        if (args.location != null) {
 
-            if ( args.location.length === 0 ) {
+            if (args.location.length === 0) {
                 event.latitude = -1;
                 event.longitude = -1;
                 event.location = "";
@@ -643,29 +642,29 @@ export class OrganizerResolver {
 
             let loc = await Utils.radarMapsService.getLatitudeLongitude(args.location);
 
-            if ( loc === null ) return new Utils.CustomError("Problem finding location");
+            if (loc === null) return new Utils.CustomError("Problem finding location");
 
             event.location = args.location;
             event.latitude = loc.lat;
             event.longitude = loc.lng;
         }
 
-        if ( args.timezone != null  ) event.timezone = args.timezone;
+        if (args.timezone != null) event.timezone = args.timezone;
 
-        if ( args.banner ) event.banner = args.banner;
+        if (args.banner) event.banner = args.banner;
 
         await event.save();
 
         return "Modified Properly";
     }
 
-    @Mutation( () => String )
-    async createEventTicket( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('title') title: string, @Arg('amount') amount: number, @Arg('currency', { nullable: true, defaultValue: 'usd' }) currency: string, @Arg('description', { nullable: true }) description: string ) {
-        let org = await Utils.getOrganizerFromJsWebToken( token );
+    @Mutation(() => String)
+    async createEventTicket(@Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('title') title: string, @Arg('amount') amount: number, @Arg('currency', { nullable: true, defaultValue: 'usd' }) currency: string, @Arg('description', { nullable: true }) description: string) {
+        let org = await Utils.getOrganizerFromJsWebToken(token);
 
-        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
 
-        if ( !event ) return new Utils.CustomError("Event does not exist");
+        if (!event) return new Utils.CustomError("Event does not exist");
 
         let eventTicket = await models.EventTickets.create({
             title,
@@ -676,14 +675,14 @@ export class OrganizerResolver {
         }).save();
 
         try {
-            let stripeTicket = await stripeHandler.createEventPrice( org.stripeConnectId, org.id, event.id, event.productId, amount, currency );
-            
+            let stripeTicket = await stripeHandler.createEventPrice(org.stripeConnectId, org.id, event.id, event.productId, amount, currency);
+
             eventTicket.priceId = stripeTicket.id;
 
             await eventTicket.save();
-        }catch(err) {
+        } catch (err) {
 
-            console.log( err );
+            console.log(err);
 
             await eventTicket.remove(); // want to self clean database
 
@@ -693,76 +692,76 @@ export class OrganizerResolver {
         return eventTicket.id;
     }
 
-    @Mutation( () => String ) 
-    async modifyEventTicketPrice( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketPriceInputType ) args: models.ModifyEventTicketPriceInputType ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
+    @Mutation(() => String)
+    async modifyEventTicketPrice(@Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketPriceInputType) args: models.ModifyEventTicketPriceInputType) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true);
 
-        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
 
-        if ( !event ) return new Utils.CustomError("Event does not exist");
+        if (!event) return new Utils.CustomError("Event does not exist");
 
-        let eventTicket = await models.EventTickets.findOne({ where: { id: args.id, event: { id: eventId }} });
+        let eventTicket = await models.EventTickets.findOne({ where: { id: args.id, event: { id: eventId } } });
 
-        if ( !eventTicket ) return new Utils.CustomError("Problem changing event ticket");
+        if (!eventTicket) return new Utils.CustomError("Problem changing event ticket");
 
         try {
-            let newStripeTicket = await stripeHandler.modifyEventPrice( org.stripeConnectId, org.id, eventId, event.productId, eventTicket.priceId, args.amount, args.currency );
+            let newStripeTicket = await stripeHandler.modifyEventPrice(org.stripeConnectId, org.id, eventId, event.productId, eventTicket.priceId, args.amount, args.currency);
 
             eventTicket.priceId = newStripeTicket.id;
             eventTicket.amount = args.amount;
             eventTicket.currency = args.currency || "usd";
             await eventTicket.save();
-        }catch( err ) {
-            console.log( err );
+        } catch (err) {
+            console.log(err);
             return new Utils.CustomError("Problem modifying event ticket");
         }
 
         return "Event Ticket Price modified successfully";
     }
 
-    @Mutation( () => String )
-    async modifyEventTicket( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketInputType ) args: models.ModifyEventTicketInputType ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
+    @Mutation(() => String)
+    async modifyEventTicket(@Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketInputType) args: models.ModifyEventTicketInputType) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true);
 
-        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
 
-        if ( !event ) return new Utils.CustomError("Event does not exist");
+        if (!event) return new Utils.CustomError("Event does not exist");
 
-        let eventTicket = await models.EventTickets.findOne({ where: { id: args.id, event: { id: eventId }} });
+        let eventTicket = await models.EventTickets.findOne({ where: { id: args.id, event: { id: eventId } } });
 
-        if ( !eventTicket ) return new Utils.CustomError("Problem changing event ticket");
+        if (!eventTicket) return new Utils.CustomError("Problem changing event ticket");
 
-        if ( args.title != null  ) eventTicket.title = args.title;
+        if (args.title != null) eventTicket.title = args.title;
 
-        if ( args.description != null  ) eventTicket.description = args.description;
+        if (args.description != null) eventTicket.description = args.description;
 
-        if ( args.amount != null ) {
-            let newStripeTicket = await stripeHandler.modifyEventPrice( org.stripeConnectId, org.id, eventId, event.productId, eventTicket.priceId, args.amount, args.currency );
+        if (args.amount != null) {
+            let newStripeTicket = await stripeHandler.modifyEventPrice(org.stripeConnectId, org.id, eventId, event.productId, eventTicket.priceId, args.amount, args.currency);
 
             eventTicket.priceId = newStripeTicket.id;
             eventTicket.amount = args.amount;
             eventTicket.currency = args.currency || 'usd';
         }
 
-        if ( args.totalTicketAvailable != null  ) eventTicket.totalTicketAvailable = args.totalTicketAvailable;
+        if (args.totalTicketAvailable != null) eventTicket.totalTicketAvailable = args.totalTicketAvailable;
 
         await eventTicket.save();
 
         return "Event Ticket updated successfully";
     }
 
-    @Query( () => [ models.SalesReview ])
-    async getReviewPage( @Arg('token') token: string, @Arg('eventId') eventId: string ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+    @Query(() => [models.SalesReview])
+    async getReviewPage(@Arg('token') token: string, @Arg('eventId') eventId: string) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token);
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
 
-        if ( !event ) return new Utils.CustomError("Event does not exist");
+        if (!event) return new Utils.CustomError("Event does not exist");
 
-        let carts = await models.EventTicketCart.find({ where: { completed: true, eventId: eventId, reviewCompleted: true }, relations: [ 'review'] });
+        let carts = await models.EventTicketCart.find({ where: { completed: true, eventId: eventId, reviewCompleted: true }, relations: ['review'] });
 
         return await Promise.all(
-            carts.map( async cart => ({
+            carts.map(async cart => ({
                 id: cart.review.id,
                 name: cart.review.name,
                 profile: cart.review.photo || '',
@@ -774,34 +773,52 @@ export class OrganizerResolver {
         )
     }
 
-    @Query( () => models.GetSalesPageResponse ) 
-    async getSalesPage( @Arg('token') token: string, @Arg('eventId') eventId: string ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+    @Query(() => models.GetSalesPageResponse)
+    async getSalesPage(@Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.GetSalesPageInput) args: models.GetSalesPageInput) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token);
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
 
-        if ( !event ) return new Utils.CustomError("Event does not exist");
+        if (!event) return new Utils.CustomError("Event does not exist");
 
         let tickets = await models.EventTickets.find({ where: { event: { id: eventId } } });
 
-        let carts = await models.EventTicketCart.find({ where: { completed: true, eventId: eventId }, relations: [ 'tickets', "tickets.eventTicket", "review" ] });
+        const filter = args.filter || {};
+
+        let cartWhere = {
+            // Filter Query
+            completed: true,
+            eventId
+        } as { completed: boolean, eventId: string, checkIn: boolean | undefined, reviewCompleted: boolean | undefined }
+
+        if ( filter.checkedIn !== undefined ) cartWhere.checkIn = filter.checkedIn;
+
+        if ( filter.leftReview !== undefined ) cartWhere.reviewCompleted = filter.leftReview
+
+        let carts = await models.EventTicketCart.find({ 
+            where: args.search && args.search.trim() !== '' ?{
+                ...cartWhere,
+                name: Like(`%${args.search}%`)
+            } : cartWhere, 
+            relations: ['tickets', "tickets.eventTicket", "review"] 
+        });
 
         return {
             tickets: await Promise.all(
-                tickets.map( async ticket => ({
+                tickets.map(async ticket => ({
                     id: ticket.id,
                     title: ticket.title,
                     description: ticket.description,
                     totalTickets: ticket.totalTicketAvailable,
-                    ticketSold: ( await models.EventTicketBuys.find({ where: { eventTicket: { id: ticket.id }, cart: { completed: true } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
+                    ticketSold: (await models.EventTicketBuys.find({ where: { eventTicket: { id: ticket.id }, cart: { completed: true } } })).reduce((summ, curr) => summ + curr.quantity, 0),
                     ticketPrice: ticket.amount
                 }))
             ),
             sales: await Promise.all(
-                carts.map( async cart => ({
+                carts.map(async cart => ({
                     id: cart.id,
                     name: cart.name,
-                    amount: cart.tickets.reduce( ( sum, item ) => sum + ( item.eventTicket.amount * item.quantity ), 0 ),
+                    amount: cart.tickets.reduce((sum, item) => sum + (item.eventTicket.amount * item.quantity), 0),
                     dateCreated: cart.created,
                     currency: 'usd',
                     checkIn: {
@@ -812,7 +829,7 @@ export class OrganizerResolver {
                         completed: cart.completed || false,
                         date: cart.dateCompleted || new Date()
                     },
-                    tickets: cart.tickets.map( ticket => ({
+                    tickets: cart.tickets.map(ticket => ({
                         id: ticket.id,
                         title: ticket.eventTicket.title,
                         description: ticket.eventTicket.description,
@@ -833,42 +850,42 @@ export class OrganizerResolver {
         }
     }
 
-    @Mutation( () => String )
-    async removeTeamMember( @Arg('token') token: string, @Arg('teamMemberId') teamMemberId: string ) {
+    @Mutation(() => String)
+    async removeTeamMember(@Arg('token') token: string, @Arg('teamMemberId') teamMemberId: string) {
         let org: models.Organizers | null = null;
         let orgMember: models.OrganizerMembers | null = null;
 
         try {
-            org = await Utils.getOrganizerFromJsWebToken( token );
-        }catch {
-            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+            org = await Utils.getOrganizerFromJsWebToken(token);
+        } catch {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken(token);
 
-            if ( orgMember.title !== "Admin" ) return new Utils.CustomError("Do not have permission to access this") 
+            if (orgMember.title !== "Admin") return new Utils.CustomError("Do not have permission to access this")
         }
 
         let teamMember = await models.OrganizerMembers.findOne({ where: { id: teamMemberId, organizer: { id: org ? org.id : orgMember?.organizer.id } } });
 
-        if ( teamMember ) await teamMember.remove();
+        if (teamMember) await teamMember.remove();
 
         return "Successfully remove organizer member";
     }
 
-    @Mutation( () => String ) 
-    async updateTeamMemberTitle( @Arg('token') token: string, @Arg('teamMemberId') teamMemberId: string, @Arg('newTitle') newTitle: 'Admin' | "Member" | "Guest" ) {
+    @Mutation(() => String)
+    async updateTeamMemberTitle(@Arg('token') token: string, @Arg('teamMemberId') teamMemberId: string, @Arg('newTitle') newTitle: 'Admin' | "Member" | "Guest") {
         let org: models.Organizers | null = null;
         let orgMember: models.OrganizerMembers | null = null;
 
         try {
-            org = await Utils.getOrganizerFromJsWebToken( token );
-        }catch {
-            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+            org = await Utils.getOrganizerFromJsWebToken(token);
+        } catch {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken(token);
 
-            if ( orgMember.title !== "Admin" ) return new Utils.CustomError("Do not have permission to access this") 
+            if (orgMember.title !== "Admin") return new Utils.CustomError("Do not have permission to access this")
         }
 
         let teamMember = await models.OrganizerMembers.findOne({ where: { id: teamMemberId, organizer: { id: org ? org.id : orgMember?.organizer.id } } });
 
-        if ( [ 'Admin', "Member", "Guest" ].includes(newTitle) && teamMember ) {
+        if (['Admin', "Member", "Guest"].includes(newTitle) && teamMember) {
             teamMember.title = newTitle;
             await teamMember.save();
 
@@ -878,18 +895,18 @@ export class OrganizerResolver {
         return new Utils.CustomError("Title isn't valid")
     }
 
-    @Mutation( () => String )
-    async addTeamMember(@Arg('token') token: string, @Arg('args', () => models.CreateOrganizerMemberInput ) args: models.CreateOrganizerMemberInput ){
+    @Mutation(() => String)
+    async addTeamMember(@Arg('token') token: string, @Arg('args', () => models.CreateOrganizerMemberInput) args: models.CreateOrganizerMemberInput) {
 
         let org: models.Organizers | null = null;
         let orgMember: models.OrganizerMembers | null = null;
-        
+
         let newMember: models.OrganizerMembers | null = null;
 
         try {
-            org = await Utils.getOrganizerFromJsWebToken( token );
-        }catch {
-            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+            org = await Utils.getOrganizerFromJsWebToken(token);
+        } catch {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken(token);
         }
 
         let localMemberCreation = async () => await models.OrganizerMembers.create({
@@ -910,77 +927,160 @@ export class OrganizerResolver {
             username: ''
         }
 
-        if ( org ) {
+        if (org) {
             newMember = await localMemberCreation();
             emailProps.orgName = org.orgName;
             emailProps.invitorName = org.orgName;
         }
 
-        else if ( orgMember ) {
+        else if (orgMember) {
 
-            if ( orgMember.title === `Admin` ) newMember = await localMemberCreation();
+            if (orgMember.title === `Admin`) newMember = await localMemberCreation();
 
             emailProps.orgName = orgMember.organizer.orgName;
             emailProps.invitorName = orgMember.name;
 
-        }else {
+        } else {
             return new Utils.CustomError("Unauthorized access");
         }
 
-        emailProps.link_to_open = `${Utils.getCravingsWebUrl()}/org/accept-invite/${
-            jwt.sign(
-                {
-                    ...await Utils.generateJsWebToken(newMember!.id),
-                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
-                    command: "invite-team-member",
-                },
-                Utils.SECRET_KEY,
-                { expiresIn: ( ( 60 * 60 ) * 24 ) * 7 } // Expires in 1 week
-            )
-        }`;
+        emailProps.link_to_open = `${Utils.getCravingsWebUrl()}/org/accept-invite/${jwt.sign(
+            {
+                ...await Utils.generateJsWebToken(newMember!.id),
+                type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                command: "invite-team-member",
+            },
+            Utils.SECRET_KEY,
+            { expiresIn: ((60 * 60) * 24) * 7 } // Expires in 1 week
+        )
+            }`;
 
         emailProps.email = newMember!.email;
         emailProps.username = newMember!.name;
 
         let sentSuccessfully = await Utils.Mailer.sendTeamMemberInviteEmail(emailProps);
 
-        if ( !sentSuccessfully ) await newMember!.remove(); // We don't want to overload database creating unclose password changes
+        if (!sentSuccessfully) await newMember!.remove(); // We don't want to overload database creating unclose password changes
 
         return sentSuccessfully && newMember ? newMember.id : new Utils.CustomError("Problem sending team member invitation");
     }
 
-    @Query( () => models.LoadAllEventsPageResponse )
-    async loadAllEventsPage( @Arg('token') token: string, @Arg('args', () => models.LoadAllEventPageInput ) args: models.LoadAllEventPageInput ) {
+    @Query(() => models.LoadDashboardPageResponse)
+    async loadDashboardPage(@Arg('token') token: string) {
+        let org: models.Organizers | models.OrganizerMembers | undefined = undefined;
 
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+        let memberDashboardEnabled = false;
+
+        try {
+            org = await Utils.getOrganizerFromJsWebToken(token);
+            memberDashboardEnabled = true;
+        } catch (e) {
+            console.log(e);
+
+            try {
+                let orgMember = await Utils.getOrganizerMemberFromJsWebToken(token);
+
+                if (orgMember) {
+                    if (orgMember.title !== 'Admin') memberDashboardEnabled = true;
+
+                    org = orgMember.organizer;
+                }
+            }
+            catch (e) {
+                console.log(e);
+                return new Utils.CustomError("Unauthorized access");
+            }
+        }
+
+        if (!org) return new Utils.CustomError("Unauthorized access");
+
+        let totalBalance = 0;
+
+        try {
+            totalBalance = (await stripe.balance.retrieve({
+                stripeAccount: org.stripeConnectId
+            })).available[0].amount;
+        } catch (error) {
+            console.error("Error retrieving balance:", error);
+        }
+
+        return {
+            totalBalance,
+
+            memberDashboardEnabled,
+
+            totalEvents: await models.Events.count({ where: { organizer: { id: org.id } } }),
+
+            totalTicketsSold: (await models.EventTicketBuys.find({
+                where: {
+                    cart: {
+                        completed: true
+                    },
+
+                    eventTicket: {
+                        event: {
+                            organizer: { id: org.id }
+                        }
+                    }
+                },
+                relations: ['cart', 'eventTicket', 'eventTicket.event']
+            })).reduce((summ, curr) => summ + curr.quantity, 0),
+
+            tasks: [],
+
+            orders: await models.EventTicketCart.createQueryBuilder('etc')
+                .select([
+                    'etc.id AS id',
+                    'etc.name AS name',
+                    'etc.eventId AS eventId',
+                    'etc.dateCompleted as dateCompleted',
+                ])
+                .addSelect(subQuery => {
+                    return subQuery
+                        .select('SUM(etb.quantity * et.amount)', 'amount')
+                        .from('event_ticket_buys', 'etb')
+                        .leftJoin('event_tickets', 'et', 'et.id = etb.eventTicketId')
+                        .where('etc.id = etb.cartId');
+                }, 'amount')
+                .leftJoin('events', 'e', 'e.id = etc.eventId')
+                .where('e.organizerId = :organizerId', { organizerId: org.id })
+                .andWhere('etc.completed = 1')
+                .getRawMany()
+        }
+    }
+
+    @Query(() => models.LoadAllEventsPageResponse)
+    async loadAllEventsPage(@Arg('token') token: string, @Arg('args', () => models.LoadAllEventPageInput) args: models.LoadAllEventPageInput) {
+
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token);
 
         let where = {
             // Filter Query
-            visible: args.filter?.public ? true : 
+            visible: args.filter?.public ? true :
                 args.filter?.private ? false : undefined,
-            
+
             eventDate: args.filter?.upcoming ? MoreThan(new Date()) :
                 args.filter?.ongoing ? LessThanOrEqual(new Date()) : undefined,
-            
-            endEventDate: args.filter?.completed ? MoreThan(new Date()) :
+
+            endEventDate: args.filter?.completed ? LessThan(new Date()) :
                 args.filter?.ongoing ? MoreThanOrEqual(new Date()) : undefined,
-            
+
             organizer: { id: org.id },
         }
 
-        let [ events, totalCount ] = await models.Events.findAndCount({ 
+        let [events, totalCount] = await models.Events.findAndCount({
             where: args.search && args.search.trim() !== '' ? [
-                { 
+                {
                     // Search Query
                     title: Like(`%${args.search}%`),
-                    ...where    
+                    ...where
                 },
 
                 {
                     description: Like(`%${args.search}%`),
                     ...where
                 },
-                    
+
                 {
                     location: Like(`%${args.search}%`),
                     ...where
@@ -992,12 +1092,12 @@ export class OrganizerResolver {
         });
 
         let endIndex = args.lastIndex + args.pageLength;
-        
+
         return {
             endIndex,
             loadMore: endIndex < totalCount,
             events: await Promise.all(
-                events.map( async ( e ) => {
+                events.map(async (e) => {
                     return {
                         id: e.id,
                         title: e.title,
@@ -1016,15 +1116,15 @@ export class OrganizerResolver {
 
     }
 
-    @Query( () => models.LoadAllEventsGalleryPageResponse )
-    async loadAllEventsGalleryPage( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('pageLength') pageLength: number = 6, @Arg("lastIndex") lastIndex: number = 0 ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+    @Query(() => models.LoadAllEventsGalleryPageResponse)
+    async loadAllEventsGalleryPage(@Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('pageLength') pageLength: number = 6, @Arg("lastIndex") lastIndex: number = 0) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token);
 
         let event = await models.Events.findOne({ where: { organizer: { id: org.id }, id: eventId } });
 
-        if ( !event ) return new Utils.CustomError("Event does not exist");
+        if (!event) return new Utils.CustomError("Event does not exist");
 
-        let [ gallery, totalCount ] = await models.EventPhotos.findAndCount({ 
+        let [gallery, totalCount] = await models.EventPhotos.findAndCount({
             where: { event: { id: eventId } },
             order: { createdAt: "DESC" },
             take: pageLength,
@@ -1036,7 +1136,7 @@ export class OrganizerResolver {
         return {
             endIndex,
             loadMore: endIndex < totalCount,
-            gallery: gallery.map( g => ({
+            gallery: gallery.map(g => ({
                 id: g.id,
                 url: g.picture,
                 dateUploaded: g.createdAt
@@ -1044,13 +1144,13 @@ export class OrganizerResolver {
         }
     }
 
-    @Query( () => models.LoadEventDetailsPageResponse )
-    async loadEventDetails( @Arg('token') token: string, @Arg('eventId') eventId: string ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token );
+    @Query(() => models.LoadEventDetailsPageResponse)
+    async loadEventDetails(@Arg('token') token: string, @Arg('eventId') eventId: string) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token);
 
         let event = await models.Events.findOne({ where: { organizer: { id: org.id }, id: eventId }, relations: ['prices'] });
 
-        if ( !event ) return new Utils.CustomError("Problem loading event details");
+        if (!event) return new Utils.CustomError("Problem loading event details");
 
         return {
             id: event.id,
@@ -1065,22 +1165,22 @@ export class OrganizerResolver {
             visibility: event.visible ? "Public" : "Private",
             dateCreated: event.createdAt,
             views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
-            totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
+            totalTicketSold: (await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } })).reduce((summ, curr) => summ + curr.quantity, 0),
             timezone: event.timezone
         }
     }
 
-    @Query( () => String )
-    async resendOrganizerTeamInviteToken( @Arg('token') token: string, @Arg('orgTeamId') orgTeamId: string ) {
+    @Query(() => String)
+    async resendOrganizerTeamInviteToken(@Arg('token') token: string, @Arg('orgTeamId') orgTeamId: string) {
         let org: models.Organizers | null = null;
         let orgMember: models.OrganizerMembers | null = null;
-        
+
         let newMember: models.OrganizerMembers | null = null;
 
         try {
-            org = await Utils.getOrganizerFromJsWebToken( token );
-        }catch {
-            orgMember = await Utils.getOrganizerMemberFromJsWebToken( token );
+            org = await Utils.getOrganizerFromJsWebToken(token);
+        } catch {
+            orgMember = await Utils.getOrganizerMemberFromJsWebToken(token);
         }
 
         let emailProps = {
@@ -1091,64 +1191,63 @@ export class OrganizerResolver {
             username: ''
         }
 
-        if ( org ) {
+        if (org) {
             newMember = await models.OrganizerMembers.findOneBy({ id: orgTeamId });
             emailProps.orgName = org.orgName;
             emailProps.invitorName = org.orgName;
         }
 
-        else if ( orgMember ) {
+        else if (orgMember) {
 
-            if ( orgMember.title === `Admin` ) newMember = await models.OrganizerMembers.findOneBy({ id: orgTeamId });
+            if (orgMember.title === `Admin`) newMember = await models.OrganizerMembers.findOneBy({ id: orgTeamId });
 
             emailProps.orgName = orgMember.organizer.orgName;
             emailProps.invitorName = orgMember.name;
 
-        }else {
+        } else {
             return new Utils.CustomError("Unauthorized access");
         }
 
-        emailProps.link_to_open = `${Utils.getCravingsWebUrl()}/org/accept-invite/${
-            jwt.sign(
-                {
-                    ...await Utils.generateJsWebToken(newMember!.id),
-                    type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
-                    command: "invite-team-member",
-                },
-                Utils.SECRET_KEY,
-                { expiresIn: ( ( 60 * 60 ) * 24 ) * 7 } // Expires in 1 week
-            )
-        }`;
+        emailProps.link_to_open = `${Utils.getCravingsWebUrl()}/org/accept-invite/${jwt.sign(
+            {
+                ...await Utils.generateJsWebToken(newMember!.id),
+                type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,
+                command: "invite-team-member",
+            },
+            Utils.SECRET_KEY,
+            { expiresIn: ((60 * 60) * 24) * 7 } // Expires in 1 week
+        )
+            }`;
 
         emailProps.email = newMember!.email;
         emailProps.username = newMember!.name;
 
         let sentSuccessfully = await Utils.Mailer.sendTeamMemberInviteEmail(emailProps);
 
-        if ( !sentSuccessfully ) await newMember!.remove(); // We don't want to overload database creating unclose password changes
+        if (!sentSuccessfully) await newMember!.remove(); // We don't want to overload database creating unclose password changes
 
         return sentSuccessfully ? "Re-invitation email sent successfully" : "Re-invitation email sent successfully";
     }
 
-    @Query( () => String )
-    async verifyOrganizerTeamInviteToken( @Arg('token') token: string ) {
+    @Query(() => String)
+    async verifyOrganizerTeamInviteToken(@Arg('token') token: string) {
         let teamMember = await Utils.verifyOrgTeamMemberInviteToken(token);
 
-        if ( teamMember.accepted ) return "Invitation Already Accepted";
+        if (teamMember.accepted) return "Invitation Already Accepted";
 
         return "Token is valid";
     }
 
-    @Query( () => String )
-    async confirmOrganizerTeamMemberAddition( @Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string ) {
+    @Query(() => String)
+    async confirmOrganizerTeamMemberAddition(@Arg('token') token: string, @Arg('newPassword') newPassword: string, @Arg('confirmNewPassword') confirmNewPassword: string) {
 
-        if ( newPassword.length < 1 || confirmNewPassword.length < 1 ) return "Can't add you to team";
+        if (newPassword.length < 1 || confirmNewPassword.length < 1) return "Can't add you to team";
 
-        if ( newPassword !== confirmNewPassword ) return "Can't add you to team";
+        if (newPassword !== confirmNewPassword) return "Can't add you to team";
 
         let teamMember = await Utils.verifyOrgTeamMemberInviteToken(token);
 
-        if ( teamMember.accepted ) return jwt.sign(
+        if (teamMember.accepted) return jwt.sign(
             {
                 ...await Utils.generateJsWebToken(teamMember.id),
                 type: Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS,

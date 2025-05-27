@@ -153,6 +153,18 @@ export class GetSalesPageResponse {
 }
 
 @InputType()
+export class GetSalesPageFilterInputOptions {
+    @Field({ nullable: true }) checkedIn?: boolean;
+    @Field({ nullable: true }) leftReview?: boolean;
+}
+
+@InputType()
+export class GetSalesPageInput {
+    @Field({ defaultValue: '' }) search?: string;
+    @Field( () => GetSalesPageFilterInputOptions, { nullable: true }) filter?: GetSalesPageFilterInputOptions
+}
+
+@InputType()
 export class ModifyEventTicketPriceInputType {
     @Field() id: string;
 
@@ -398,6 +410,49 @@ export class LoadAllEventsPageResponse {
     @Field() endIndex: number;
     @Field() loadMore: boolean;
     @Field( () => [LoadAllEventsPageEventResponse] ) events: LoadAllEventsPageEventResponse[];
+}
+
+@ObjectType()
+export class LoadDashboardPageTaskResponse {
+    @Field() id: string;
+
+    @Field() title: string;
+
+    @Field() userName: string;
+
+    @Field() userProfile: string;
+
+    @Field() dueDate: Date;
+
+    @Field() status: "todo" | "completed"
+}
+
+@ObjectType()
+export class LoadDashboardPageOrdersResponse {
+    @Field() id: string;
+
+    @Field() name: string;
+
+    @Field() eventId: string;
+
+    @Field() dateCompleted: Date;
+
+    @Field({ nullable: true }) amount: number;
+}
+
+@ObjectType()
+export class LoadDashboardPageResponse {
+    @Field() totalBalance: number;
+
+    @Field() totalEvents: number;
+
+    @Field() totalTicketsSold: number;
+
+    @Field() memberDashboardEnabled: boolean;
+
+    @Field( () => [LoadDashboardPageTaskResponse] ) tasks: LoadDashboardPageTaskResponse[];
+
+    @Field( () => [ LoadDashboardPageOrdersResponse ] ) orders: LoadDashboardPageOrdersResponse[];
 }
 
 @InputType()
