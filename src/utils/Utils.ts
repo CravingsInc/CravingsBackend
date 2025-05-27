@@ -14,6 +14,9 @@ export class Utils {
 
     static SECRET_KEY = Utils.AppConfig.BasicConfig.SeceretKey;
 
+    // Sets Application Ticket Fee as 3%, which is what CravingsINC takes from all tickets
+    static APPLICATION_TICKET_FEE = 0.03;
+
     static radarMapsService = RadarMapsUtils.getMaps( Utils.AppConfig.BasicConfig.RadarMapsApiKey );
 
     static LOGIN_TOKEN_TYPE = {
