@@ -37,7 +37,8 @@ export class RadarMapsUtils {
             if ( results && results.length > 0 ) {
                 return {
                     lat: results[0].latitude,
-                    lng: results[0].longitude
+                    lng: results[0].longitude,
+                    timezone: results[0].timeZone.id
                 }
             }
 

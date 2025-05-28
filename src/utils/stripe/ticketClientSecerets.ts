@@ -32,7 +32,7 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
     transfer_data: {
       destination: stripeAccount
     },
-    application_fee_amount: totalPrice * 0.1,
+    application_fee_amount: totalPrice * Utils.APPLICATION_TICKET_FEE,
 
     metadata: {
       customer: customer || null,
@@ -67,7 +67,7 @@ export const updatePaymentIntent = async ( id: string, prices: models.TicketBuyC
     paymentIntent.id,
     { 
       amount: totalPrice,
-      application_fee_amount: totalPrice * 0.1,
+      application_fee_amount: totalPrice * Utils.APPLICATION_TICKET_FEE,
       metadata: { priceList: JSON.stringify( priceList ) }
     }
   );

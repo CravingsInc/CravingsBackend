@@ -48,7 +48,6 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         break;
       case 'payment_intent.payment_failed':
         // PaymentIntent failed, handle accordingly
-        console.log( event );
         break;
       // Handle other event types as needed
     }
@@ -72,8 +71,6 @@ router.post('/webhook/connect', express.raw({ type: 'application/json' }), async
       case 'account.updated':
         // PaymentIntent succeeded, handle accordingly
         const connectedAccount = event.data.object as any;
-  
-        console.log( connectedAccount );
   
         if ( !connectedAccount.metadata ) return res.json({ received: true });
   

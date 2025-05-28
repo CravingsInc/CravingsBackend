@@ -46,6 +46,8 @@ export class ModifyEventInputType {
     @Field({ nullable: true }) startDate?: Date;
 
     @Field({ nullable: true }) endDate?: Date;
+
+    @Field({ nullable: true }) timezone?: string;
 }
 
 @InputType()
@@ -148,6 +150,18 @@ export class GetSalesPageResponse {
     @Field( () => [ GetSalesPageResponseTickets ]) tickets: GetSalesPageResponseTickets[];
 
     @Field( () => [ GetSalesPageResponseSales ]) sales: GetSalesPageResponseSales[];
+}
+
+@InputType()
+export class GetSalesPageFilterInputOptions {
+    @Field({ nullable: true }) checkedIn?: boolean;
+    @Field({ nullable: true }) leftReview?: boolean;
+}
+
+@InputType()
+export class GetSalesPageInput {
+    @Field({ defaultValue: '' }) search?: string;
+    @Field( () => GetSalesPageFilterInputOptions, { nullable: true }) filter?: GetSalesPageFilterInputOptions
 }
 
 @InputType()
@@ -369,6 +383,8 @@ export class LoadEventDetailsPageResponse extends LoadAllEventsPageEventResponse
     @Field() location: string;
 
     @Field() totalTicketSold: number;
+
+    @Field() timezone: string;
 }
 
 @ObjectType()
@@ -394,6 +410,66 @@ export class LoadAllEventsPageResponse {
     @Field() endIndex: number;
     @Field() loadMore: boolean;
     @Field( () => [LoadAllEventsPageEventResponse] ) events: LoadAllEventsPageEventResponse[];
+}
+
+@ObjectType()
+export class LoadDashboardPageTaskResponse {
+    @Field() id: string;
+
+    @Field() title: string;
+
+    @Field() userName: string;
+
+    @Field() userProfile: string;
+
+    @Field() dueDate: Date;
+
+    @Field() status: "todo" | "completed"
+}
+
+@ObjectType()
+export class LoadDashboardPageOrdersResponse {
+    @Field() id: string;
+
+    @Field() name: string;
+
+    @Field() eventId: string;
+
+    @Field() dateCompleted: Date;
+
+    @Field({ nullable: true }) amount: number;
+}
+
+@ObjectType()
+export class LoadDashboardPageResponse {
+    @Field() totalBalance: number;
+
+    @Field() totalEvents: number;
+
+    @Field() totalTicketsSold: number;
+
+    @Field() memberDashboardEnabled: boolean;
+
+    @Field( () => [LoadDashboardPageTaskResponse] ) tasks: LoadDashboardPageTaskResponse[];
+
+    @Field( () => [ LoadDashboardPageOrdersResponse ] ) orders: LoadDashboardPageOrdersResponse[];
+}
+
+@InputType()
+export class LoadAllEventsPageFilterOptions {
+    @Field({ nullable: true }) upcoming?: boolean;
+    @Field({ nullable: true }) completed?: boolean;
+    @Field({ nullable: true }) ongoing?: boolean;
+    @Field({ nullable: true }) private?: boolean;
+    @Field({ nullable: true }) public?: boolean;
+}
+
+@InputType()
+export class LoadAllEventPageInput {
+    @Field({ defaultValue: 7 }) pageLength: number;
+    @Field({ defaultValue: 0 }) lastIndex: number;
+    @Field({ defaultValue: '' }) search?: string;
+    @Field( () => LoadAllEventsPageFilterOptions, { nullable: true }) filter?: LoadAllEventsPageFilterOptions;
 }
 
 @ObjectType()

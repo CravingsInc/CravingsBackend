@@ -50,6 +50,10 @@ export class Events extends BaseEntity {
     ticketType: 'infinite' | 'limited';
 
     @Field()
+    @Column({ default: "America/New_York" })
+    timezone: string;
+
+    @Field()
     @Column({ default: () => "CURRENT_TIMESTAMP" })
     eventDate: Date;
 
