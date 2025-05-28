@@ -34,6 +34,7 @@ export class EventResolver {
                 left join organizers o on e.organizerId = o.id
                 ${ user ? `left join users u on u.id = "${user.id}"` : ''}
                 where e.visible = TRUE
+                where e.ticketTypes = TRUE
                 group by e.id 
                 order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
@@ -139,6 +140,7 @@ export class EventResolver {
                 left join organizers o on e.organizerId = o.id
                 ${ user ? `left join users u on u.id = "${user.id}"` : ''}
                 where e.visible = TRUE
+                where e.ticketTypes = TRUE
                 group by e.id 
                 order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
@@ -244,6 +246,7 @@ export class EventResolver {
                 left join organizers o on e.organizerId = o.id
                 ${ user ? `left join users u on u.id = "${user.id}"` : ''}
                 where e.visible = TRUE
+                where e.ticketTypes = TRUE
                 group by e.id 
                 order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
@@ -349,6 +352,7 @@ export class EventResolver {
                 left join organizers o on e.organizerId = o.id
                 ${ user ? `left join users u on u.id = "${user.id}"` : ''}
                 where e.visible = TRUE
+                where e.ticketTypes = TRUE
                 group by e.id 
                 order by DATE(e.eventDate) DESC, ticketSold DESC
                 limit ${limit}
@@ -700,6 +704,8 @@ export class EventResolver {
         if ( !event ) return new Utils.CustomError("Event not found.");
 
         if ( !event.visible ) return new Utils.CustomError("Event not found.");
+
+        if ( !event.ticketTypes ) return new Utils.CustomError("Event not found.");
 
         let items = event.prices.filter( price => prices.find( p => p.id === price.priceId ) );
 

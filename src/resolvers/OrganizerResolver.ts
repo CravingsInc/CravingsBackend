@@ -1069,7 +1069,7 @@ export class OrganizerResolver {
                 endDate: event.endEventDate
             },
             visibility: event.visible ? "Public" : "Private",
-            ticketType: event.ticketType ? "Custom" : "Donation",
+            ticketType: event.ticketTypes ? "Custom" : "Donation",
             dateCreated: event.createdAt,
             views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
             totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
