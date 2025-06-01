@@ -695,6 +695,7 @@ export class OrganizerResolver {
         return eventTicket.id;
     }
 
+
     @Mutation( () => String ) 
     async modifyEventTicketPrice( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('args', () => models.ModifyEventTicketPriceInputType ) args: models.ModifyEventTicketPriceInputType ) {
         let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
@@ -720,6 +721,42 @@ export class OrganizerResolver {
         }
 
         return "Event Ticket Price modified successfully";
+    }
+
+    @Mutation( () => String )
+    async createCustomPriceEventTicket( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('maximumAmount') maximumAmount: number, @Arg('minimumAmount') minimumAmount: number, @Arg('currency', { nullable: true, defaultValue: 'usd' }) currency: string, @Arg('description', { nullable: true }) description: string ) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
+
+        if ( !event ) return new Utils.CustomError("Event does not exist");
+
+        let eventTicket = await models.EventTickets.create({
+            title: "Custom Price Ticket",
+            description,
+            event,
+            minimumAmount,
+            maximumAmount,
+            currency,
+        }).save();
+
+        try {
+            let stripeTicket = await stripeHandler.createEventPrice( org.stripeConnectId, org.id, event.id, event.productId, minimumAmount, currency );
+            
+            eventTicket.priceId = stripeTicket.id;
+
+            await eventTicket.save();
+        }catch(err) {
+
+            console.log( err );
+
+            await eventTicket.remove(); // want to self clean database
+
+            return new Utils.CustomError("Problem creating custom price event ticket")
+        }
+
+        return eventTicket.id;
+
     }
 
     @Mutation( () => String )
