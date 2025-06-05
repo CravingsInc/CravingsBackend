@@ -359,7 +359,7 @@ export class LoadAllEventsPageEventResponse {
     
     @Field() visibility: "Public" | "Private"
 
-    @Field() ticketType: "Custom" | "Donation";
+    @Field() ticketType: "Ticket" | "Custom";
 
     @Field() views: number;
 
@@ -411,8 +411,8 @@ export class LoadAllEventsPageFilterOptions {
     @Field({ nullable: true }) ongoing?: boolean;
     @Field({ nullable: true }) private?: boolean;
     @Field({ nullable: true }) public?: boolean;
+    @Field({ nullable: true }) ticket?: boolean;
     @Field({ nullable: true }) custom?: boolean;
-    @Field({ nullable: true }) donation?: boolean;
 }
 
 @InputType()

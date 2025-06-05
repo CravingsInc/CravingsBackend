@@ -1000,8 +1000,8 @@ export class OrganizerResolver {
             visible: args.filter?.public ? true : 
                 args.filter?.private ? false : undefined,
 
-            ticketTypes: args.filter?.donation ? false :
-                args.filter?.custom ? true : undefined,
+            ticketTypes: args.filter?.custom ? false :
+                args.filter?.ticket? true : undefined,
             
             eventDate: args.filter?.upcoming ? MoreThan(new Date()) :
                 args.filter?.ongoing ? LessThanOrEqual(new Date()) : undefined,
@@ -1047,7 +1047,7 @@ export class OrganizerResolver {
                         title: e.title,
                         banner: e.banner,
                         visibility: e.visible ? "Public" : "Private",
-                        ticketType: e.ticketType ? "Custom" : "Donation",
+                        ticketType: e.ticketType ? "Ticket" : "Custom",
                         views: await models.EventsPageVisit.count({ where: { event: { id: e.id } } }),
                         dateCreated: e.createdAt,
                         eventDate: {
@@ -1108,7 +1108,7 @@ export class OrganizerResolver {
                 endDate: event.endEventDate
             },
             visibility: event.visible ? "Public" : "Private",
-            ticketType: event.ticketTypes ? "Custom" : "Donation",
+            ticketType: event.ticketTypes ? "Ticket" : "Custom",
             dateCreated: event.createdAt,
             views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
             totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
