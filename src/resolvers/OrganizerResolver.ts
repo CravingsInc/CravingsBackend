@@ -724,7 +724,8 @@ export class OrganizerResolver {
     }
 
     @Mutation( () => String )
-    async createCustomPriceEventTicket( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('maximumAmount') maximumAmount: number, @Arg('minimumAmount') minimumAmount: number, @Arg('currency', { nullable: true, defaultValue: 'usd' }) currency: string, @Arg('description', { nullable: true }) description: string ) {
+    async createCustomPriceEventTicket( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('title') title: string, @Arg('maximumAmount') maximumAmount: number, @Arg('minimumAmount') minimumAmount: number, @Arg('currency', { nullable: true, defaultValue: 'usd' }) currency: string, @Arg('description') description: string
+ ) {
         let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } }});
@@ -732,12 +733,13 @@ export class OrganizerResolver {
         if ( !event ) return new Utils.CustomError("Event does not exist");
 
         let eventTicket = await models.EventTickets.create({
-            title: "Custom Price Ticket",
+            title,
             description,
             event,
             minimumAmount,
             maximumAmount,
             currency,
+            amount: 0
         }).save();
 
         try {
