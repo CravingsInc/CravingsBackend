@@ -4,6 +4,7 @@ const multer = require("multer");
 import * as models from '../../models';
 import { Utils, s3 } from "../../utils";
 import { stripe } from "../../utils/stripe";
+import Stripe from "stripe";
 
 const router = express.Router();
 
@@ -68,9 +69,23 @@ router.get('/stripe/login/:token', async ( req: any, res: any ) => {
     if ( !org ) return res.status(400).json({ error: "Invalid token" });
 
     try {
-        let loginUrl = await stripe.accounts.createLoginLink( org.stripeConnectId );
 
-        return res.redirect( loginUrl.url );
+        let stripeUrl : Stripe.LoginLink | Stripe.AccountLink
+
+        let redirect = `${Utils.getBackendUrl()}/organizer/stripe/login/${token}`
+        
+        if ( org.stripeAccountVerified ) {
+            stripeUrl = await stripe.accounts.createLoginLink( org.stripeConnectId );
+        }else {
+            stripeUrl = await stripe.accountLinks.create({
+                account: org.stripeConnectId,
+                refresh_url: redirect,
+                return_url: redirect,
+                type: "account_onboarding"
+            })
+        }
+
+        return res.redirect( stripeUrl.url );
     }catch ( e ) {
         console.log( e );
         return res.status(500).json({ error: "Could not create login link" });
