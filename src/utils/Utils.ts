@@ -38,6 +38,10 @@ export class Utils {
         return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
     }
 
+    static getBackendUrl = () => {
+        return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://server.cravingsinc.us" : "https://localhost:3555"
+    }
+
     /**
      * Generates a primary key for a given table.
      * @param checkID - Function to check whether or not the ID is valid.
