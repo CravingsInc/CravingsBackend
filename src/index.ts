@@ -8,6 +8,7 @@ import { buildSchema } from "type-graphql";
 import path from "path";
 import { createConnection } from "typeorm";
 import * as resolvers from "./resolvers";
+import cors from "cors";
 
 import Api from './api';
 const bodyParser = require("body-parser");
@@ -20,29 +21,32 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, "public")));
 
+// Enhanced CORS configuration using cors package
+app.use(cors({
+  origin: "*", // Allow all origins
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
+
 app.use((req, res, next) => {
   if (req.originalUrl === "/stripe/webhook" || req.originalUrl === "/stripe/webhook/connect") next();
 
   else bodyParser.json()(req, res, next);
 });
 
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
-
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use( '/event', Api.EventRouter );
+app.use('/event', Api.EventRouter);
 
-app.use( '/user', Api.UserRouter );
+app.use('/user', Api.UserRouter);
 
-app.use( "/api", Api.ApiRouter)
+app.use("/api", Api.ApiRouter)
 
-app.use( '/stripe', Api.StripeRouter );
+app.use('/stripe', Api.StripeRouter);
 
-app.use( '/organizer', Api.OrganizerRouter );
+app.use('/organizer', Api.OrganizerRouter);
 
 const httpServer = http.createServer(app);
 
@@ -50,23 +54,23 @@ async function main() {
   await createConnection(
     Utils.AppConfig.BasicConfig.CLEARDB_DATABASE_NEW_URL
       ? {
-          type: "mysql",
-          url: Utils.AppConfig.BasicConfig.CLEARDB_DATABASE_NEW_URL,
-          entities: ["src/models/*.ts"],
-          subscribers: [ DateNormalizerSubscriber ],
-          synchronize: true,
-        }
+        type: "mysql",
+        url: Utils.AppConfig.BasicConfig.CLEARDB_DATABASE_NEW_URL,
+        entities: ["src/models/*.ts"],
+        subscribers: [DateNormalizerSubscriber],
+        synchronize: true,
+      }
       : {
-          type: "sqlite",
-          database: "./db.sqlite3",
-          entities: ["src/models/*.ts"],
-          subscribers: [ DateNormalizerSubscriber ],
-          synchronize: true,
-        }
+        type: "sqlite",
+        database: "./db.sqlite3",
+        entities: ["src/models/*.ts"],
+        subscribers: [DateNormalizerSubscriber],
+        synchronize: true,
+      }
   );
 
   const schema = await buildSchema({
-    resolvers: [ ...( Object.values(resolvers) ) ] as [any],
+    resolvers: [...(Object.values(resolvers))] as [any],
     //dateScalarMode: "timestamp",
   });
 

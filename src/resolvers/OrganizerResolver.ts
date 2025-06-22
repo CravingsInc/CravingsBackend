@@ -648,9 +648,9 @@ export class OrganizerResolver {
             event.longitude = loc.lng;
         }
 
-        if ( args.timezone != null  ) event.timezone = args.timezone;
+        if (args.timezone != null) event.timezone = args.timezone;
 
-        if ( args.banner ) event.banner = args.banner;
+        if (args.banner) event.banner = args.banner;
 
         await event.save();
 
@@ -782,7 +782,10 @@ export class OrganizerResolver {
 
         let tickets = await models.EventTickets.find({ where: { event: { id: eventId } } });
 
-        let carts = await models.EventTicketCart.find({ where: { completed: true, eventId: eventId }, relations: ['tickets', "tickets.eventTicket", "review"] });
+        let carts = await models.EventTicketCart.find({
+            where: { completed: true, eventId: eventId },
+            relations: ['tickets', "tickets.eventTicket", "review", "appliedCoupon"]
+        });
 
         let filteredCarts = carts.filter(cart => {
             let match = true;
@@ -810,7 +813,15 @@ export class OrganizerResolver {
                 filteredCarts.map(async cart => ({
                     id: cart.id,
                     name: cart.name,
-                    amount: cart.tickets.reduce((sum, item) => sum + (item.eventTicket.amount * item.quantity), 0),
+                    amount: cart.finalTotal || cart.tickets.reduce((sum, item) => sum + (item.eventTicket.amount * item.quantity), 0),
+                    originalAmount: cart.originalTotal || cart.tickets.reduce((sum, item) => sum + (item.eventTicket.amount * item.quantity), 0),
+                    discountAmount: cart.discountAmount || 0,
+                    appliedCoupon: cart.appliedCoupon ? {
+                        code: cart.appliedCoupon.code,
+                        description: cart.appliedCoupon.description,
+                        discountAmount: cart.appliedCoupon.discountAmount,
+                        discountType: cart.appliedCoupon.discountType
+                    } : null,
                     dateCreated: cart.created,
                     currency: 'usd',
                     checkIn: {
@@ -840,6 +851,44 @@ export class OrganizerResolver {
                 }))
             )
         }
+    }
+
+    @Query(() => models.CouponListResponse)
+    async getEventCouponsForSales(@Arg('token') token: string, @Arg('eventId') eventId: string) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token);
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
+
+        if (!event) return new Utils.CustomError("Event does not exist");
+
+        const coupons = await models.Coupon.find({
+            where: { event: { id: eventId } },
+            relations: ['specificTicket'],
+            order: { createdAt: 'DESC' }
+        });
+
+        const couponResponses = coupons.map(coupon => ({
+            id: coupon.id,
+            code: coupon.code,
+            description: coupon.description,
+            discountAmount: coupon.discountAmount,
+            discountType: coupon.discountType,
+            maxUses: coupon.maxUses,
+            currentUses: coupon.currentUses,
+            active: coupon.active,
+            validFrom: coupon.validFrom,
+            validUntil: coupon.validUntil,
+            appliesToAllTickets: coupon.appliesToAllTickets,
+            specificTicketId: coupon.specificTicket?.id,
+            specificTicketTitle: coupon.specificTicket?.title,
+            createdAt: coupon.createdAt,
+            updatedAt: coupon.updatedAt
+        }));
+
+        return {
+            coupons: couponResponses,
+            total: couponResponses.length
+        };
     }
 
     @Mutation(() => String)
@@ -1073,7 +1122,7 @@ export class OrganizerResolver {
             visibility: event.visible ? "Public" : "Private",
             dateCreated: event.createdAt,
             views: await models.EventsPageVisit.count({ where: { event: { id: eventId } } }),
-            totalTicketSold: ( await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 ),
+            totalTicketSold: (await models.EventTicketBuys.find({ where: { cart: { completed: true, eventId } } })).reduce((summ, curr) => summ + curr.quantity, 0),
             timezone: event.timezone
         }
     }

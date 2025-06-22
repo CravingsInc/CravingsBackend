@@ -6,37 +6,37 @@ import { Utils } from '../../Utils';
 
 type Price = { amount: number, quantity: number, id: string };
 
-export const buyTicketSuccedded = async ( id: string, metadata: { customer: string | null, type: PAYMENT_INTENT_TYPE, eventId: string, priceList: string, cart: string }, name?: string, email?: string ) => {
+export const buyTicketSuccedded = async (id: string, metadata: { customer: string | null, type: PAYMENT_INTENT_TYPE, eventId: string, priceList: string, cart: string, couponId?: string }, name?: string, email?: string) => {
     let event = await models.Events.findOne({ where: { id: metadata.eventId } });
 
-    if ( !event ) return { status: 500, message: 'Event not found' };
+    if (!event) return { status: 500, message: 'Event not found' };
 
     let user: models.Users | null = null;
 
-    if ( metadata.customer ) {
+    if (metadata.customer) {
         try {
             user = await models.Users.findOne({ where: { id: metadata.customer } });
 
-            if ( !user ) return { status: 500, message: 'User not found' };
-        }catch( e ) { console.log( e ); }
+            if (!user) return { status: 500, message: 'User not found' };
+        } catch (e) { console.log(e); }
     }
 
     let cart = await models.EventTicketCart.findOne({ where: { id: metadata.cart } })
 
-    if ( !cart ) return { status: 500, message: 'Cart not found' };
+    if (!cart) return { status: 500, message: 'Cart not found' };
 
     let priceList: Price[] = [];
 
     try {
-        priceList = JSON.parse( metadata.priceList ) as Price[];
-    }catch( e ) { console.log( e );  return { status: 500, message: 'Price List Not Properly Formatted' } }
+        priceList = JSON.parse(metadata.priceList) as Price[];
+    } catch (e) { console.log(e); return { status: 500, message: 'Price List Not Properly Formatted' } }
 
-    for ( let i = 0; i < priceList.length; i++ ) {
-        let price = priceList[ i ];
+    for (let i = 0; i < priceList.length; i++) {
+        let price = priceList[i];
 
-        let eventTicket = await models.EventTickets.findOne({ where: { priceId: price.id }});
+        let eventTicket = await models.EventTickets.findOne({ where: { priceId: price.id } });
 
-        if ( !eventTicket ) return { status: 500, message: 'Cannot find event ticket' };
+        if (!eventTicket) return { status: 500, message: 'Cannot find event ticket' };
 
         let ticketBuy = await models.EventTicketBuys.create({
             type: metadata.customer ? 'user' : 'guest',
@@ -49,6 +49,19 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
         }).save()
     }
 
+    // Increment coupon usage if a coupon was applied
+    if (metadata.couponId) {
+        try {
+            const coupon = await models.Coupon.findOne({ where: { id: metadata.couponId } });
+            if (coupon) {
+                coupon.currentUses += 1;
+                await coupon.save();
+            }
+        } catch (e) {
+            console.log('Error updating coupon usage:', e);
+        }
+    }
+
     user ? cart.user = user : null;
     cart.type = metadata.customer ? 'user' : 'guest';
     cart.name = name || 'UNKNOWN';
@@ -58,7 +71,7 @@ export const buyTicketSuccedded = async ( id: string, metadata: { customer: stri
     cart.checkIn = false;
     await cart.save();
 
-    if ( email ) Utils.Mailer.sendTicketBuyConfirmation({ name: name || 'UNKNOWN USER', eventName: event.title, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?cart_id=${cart.id}`, qrCode: cart.qrCode, email })
+    if (email) Utils.Mailer.sendTicketBuyConfirmation({ name: name || 'UNKNOWN USER', eventName: event.title, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?cart_id=${cart.id}`, qrCode: cart.qrCode, email })
 
     return { status: 200, message: 'Event Tickets Created Successfully' };
 }

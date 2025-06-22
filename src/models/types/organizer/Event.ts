@@ -3,7 +3,7 @@ import { Location } from "../Location";
 
 @ObjectType()
 export class EventOrganizerResponse {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() name: string;
 
@@ -12,7 +12,7 @@ export class EventOrganizerResponse {
 
 @ObjectType()
 export class EventRecommendationResponse {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() title: string;
 
@@ -24,9 +24,9 @@ export class EventRecommendationResponse {
 
     @Field() eventDate: Date;
 
-    @Field( () => Location ) location: Location; 
+    @Field(() => Location) location: Location;
 
-    @Field( () => EventOrganizerResponse ) organizer: EventOrganizerResponse;
+    @Field(() => EventOrganizerResponse) organizer: EventOrganizerResponse;
 }
 
 @InputType()
@@ -59,7 +59,7 @@ export class ModifyEventTicketInputType {
     @Field({ nullable: true }) description?: string;
 
     @Field({ nullable: true }) amount?: number;
-    
+
     @Field({ nullable: true, defaultValue: "usd" }) currency?: string;
 
     @Field({ nullable: true }) totalTicketAvailable?: number;
@@ -67,7 +67,7 @@ export class ModifyEventTicketInputType {
 
 @ObjectType()
 export class GetSalesPageResponseTicketsShortened {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() title: string;
 
@@ -80,12 +80,12 @@ export class GetSalesPageResponseTicketsShortened {
 
 @ObjectType()
 export class GetSalesPageResponseTickets {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() title: string;
 
     @Field() description: string;
-    
+
     @Field() totalTickets: number;
 
     @Field() ticketSold: number;
@@ -93,14 +93,14 @@ export class GetSalesPageResponseTickets {
     @Field() ticketPrice: number;
 }
 
-@ObjectType() 
+@ObjectType()
 export class SalesCheckIn {
     @Field() checkIn: boolean;
 
     @Field() date: Date;
 }
 
-@ObjectType() 
+@ObjectType()
 export class SalesCompleted {
     @Field() completed: boolean;
 
@@ -110,7 +110,7 @@ export class SalesCompleted {
 @ObjectType()
 export class SalesReview {
     @Field() id: string;
-    
+
     @Field() name: string;
 
     @Field() profile: string;
@@ -125,31 +125,48 @@ export class SalesReview {
 }
 
 @ObjectType()
+export class SalesAppliedCoupon {
+    @Field() code: string;
+
+    @Field() description: string;
+
+    @Field() discountAmount: number;
+
+    @Field() discountType: 'percentage' | 'fixed';
+}
+
+@ObjectType()
 export class GetSalesPageResponseSales {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() name: string;
 
     @Field() amount: number;
 
+    @Field() originalAmount: number;
+
+    @Field() discountAmount: number;
+
+    @Field(() => SalesAppliedCoupon, { nullable: true }) appliedCoupon?: SalesAppliedCoupon;
+
     @Field() dateCreated: Date;
 
     @Field() currency: string;
 
-    @Field( () => SalesCheckIn ) checkIn: SalesCheckIn;
+    @Field(() => SalesCheckIn) checkIn: SalesCheckIn;
 
-    @Field( () => SalesCompleted ) completed: SalesCompleted;
+    @Field(() => SalesCompleted) completed: SalesCompleted;
 
-    @Field( () => [GetSalesPageResponseTicketsShortened] ) tickets: GetSalesPageResponseTicketsShortened[];
+    @Field(() => [GetSalesPageResponseTicketsShortened]) tickets: GetSalesPageResponseTicketsShortened[];
 
-    @Field( () => SalesReview, { nullable: true }) review?: SalesReview;
+    @Field(() => SalesReview, { nullable: true }) review?: SalesReview;
 }
 
 @ObjectType()
 export class GetSalesPageResponse {
-    @Field( () => [ GetSalesPageResponseTickets ]) tickets: GetSalesPageResponseTickets[];
+    @Field(() => [GetSalesPageResponseTickets]) tickets: GetSalesPageResponseTickets[];
 
-    @Field( () => [ GetSalesPageResponseSales ]) sales: GetSalesPageResponseSales[];
+    @Field(() => [GetSalesPageResponseSales]) sales: GetSalesPageResponseSales[];
 }
 
 @InputType()
@@ -186,7 +203,7 @@ export type EventRecommendationDatabaseResponse = {
 
 @ObjectType()
 export class EventsPageOrganizer {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() name: string;
 
@@ -200,7 +217,7 @@ export class EventsPageOrganizer {
 
 @ObjectType()
 export class EventsPagePrices {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() title: string;
 
@@ -213,8 +230,8 @@ export class EventsPagePrices {
 
 @ObjectType()
 export class PhotoGallery {
-    @Field( () => ID ) id: string;
-    
+    @Field(() => ID) id: string;
+
     @Field() picture: string;
 
     @Field() eventId: string;
@@ -222,7 +239,7 @@ export class PhotoGallery {
 
 @ObjectType()
 export class EventsPage {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() name: string;
 
@@ -244,13 +261,13 @@ export class EventsPage {
 
     @Field() ticketAvailable: number;
 
-    @Field( () => [ PhotoGallery ] ) photoGallery: PhotoGallery[];
+    @Field(() => [PhotoGallery]) photoGallery: PhotoGallery[];
 
-    @Field( () => Location ) location: Location;
+    @Field(() => Location) location: Location;
 
-    @Field( () => EventsPageOrganizer ) organizer: EventsPageOrganizer;
+    @Field(() => EventsPageOrganizer) organizer: EventsPageOrganizer;
 
-    @Field( () => [EventsPagePrices] ) prices: EventsPagePrices[];
+    @Field(() => [EventsPagePrices]) prices: EventsPagePrices[];
 }
 
 @InputType()
@@ -275,7 +292,7 @@ export class RegisterFreeEventInput {
 
     @Field() cartId: string;
 
-    @Field( () => [TicketBuyClientSecretUpdate] ) tickets: TicketBuyClientSecretUpdate[];
+    @Field(() => [TicketBuyClientSecretUpdate]) tickets: TicketBuyClientSecretUpdate[];
 }
 
 @ObjectType()
@@ -289,15 +306,15 @@ export class EventTicketBuyer {
 
 @ObjectType()
 export class EventTicket {
-    @Field( () => ID ) id: string;
-    
+    @Field(() => ID) id: string;
+
     @Field() name: string;
-    
+
     @Field() banner: string;
-    
+
     @Field() date: Date;
-    
-    @Field( () => EventTicketBuyer ) buyer: EventTicketBuyer;;
+
+    @Field(() => EventTicketBuyer) buyer: EventTicketBuyer;;
 
     @Field() cart_id: string;
 }
@@ -305,7 +322,7 @@ export class EventTicket {
 @ObjectType()
 export class EventTicketReview {
     @Field() eventId: string;
-    
+
     @Field() eventBanner: string;
 
     @Field() eventTitle: string;
@@ -343,25 +360,25 @@ export class EventReviewCard {
 @ObjectType()
 export class EventDate {
     @Field() startDate: Date;
-    
+
     @Field() endDate: Date;
 }
 
 @ObjectType()
 export class LoadAllEventsPageEventResponse {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() title: string;
 
     @Field() banner: string;
-    
+
     @Field() visibility: "Public" | "Private"
 
     @Field() views: number;
 
     @Field() dateCreated: Date;
 
-    @Field( () => EventDate ) eventDate: EventDate;
+    @Field(() => EventDate) eventDate: EventDate;
 }
 
 @ObjectType()
@@ -377,7 +394,7 @@ export class LoadEventDetailsPageResponse extends LoadAllEventsPageEventResponse
 
 @ObjectType()
 export class GalleryPageResponse {
-    @Field( () => ID ) id: string;
+    @Field(() => ID) id: string;
 
     @Field() url: string;
 
@@ -387,17 +404,17 @@ export class GalleryPageResponse {
 @ObjectType()
 export class LoadAllEventsGalleryPageResponse {
     @Field() endIndex: number;
-    
+
     @Field() loadMore: boolean;
 
-    @Field( () => [ GalleryPageResponse ]) gallery: GalleryPageResponse[];
+    @Field(() => [GalleryPageResponse]) gallery: GalleryPageResponse[];
 }
 
 @ObjectType()
 export class LoadAllEventsPageResponse {
     @Field() endIndex: number;
     @Field() loadMore: boolean;
-    @Field( () => [LoadAllEventsPageEventResponse] ) events: LoadAllEventsPageEventResponse[];
+    @Field(() => [LoadAllEventsPageEventResponse]) events: LoadAllEventsPageEventResponse[];
 }
 
 @InputType()
@@ -414,7 +431,7 @@ export class LoadAllEventPageInput {
     @Field({ defaultValue: 7 }) pageLength: number;
     @Field({ defaultValue: 0 }) lastIndex: number;
     @Field({ defaultValue: '' }) search?: string;
-    @Field( () => LoadAllEventsPageFilterOptions, { nullable: true }) filter?: LoadAllEventsPageFilterOptions;
+    @Field(() => LoadAllEventsPageFilterOptions, { nullable: true }) filter?: LoadAllEventsPageFilterOptions;
 }
 
 @ObjectType()

@@ -4,3 +4,4 @@ export * from './eventTickets';
 export * from './EventTicketCart';
 export * from './EventPhotos';
 export * from './EventTicketCartReview';
+export * from './Coupon';

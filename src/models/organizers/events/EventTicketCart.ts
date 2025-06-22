@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, M
 import { EventTicketBuys } from "./EventTicketBuys";
 import { Users } from "../../users";
 import { EventTicketCartReview } from "./EventTicketCartReview";
+import { Coupon } from "./Coupon";
 
 @Entity()
 export class EventTicketCart extends BaseEntity {
@@ -16,8 +17,8 @@ export class EventTicketCart extends BaseEntity {
 
     @Column({ default: "UNKNOWN" })
     email: string;
-    
-    @ManyToOne( () => Users, u => u.eventCarts, { onDelete: 'CASCADE', nullable: true })
+
+    @ManyToOne(() => Users, u => u.eventCarts, { onDelete: 'CASCADE', nullable: true })
     user?: Users | null;
 
     @Column()
@@ -41,7 +42,7 @@ export class EventTicketCart extends BaseEntity {
     @Column()
     eventId: string;
 
-    @OneToMany( () => EventTicketBuys, eTB => eTB.cart )
+    @OneToMany(() => EventTicketBuys, eTB => eTB.cart)
     tickets: EventTicketBuys[];
 
     @CreateDateColumn()
@@ -59,4 +60,20 @@ export class EventTicketCart extends BaseEntity {
     @OneToOne(() => EventTicketCartReview)
     @JoinColumn()
     review: EventTicketCartReview;
+
+    // Coupon-related fields
+    @ManyToOne(() => Coupon, { nullable: true, onDelete: "SET NULL" })
+    appliedCoupon?: Coupon | null;
+
+    @Column({ nullable: true })
+    appliedCouponId?: string;
+
+    @Column({ type: 'float', default: 0 })
+    discountAmount: number;
+
+    @Column({ type: 'float', default: 0 })
+    originalTotal: number;
+
+    @Column({ type: 'float', default: 0 })
+    finalTotal: number;
 }
