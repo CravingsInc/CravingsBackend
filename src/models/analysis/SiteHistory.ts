@@ -33,14 +33,14 @@ export class SiteHistory extends BaseEntity {
     organizer?: Organizers;
 
     /**
-     * @description Full URL that was visited for example if the url visited was ```https://www.cravingsinc.us/events/{eventId}``` it will load ```Event Detail Page```.
+     * @description Full URL that was visited for example if the url visited was ```https://app.eventrix.ai/events/{eventId}``` it will load ```Event Detail Page```.
     */
     @Field()
     @Column()
     urlVisited: string;
 
     /**
-     * @description Full URL that was visited for example if the url visited was ```https://www.cravingsinc.us/events/{eventId}``` it will load that exactly.
+     * @description Full URL that was visited for example if the url visited was ```https://app.eventrix.ai/events/{eventId}``` it will load that exactly.
     */
     @Field()
     @Column()
