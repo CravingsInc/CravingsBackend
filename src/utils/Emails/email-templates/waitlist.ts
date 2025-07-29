@@ -289,7 +289,7 @@ export const waitList = `
                 <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
                  <tr>
                   <td align="center" valign="top" style="padding: 0px 0px 20px 0px;">
-                    <a href='https://organizer.eventrix.ai/'>
+                    <a href='https://www.eventrix.ai/'>
                         <img src="https://cravings-media.nyc3.cdn.digitaloceanspaces.com/company-folder/logo.png" class="" width="125" height="43" alt="" style="display: block; outline: 0; line-height: 100%; -ms-interpolation-mode: bicubic; width:125px; height: auto; max-width: 100%; border: 0;" />
                     </a>
                   </td>
