@@ -14,10 +14,10 @@ export class Utils {
 
     static SECRET_KEY = Utils.AppConfig.BasicConfig.SeceretKey;
 
-    // Sets Application Ticket Fee as 3%, which is what CravingsINC takes from all tickets
+    // Sets Application Ticket Fee as 3%, which is what Eventrix takes from all tickets
     static APPLICATION_TICKET_FEE = 0.03;
 
-    static radarMapsService = RadarMapsUtils.getMaps( Utils.AppConfig.BasicConfig.RadarMapsApiKey );
+    static radarMapsService = RadarMapsUtils.getMaps(Utils.AppConfig.BasicConfig.RadarMapsApiKey);
 
     static LOGIN_TOKEN_TYPE = {
         USER: "USER",
@@ -26,7 +26,7 @@ export class Utils {
     } as const;
 
     static CustomError = class extends Error {
-        constructor( message: string, name= "CustomError" ) {
+        constructor(message: string, name = "CustomError") {
             super(message);
             this.name = name;
         }
@@ -35,11 +35,11 @@ export class Utils {
     static Mailer = Mailer.getMailer();
 
     static getCravingsWebUrl = () => {
-        return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://www.cravingsinc.us" : "http://localhost:3000"
+        return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://app.eventrix.ai" : "http://localhost:3000"
     }
 
     static getBackendUrl = () => {
-        return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://server.cravingsinc.us" : "https://localhost:3555"
+        return Utils.AppConfig.BasicConfig.NODE_ENV === "production" ? "https://server.eventrix.ai" : "https://localhost:3555"
     }
 
     /**
@@ -60,12 +60,12 @@ export class Utils {
 
         return result;
     }
-    
+
     /**
      * Genereate a random unsigned JSONToken.
      * @param user - The user, this is used to add to the json token, to make it really unique
     */
-    static async generateJsWebToken( id: string ): Promise<{ [key: string]: string }> {
+    static async generateJsWebToken(id: string): Promise<{ [key: string]: string }> {
         let genKey = await this.generateID(
             async (result: string): Promise<boolean> => {
                 return result ? false : true
@@ -74,133 +74,133 @@ export class Utils {
         return { token: genKey, id: id };
     }
 
-    static async getUserFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Users> {
+    static async getUserFromJsWebToken(token: string, relations: string[] = []): Promise<models.Users> {
         try {
             let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
-            if ( unHashedToken ) {
-                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER ) {
+            if (unHashedToken) {
+                if (unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER) {
                     let user = await models.Users.findOne({
                         where: { id: unHashedToken.id },
                         relations
                     });
-    
-                    if ( user ) return user;
+
+                    if (user) return user;
                 }
-            }    
-        }catch( e ) {}
+            }
+        } catch (e) { }
 
         throw new Utils.CustomError("User does not exist.");
     }
-    
-    static getRegenToken( token: string ) {
+
+    static getRegenToken(token: string) {
         try {
-            const decoded = jwt.decode( token ) as jwt.JwtPayload;
+            const decoded = jwt.decode(token) as jwt.JwtPayload;
 
             const secondsInWeek = 604_800;
 
-            const currentTime = Math.floor( Date.now() / 1000 );
+            const currentTime = Math.floor(Date.now() / 1000);
 
-            const expiresIn = ( decoded.exp || 0 ) - currentTime;
+            const expiresIn = (decoded.exp || 0) - currentTime;
 
-            return expiresIn > secondsInWeek ? token : jwt.sign( { ...decoded, exp: ( decoded.exp || 0 ) + ( secondsInWeek * 2) }, this.SECRET_KEY);
-        } catch( e ) {
-            console.log( e );
+            return expiresIn > secondsInWeek ? token : jwt.sign({ ...decoded, exp: (decoded.exp || 0) + (secondsInWeek * 2) }, this.SECRET_KEY);
+        } catch (e) {
+            console.log(e);
         }
 
         return new Utils.CustomError('Problem retrieving token');
     }
 
-    static async verifyUserPasswordChangeToken( token: string ) {
+    static async verifyUserPasswordChangeToken(token: string) {
         try {
-            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
-        
-            if ( unHashedToken ) {
-                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER && unHashedToken.command === 'change-password' ) {
-                    let pwc = await models.UserPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: [ "user" ] })
-                    
-                    if ( pwc ) return pwc;
-                }  
+            let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
+
+            if (unHashedToken) {
+                if (unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.USER && unHashedToken.command === 'change-password') {
+                    let pwc = await models.UserPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: ["user"] })
+
+                    if (pwc) return pwc;
+                }
             }
-        }catch( e ) {} 
+        } catch (e) { }
 
         throw new Utils.CustomError("Token is not valid");
     }
 
-    static async verifyOrgPasswordChangeToken( token: string ) {
+    static async verifyOrgPasswordChangeToken(token: string) {
         try {
-            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+            let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
-            if ( unHashedToken ) {
-                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER && unHashedToken.command === 'change-password' ) {
+            if (unHashedToken) {
+                if (unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER && unHashedToken.command === 'change-password') {
                     let pwc = await models.OrganizerPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: ['organizer'] });
 
-                    if ( pwc ) return pwc;
+                    if (pwc) return pwc;
                 }
             }
-        }catch( e ) {}
+        } catch (e) { }
 
         throw new Utils.CustomError("Token is not valid");
     }
 
-    static async verifyOrgMemberPasswordChangeToken( token: string ) {
+    static async verifyOrgMemberPasswordChangeToken(token: string) {
         try {
-            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+            let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
-            if ( unHashedToken ) {
-                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS && unHashedToken.command === 'change-password' ) {
+            if (unHashedToken) {
+                if (unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS && unHashedToken.command === 'change-password') {
                     let pwc = await models.OrganizerMemberPasswordChange.findOne({ where: { id: unHashedToken.pwc }, relations: ['member'] });
 
-                    if ( pwc ) return pwc;
+                    if (pwc) return pwc;
                 }
             }
-        }catch( e ) {}
+        } catch (e) { }
 
         throw new Utils.CustomError("Token is not valid");
     }
 
-    static async verifyOrgTeamMemberInviteToken( token: string ) {
+    static async verifyOrgTeamMemberInviteToken(token: string) {
         try {
-            let unHashedToken: any = jwt.verify( token, this.SECRET_KEY );
+            let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
-            if ( unHashedToken ) {
-                if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS && unHashedToken.command === 'invite-team-member' ) {
-                    let teamMember = await models.OrganizerMembers.findOne({ where: { id: unHashedToken.id }, relations: [ 'organizer' ] });
+            if (unHashedToken) {
+                if (unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS && unHashedToken.command === 'invite-team-member') {
+                    let teamMember = await models.OrganizerMembers.findOne({ where: { id: unHashedToken.id }, relations: ['organizer'] });
 
-                    if ( teamMember ) return teamMember;
+                    if (teamMember) return teamMember;
                 }
             }
-        }catch( e ) {}
+        } catch (e) { }
 
         throw new Utils.CustomError("Token is not valid");
     }
 
-    static async getOrganizerFromJsWebToken( token: string, relations: string[] = [] ) : Promise<models.Organizers> {
+    static async getOrganizerFromJsWebToken(token: string, relations: string[] = []): Promise<models.Organizers> {
         let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
-        if ( unHashedToken ) {
-            if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER ) {
+        if (unHashedToken) {
+            if (unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER) {
                 let organizer = await models.Organizers.findOne({
                     where: { id: unHashedToken.id },
                     relations
                 });
 
-                if ( organizer ) return organizer;
+                if (organizer) return organizer;
             }
         }
 
         throw new Utils.CustomError("User does not exist.");
     }
 
-    static async getOrgFromOrgOrMemberJsWebToken( token: string, relations: string[] = [], adminRequirement: boolean = false ): Promise<models.Organizers> {
+    static async getOrgFromOrgOrMemberJsWebToken(token: string, relations: string[] = [], adminRequirement: boolean = false): Promise<models.Organizers> {
         let org: models.Organizers;
 
         try {
-            org = await this.getOrganizerFromJsWebToken( token, relations);
-        }catch {
-            let orgMember = await this.getOrganizerMemberFromJsWebToken( token, relations );
+            org = await this.getOrganizerFromJsWebToken(token, relations);
+        } catch {
+            let orgMember = await this.getOrganizerMemberFromJsWebToken(token, relations);
 
-            if ( adminRequirement && orgMember.title !== 'Admin' ) {
+            if (adminRequirement && orgMember.title !== 'Admin') {
                 throw new Utils.CustomError("User does not have the correct permissions.");
             }
 
@@ -210,63 +210,63 @@ export class Utils {
         return org;
     }
 
-    static async getOrganizerMemberFromJsWebToken( token: string, relations: string[] = [] ): Promise<models.OrganizerMembers> {
+    static async getOrganizerMemberFromJsWebToken(token: string, relations: string[] = []): Promise<models.OrganizerMembers> {
         let unHashedToken: any = jwt.verify(token, this.SECRET_KEY);
 
-        if ( unHashedToken ) {
-            if ( unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS ) {
+        if (unHashedToken) {
+            if (unHashedToken.type === Utils.LOGIN_TOKEN_TYPE.ORGANIZER_MEMBERS) {
                 let orgMember = await models.OrganizerMembers.findOne({
                     where: { id: unHashedToken.id },
-                    relations: ['organizer', ...relations.map( val => `organizer.${val}`)]
+                    relations: ['organizer', ...relations.map(val => `organizer.${val}`)]
                 });
 
-                if ( orgMember ) return orgMember;
+                if (orgMember) return orgMember;
             }
         }
 
         throw new Utils.CustomError("User does not exist.");
     }
 
-    static getMiles( start: { longitude: number, latitude: number }, end: { longitude: number, latitude: number } ) {
-        let km  = Math.acos(
+    static getMiles(start: { longitude: number, latitude: number }, end: { longitude: number, latitude: number }) {
+        let km = Math.acos(
             Math.sin(start.latitude) * Math.sin(end.latitude) + Math.cos(start.latitude) * Math.cos(end.latitude) * Math.cos(end.longitude - start.longitude)
         ) * 6371;
 
-        return km*Utils.KmTomilesConversion;
+        return km * Utils.KmTomilesConversion;
     }
 
-    static shortenNumericString( num: number ) {
-        if ( num < 1000 ) return `${num}`;
-        else if ( num < 1_000_000 ) return `${num/1000}k`;
-        else if ( num < 1_000_000_000 ) return `${num/1_000_000}m`;
-        else return `${num/1_000_000_000}b`;
+    static shortenNumericString(num: number) {
+        if (num < 1000) return `${num}`;
+        else if (num < 1_000_000) return `${num / 1000}k`;
+        else if (num < 1_000_000_000) return `${num / 1_000_000}m`;
+        else return `${num / 1_000_000_000}b`;
     }
 
     static shortenMinutesToString(minutes: number) {
-        if ( minutes / 60 < 1 ) {
+        if (minutes / 60 < 1) {
             let div = Math.round(minutes);
             return `${div > 1 ? div : 1}m`;
         }
-        else if ( minutes / ( 60 * 60 ) < 60 ) {
-            let div = Math.round(minutes/( 60 * 60 ));
+        else if (minutes / (60 * 60) < 60) {
+            let div = Math.round(minutes / (60 * 60));
             return `${div > 1 ? div : 1}h`;
         }
-        else if ( minutes / ( 60 * 60 * 24 ) < 360 ) {
-            let div = Math.round(minutes/( 60 * 60 * 24 ));
+        else if (minutes / (60 * 60 * 24) < 360) {
+            let div = Math.round(minutes / (60 * 60 * 24));
 
             return `${div > 1 ? div : 1}d`;
         }
         else {
-            let div = Math.round(minutes/( 60 * 60 * 24 * 7 ))
+            let div = Math.round(minutes / (60 * 60 * 24 * 7))
 
             return `${div > 1 ? div : 1}w`;
         }
     }
 
-    static verifyRequestParams( reqBody: any, params: string[] ) {
+    static verifyRequestParams(reqBody: any, params: string[]) {
 
-        for ( let param of params ) {
-            if ( !reqBody[param] ) {
+        for (let param of params) {
+            if (!reqBody[param]) {
                 throw new Utils.CustomError(`Missing parameter ${param}`);
             }
         }

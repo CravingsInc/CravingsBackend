@@ -4,7 +4,7 @@ export enum ConnectAccountType {
     ORGANIZER = 'ORGANIZER',
 }
 
-export const createConnectAccount = async ( email: string, userId: string, type: ConnectAccountType = ConnectAccountType.ORGANIZER ) => {
+export const createConnectAccount = async (email: string, userId: string, type: ConnectAccountType = ConnectAccountType.ORGANIZER) => {
     return await stripe.accounts.create({
         type: "express",
         email,
@@ -16,12 +16,12 @@ export const createConnectAccount = async ( email: string, userId: string, type:
             email,
             userId,
             type: ConnectAccountType.ORGANIZER,
-            dateJoined: ( new Date() ).getTime() 
+            dateJoined: (new Date()).getTime()
         },
         business_type: "individual",
 
         business_profile: {
-            url: `https://www.cravingsinc.us/organizers/${userId}`
+            url: `https://app.eventrix.ai/organizers/${userId}`
         }
     });
 }
