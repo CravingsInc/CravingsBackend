@@ -239,10 +239,10 @@
                 "Includes entry to the festival and access to all food trucks and vendors, and sitting. Food and beverages are available for purchase seperately.",
                 "###Food Truck Admission:",
                 "Cost: $100 per food truck",
-                "Includes a designated space for your food truck, acess to the festival audience, and marketing support from CravingsInc.",
+                "Includes a designated space for your food truck, acess to the festival audience, and marketing support from Eventrix.",
                 "###Vendor Admission:",
                 "Cost: $50 per vendor",
-                "Includes a designated space for your booth, access to the festival audience, and marketing support from CravingsInc.",
+                "Includes a designated space for your booth, access to the festival audience, and marketing support from Eventrix.",
                 "##Activities and Highlights:",
                 "- __Gourmet Food Trucks:__ A wide selection of food trucks offering diverse cuisines and unique dishes.",
                 "- __Local Vendors:__ Discover and support local food artisans and producers.",
@@ -253,7 +253,7 @@
                 "Free parking (once admission is paid ) is available at the Novi High School parking lot. Additional parking spaces are available at nearby locations with shuttle services provided.",
                 "##Contact Information:",
                 "For more details or inquires, please contact us at:",
-                "Email: outreach@cravingsinc.us",
+                "Email: outreach@eventrix.ai",
                 "Phone: (248)-812-6865"
             ],
             "banner": "https://cravings-media.nyc3.cdn.digitaloceanspaces.com/banner/image/png/cravings-food-fest.png",
@@ -266,14 +266,14 @@
                     "title": "Food Truck Admission",
                     "amount": 100,
                     "totalAvailable": 30,
-                    "description": "Includes a designated space for your food truck, acess to the festival audience, and marketing support from CravingsInc."
+                    "description": "Includes a designated space for your food truck, acess to the festival audience, and marketing support from Eventrix."
                 },
 
                 {
                     "title": "Vendor Admission",
                     "amount": 50,
                     "totalAvailable": 5,
-                    "description": "Includes a designated space for your booth, access to the festival audience, and marketing support from CravingsInc."
+                    "description": "Includes a designated space for your booth, access to the festival audience, and marketing support from Eventrix."
                 },
 
                 {
