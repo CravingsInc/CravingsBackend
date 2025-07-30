@@ -73,7 +73,7 @@ export class Mailer {
     async sendContactEmail(opt: ContactProps) {
         return await this.sendEmail(
             'Eventrix <outreach@eventrix.ai>',
-            `admins@cravingsinc.us${opt.organizer === "Yes" ? '' : `,${opt.email}`}`.split(','),
+            `chidozie@eventrix.ai${opt.organizer === "Yes" ? '' : `,${opt.email}`}`.split(','),
             `Eventrix ${opt.waitList === "Yes" ? 'New WaitList' : 'Contact'} by ${opt.first_name}`,
             getEmailTemplates(EmailTemplates.CONTACT, opt)
         )
@@ -93,7 +93,7 @@ export class Mailer {
     async sendReservationEmail(opt: ReservationProps) {
         return await this.sendEmail(
             'Eventrix <reservation@eventrix.ai>',
-            `${opt.email},admims@cravingsinc.us`.split(','),
+            `${opt.email},chidozie@eventrix.ai`.split(','),
             `Eventrix Event Reservation by ${opt.first_name}`,
             getEmailTemplates(EmailTemplates.RESERVATION, opt)
         )
