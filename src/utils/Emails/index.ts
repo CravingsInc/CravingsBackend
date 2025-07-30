@@ -60,7 +60,7 @@ export class Mailer {
         return Utils.AppConfig.BasicConfig.RESEND_API_KEY;
     }
 
-    async sendEmail(from: string, to: string, subject: string, html: string) {
+    async sendEmail(from: string, to: string | string[], subject: string, html: string) {
         try {
             await this.mailer.emails.send({ from, to, subject, html });
             return true;
@@ -73,7 +73,7 @@ export class Mailer {
     async sendContactEmail(opt: ContactProps) {
         return await this.sendEmail(
             'Eventrix <outreach@eventrix.ai>',
-            `outreach@cravingsinc.us${opt.organizer === "Yes" ? '' : `, ${opt.email}`}`,
+            `admins@cravingsinc.us${opt.organizer === "Yes" ? '' : `, ${opt.email}`}`.split(','),
             `Eventrix ${opt.waitList === "Yes" ? 'New WaitList' : 'Contact'} by ${opt.first_name}`,
             getEmailTemplates(EmailTemplates.CONTACT, opt)
         )
@@ -93,7 +93,7 @@ export class Mailer {
     async sendReservationEmail(opt: ReservationProps) {
         return await this.sendEmail(
             'Eventrix <reservation@eventrix.ai>',
-            `${opt.email}, outreach@cravingsinc.us`,
+            `${opt.email}, admims@cravingsinc.us`.split(','),
             `Eventrix Event Reservation by ${opt.first_name}`,
             getEmailTemplates(EmailTemplates.RESERVATION, opt)
         )
