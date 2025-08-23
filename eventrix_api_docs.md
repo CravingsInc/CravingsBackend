@@ -1,4 +1,4 @@
-# Cravings Backend API Documentation
+# Eventrix Backend API Documentation
 
 ## Table of Contents
 1. [GraphQL API](#graphql-api)
