@@ -52,6 +52,14 @@ export class Events extends BaseEntity {
     is_public: boolean; // If this event is public or private, private events are only accessible via direct link, meaning this event won't show up on app, and it won't be searchable
 
     @Field()
+    @Column({ default: 0 })
+    minPrice: number; // Only in use in CYOP events;
+
+    @Field()
+    @Column({ default: 0 })
+    maxPrice: number; // Only in use in CYOP events;
+
+    @Field()
     @Column({ default: "" })
     productId: string;
 
