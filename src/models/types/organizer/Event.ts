@@ -1,5 +1,19 @@
 import { ObjectType, InputType, Field, ID } from "type-graphql";
 import { Location } from "../Location";
+import { EventType } from "../../organizers";
+
+@InputType()
+export class CreateEventInput {
+    @Field() title: string;
+
+    @Field() description: string;
+
+    @Field( () => EventType ) type: EventType;
+
+    @Field() is_public: boolean;
+
+    @Field() is_monetized: boolean;
+}
 
 @ObjectType()
 export class EventOrganizerResponse {
