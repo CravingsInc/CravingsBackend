@@ -9,30 +9,30 @@ import { PAYMENT_INTENT_TYPE } from "../utils/stripe";
 @Resolver()
 export class EventResolver {
 
-    @Query( () => [ models.EventRecommendationResponse ] )
-    async getPopularOrganizersEvents( @Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 } ) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 } ) longitude: number, @Arg('token', { nullable: true } ) token?: string ) {
+    @Query(() => [models.EventRecommendationResponse])
+    async getPopularOrganizersEvents(@Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 }) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 }) longitude: number, @Arg('token', { nullable: true }) token?: string) {
         let user: models.Users | null = null;
 
-        if ( token ) {
+        if (token) {
             try {
-                user = await Utils.getUserFromJsWebToken( token );
-            }catch ( e ) { console.log( e ); }
+                user = await Utils.getUserFromJsWebToken(token);
+            } catch (e) { console.log(e); }
         }
 
-        let events: ( { orgFollowers: number } & models.EventRecommendationDatabaseResponse )[] = [];
+        let events: ({ orgFollowers: number } & models.EventRecommendationDatabaseResponse)[] = [];
 
         try {
             events = await models.Events.query(`
                 select
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-                ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+                ${user ? "u.latitude as uLat, u.longitude as uLong," : ""}
                 COUNT(etb.id) AS ticketSold
                 from events e
                 left join event_tickets et on e.id = et.eventId
                 left join event_ticket_buys etb on et.id = etb.eventTicketId
                 left join organizers o on e.organizerId = o.id
-                ${ user ? `left join users u on u.id = "${user.id}"` : ''}
+                ${user ? `left join users u on u.id = "${user.id}"` : ''}
                 where e.visible = TRUE
                 group by e.id 
                 order by DATE(e.eventDate) DESC, ticketSold DESC
@@ -65,17 +65,17 @@ export class EventResolver {
                         `
                     )
             )*/
-        }catch ( e ) { console.log(e); }
+        } catch (e) { console.log(e); }
 
         return (await Promise.all(
             events.map(async (val) => {
                 let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
 
-                let prices: ( number | null )[] = [];
+                let prices: (number | null)[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
-                }catch(e) { prices = [0]; }
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId))?.data.map(v => v.unit_amount);
+                } catch (e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
@@ -95,7 +95,7 @@ export class EventResolver {
                         longitude: val.eLong,
                         location: val.location
                     },
-                    eventDate: new Date( val.eventDate ),
+                    eventDate: new Date(val.eventDate),
                     miles: Utils.shortenNumericString(miles),
                     timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
                     ticketSold: val.ticketSold || 0,
@@ -107,21 +107,21 @@ export class EventResolver {
                     milesNum: miles
                 };
             })
-        )).filter( val => 
-            ( val.milesNum <= ( user ? user.searchMilesRadius : 20 ) + Utils.milesFilterLeway )
+        )).filter(val =>
+            (val.milesNum <= (user ? user.searchMilesRadius : 20) + Utils.milesFilterLeway)
             || val.id !== null
         );
     }
 
 
-    @Query( () => [ models.EventRecommendationResponse ] )
-    async getPopularEvents( @Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 } ) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 } ) longitude: number, @Arg('token', { nullable: true } ) token?: string ) {
+    @Query(() => [models.EventRecommendationResponse])
+    async getPopularEvents(@Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 }) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 }) longitude: number, @Arg('token', { nullable: true }) token?: string) {
         let user: models.Users | null = null;
 
-        if ( token ) {
+        if (token) {
             try {
-                user = await Utils.getUserFromJsWebToken( token );
-            }catch ( e ) { console.log( e ); }
+                user = await Utils.getUserFromJsWebToken(token);
+            } catch (e) { console.log(e); }
         }
 
         let events: models.EventRecommendationDatabaseResponse[] = [];
@@ -131,13 +131,13 @@ export class EventResolver {
                 select
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-                ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+                ${user ? "u.latitude as uLat, u.longitude as uLong," : ""}
                 COUNT(etb.id) AS ticketSold
                 from events e
                 left join event_tickets et on e.id = et.eventId
                 left join event_ticket_buys etb on et.id = etb.eventTicketId
                 left join organizers o on e.organizerId = o.id
-                ${ user ? `left join users u on u.id = "${user.id}"` : ''}
+                ${user ? `left join users u on u.id = "${user.id}"` : ''}
                 where e.visible = TRUE
                 group by e.id 
                 order by DATE(e.eventDate) DESC, ticketSold DESC
@@ -170,17 +170,17 @@ export class EventResolver {
                         `
                     )
             )*/
-        }catch ( e ) { console.log(e); }
+        } catch (e) { console.log(e); }
 
         return (await Promise.all(
             events.map(async (val) => {
                 let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
 
-                let prices: ( number | null )[] = [];
+                let prices: (number | null)[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
-                }catch(e) { prices = [0]; }
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId))?.data.map(v => v.unit_amount);
+                } catch (e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
@@ -200,7 +200,7 @@ export class EventResolver {
                         longitude: val.eLong,
                         location: val.location
                     },
-                    eventDate: new Date( val.eventDate ),
+                    eventDate: new Date(val.eventDate),
                     miles: Utils.shortenNumericString(miles),
                     timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
                     ticketSold: val.ticketSold || 0,
@@ -212,21 +212,21 @@ export class EventResolver {
                     milesNum: miles
                 };
             })
-        )).filter( val => 
-            ( val.milesNum <= ( user ? user.searchMilesRadius : 20 ) + Utils.milesFilterLeway )
+        )).filter(val =>
+            (val.milesNum <= (user ? user.searchMilesRadius : 20) + Utils.milesFilterLeway)
             || val.id !== null
         );
     }
 
-    @Query( () => [ models.EventRecommendationResponse ] )
-    async getFeaturedEvents( @Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 } ) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 } ) longitude: number, @Arg('token', { nullable: true } ) token?: string ) {
+    @Query(() => [models.EventRecommendationResponse])
+    async getFeaturedEvents(@Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 }) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 }) longitude: number, @Arg('token', { nullable: true }) token?: string) {
 
         let user: models.Users | null = null;
 
-        if ( token ) {
+        if (token) {
             try {
-                user = await Utils.getUserFromJsWebToken( token );
-            }catch( e ) { console.log( e) }
+                user = await Utils.getUserFromJsWebToken(token);
+            } catch (e) { console.log(e) }
         }
 
         let events: models.EventRecommendationDatabaseResponse[] = [];
@@ -236,13 +236,13 @@ export class EventResolver {
                 select
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-                ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+                ${user ? "u.latitude as uLat, u.longitude as uLong," : ""}
                 COUNT(etb.id) AS ticketSold
                 from events e
                 left join event_tickets et on e.id = et.eventId
                 left join event_ticket_buys etb on et.id = etb.eventTicketId
                 left join organizers o on e.organizerId = o.id
-                ${ user ? `left join users u on u.id = "${user.id}"` : ''}
+                ${user ? `left join users u on u.id = "${user.id}"` : ''}
                 where e.visible = TRUE
                 group by e.id 
                 order by DATE(e.eventDate) DESC, ticketSold DESC
@@ -275,17 +275,17 @@ export class EventResolver {
                         `
                     )
             )*/
-        }catch ( e ) { console.log(e); }
+        } catch (e) { console.log(e); }
 
         return (await Promise.all(
             events.map(async (val) => {
                 let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
 
-                let prices: ( number | null )[] = [];
+                let prices: (number | null)[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
-                }catch(e) { prices = [0]; }
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId))?.data.map(v => v.unit_amount);
+                } catch (e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
@@ -305,7 +305,7 @@ export class EventResolver {
                         longitude: val.eLong,
                         location: val.location
                     },
-                    eventDate: new Date( val.eventDate ),
+                    eventDate: new Date(val.eventDate),
                     miles: Utils.shortenNumericString(miles),
                     timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
                     ticketSold: val.ticketSold || 0,
@@ -317,21 +317,21 @@ export class EventResolver {
                     milesNum: miles
                 };
             })
-        )).filter( val => 
-            ( val.milesNum <= ( user ? user.searchMilesRadius : 20 ) + Utils.milesFilterLeway )
+        )).filter(val =>
+            (val.milesNum <= (user ? user.searchMilesRadius : 20) + Utils.milesFilterLeway)
             || val.id !== null
         );
     }
 
-    @Query( () => [ models.EventRecommendationResponse ] )
-    async getUpComingEvents( @Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 } ) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 } ) longitude: number, @Arg('token', { nullable: true } ) token?: string ) {
+    @Query(() => [models.EventRecommendationResponse])
+    async getUpComingEvents(@Arg('limit') limit: number, @Arg('latitude', { nullable: true, defaultValue: 42.3314 }) latitude: number, @Arg('longitude', { nullable: true, defaultValue: 83.0458 }) longitude: number, @Arg('token', { nullable: true }) token?: string) {
 
         let user: models.Users | null = null;
 
-        if ( token ) {
+        if (token) {
             try {
-                user = await Utils.getUserFromJsWebToken( token );
-            }catch( e ) { console.log( e) }
+                user = await Utils.getUserFromJsWebToken(token);
+            } catch (e) { console.log(e) }
         }
 
         let events: models.EventRecommendationDatabaseResponse[] = [];
@@ -341,13 +341,13 @@ export class EventResolver {
                 select
                 e.id, e.title, e.description, e.banner, e.productId, e.createdAt, e.updatedAt, e.organizerId, e.location, e.latitude as eLat, e.longitude as eLong, e.eventDate,
                 o.id as orgId, o.stripeConnectId as orgStripeConnectId, o.orgName, o.profilePicture as orgProfilePicture,
-                ${ user ? "u.latitude as uLat, u.longitude as uLong," : "" }
+                ${user ? "u.latitude as uLat, u.longitude as uLong," : ""}
                 COUNT(etb.id) AS ticketSold
                 from events e
                 left join event_tickets et on e.id = et.eventId
                 left join event_ticket_buys etb on et.id = etb.eventTicketId
                 left join organizers o on e.organizerId = o.id
-                ${ user ? `left join users u on u.id = "${user.id}"` : ''}
+                ${user ? `left join users u on u.id = "${user.id}"` : ''}
                 where e.visible = TRUE
                 group by e.id 
                 order by DATE(e.eventDate) DESC, ticketSold DESC
@@ -380,17 +380,17 @@ export class EventResolver {
                         `
                     )
             )*/
-        }catch ( e ) { console.log(e); }
+        } catch (e) { console.log(e); }
 
         return (await Promise.all(
             events.map(async (val) => {
                 let miles = Math.round(Utils.getMiles({ longitude: val.uLong || 0, latitude: val.uLong || 0 }, { longitude: val.eLong || 0, latitude: val.eLat || 0 }));
 
-                let prices: ( number | null )[] = [];
+                let prices: (number | null)[] = [];
 
                 try {
-                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId ))?.data.map(v => v.unit_amount);
-                }catch(e) { prices = [0]; }
+                    prices = (await stripeHandler.getEventTicketPrices(val.productId, val.orgStripeConnectId))?.data.map(v => v.unit_amount);
+                } catch (e) { prices = [0]; }
 
                 let maxPrice, minPrice = 0;
 
@@ -410,7 +410,7 @@ export class EventResolver {
                         longitude: val.eLong,
                         location: val.location
                     },
-                    eventDate: new Date( val.eventDate ),
+                    eventDate: new Date(val.eventDate),
                     miles: Utils.shortenNumericString(miles),
                     timeToDestination: Utils.shortenMinutesToString(miles * 2), // To minitus per mile
                     ticketSold: val.ticketSold || 0,
@@ -422,19 +422,19 @@ export class EventResolver {
                     milesNum: miles
                 };
             })
-        )).filter( val => 
-            ( val.milesNum <= ( user ? user.searchMilesRadius : 20 ) + Utils.milesFilterLeway )
+        )).filter(val =>
+            (val.milesNum <= (user ? user.searchMilesRadius : 20) + Utils.milesFilterLeway)
             || val.id !== null
         );
     }
 
-    @Mutation( () => models.PhotoGallery )
-    async addPhotoGallery( @Arg('token') token: string, @Arg('photoUrl') photoUrl: string, @Arg('eventId') eventId: string ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
+    @Mutation(() => models.PhotoGallery)
+    async addPhotoGallery(@Arg('token') token: string, @Arg('photoUrl') photoUrl: string, @Arg('eventId') eventId: string) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true);
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
 
-        if ( !event ) return new Utils.CustomError("Couldn't find event");
+        if (!event) return new Utils.CustomError("Couldn't find event");
 
         let photo = await models.EventPhotos.create({
             picture: photoUrl,
@@ -447,28 +447,28 @@ export class EventResolver {
         }
     }
 
-    @Mutation( () => String )
-    async deletePhotoGallery( @Arg('token') token: string, @Arg('photoId') photoId: string ) {
-        let org = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true );
+    @Mutation(() => String)
+    async deletePhotoGallery(@Arg('token') token: string, @Arg('photoId') photoId: string) {
+        let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true);
 
-        let photo = await models.EventPhotos.findOne({ where: { id: photoId }, relations: [ 'event', 'event.organizer' ] });
+        let photo = await models.EventPhotos.findOne({ where: { id: photoId }, relations: ['event', 'event.organizer'] });
 
-        if ( !photo ) return "Couldn't find photo";
+        if (!photo) return "Couldn't find photo";
 
-        if ( photo.event.organizer.id !== org.id ) return "You don't have permission to delete this photo";
+        if (photo.event.organizer.id !== org.id) return "You don't have permission to delete this photo";
 
         await photo.remove();
 
         return "Photo deleted successfully";
     }
 
-    @Query( () => models.EventsPage )
-    async getEventsPage( @Arg('eventId') eventId: string, @Arg("userToken", { nullable: true }) userToken?: string ) {
+    @Query(() => models.EventsPage)
+    async getEventsPage(@Arg('eventId') eventId: string, @Arg("userToken", { nullable: true }) userToken?: string) {
         let user = userToken ? await Utils.getUserFromJsWebToken(userToken) : null;
 
-        let event = await models.Events.findOne({ where: { id: eventId }, relations: [ 'organizer', 'prices', 'parent' ] });
+        let event = await models.Events.findOne({ where: { id: eventId }, relations: ['organizer', 'prices', 'parent'] });
 
-        if ( !event ) return new Utils.CustomError("Invalid Event. Please try again.");
+        if (!event) return new Utils.CustomError("Invalid Event. Please try again.");
 
         await models.EventsPageVisit.create({
             guest: user == null,
@@ -476,25 +476,23 @@ export class EventResolver {
             event
         }).save();
 
-        let prices: ( number | null )[] = [];
+        let prices: (number | null)[] = [];
 
         try {
-            prices = (await stripeHandler.getEventTicketPrices(event.productId, event.organizer.stripeConnectId ))?.data.map(v => v.unit_amount);
-        }catch(e) { prices = [0]; console.log(e); }
+            prices = (await stripeHandler.getEventTicketPrices(event.productId, event.organizer.stripeConnectId))?.data.map(v => v.unit_amount);
+        } catch (e) { prices = [0]; console.log(e); }
 
         let max, min = 0;
 
-        if ( prices && prices.length > 0 ) {
-            max = Math.max(...prices as number[] ) / 100;
-            min = Math.min(...prices as number[] ) / 100;
+        if (prices && prices.length > 0) {
+            max = Math.max(...prices as number[]) / 100;
+            min = Math.min(...prices as number[]) / 100;
         }
 
         let ticketAvailable = 0;
         let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { event: { id: event.id } }, cart: { completed: true } });
 
-        if ( event.ticketType === 'limited' ) {
-            for ( let price of event.prices ) ticketAvailable += price.totalTicketAvailable;
-        }
+        for (let price of event.prices) ticketAvailable += price.totalTicketAvailable;
 
         let queryEventId = event.parent ? event.parent.id : event.id;
 
@@ -511,11 +509,12 @@ export class EventResolver {
             name: event.title,
             description: event.description,
             banner: event.banner,
-            eventDate: new Date( event.eventDate ),
-            endEventDate: new Date( event.endEventDate ),
-            ticketType: event.ticketType,
+            eventDate: new Date(event.eventDate),
+            endEventDate: new Date(event.endEventDate),
+            type: event.type,
+            is_monetized: event.is_monetized,
             ticketAvailable: ticketAvailable - ticketSold,
-            userFollowing: ( await models.OrganizersFollowers.findOne({ where: { user: { id: user?.id }, organizer: { id: event.organizer.id } }}) ) ? true : false,
+            userFollowing: (await models.OrganizersFollowers.findOne({ where: { user: { id: user?.id }, organizer: { id: event.organizer.id } } })) ? true : false,
             costRange: prices.length > 1 ? `$${min}-$${max}` : `$${min}`,
             ticketSold,
             photoGallery,
@@ -532,51 +531,51 @@ export class EventResolver {
                 followers: await models.OrganizersFollowers.countBy({ organizer: { id: event.organizer.id } })
             },
             prices: await Promise.all(
-                event.prices.map( async prices => ({ 
+                event.prices.map(async prices => ({
                     id: prices.priceId, title: prices.title, description: prices.description, amount: prices.amount,
-                    ticketAvailable: prices.totalTicketAvailable - ( await models.EventTicketBuys.find({ where: { eventTicket: { id: prices.id }, cart: { completed: true } } }) ).reduce( ( summ, curr ) => summ + curr.quantity, 0 )
+                    ticketAvailable: prices.totalTicketAvailable - (await models.EventTicketBuys.find({ where: { eventTicket: { id: prices.id }, cart: { completed: true } } })).reduce((summ, curr) => summ + curr.quantity, 0)
                 }))
             )
         }
     }
 
-    @Query( () => [ models.EventReviewCard ])
-    async getEventTicketsReviews( @Arg('event_id') event_id: string ) {
+    @Query(() => [models.EventReviewCard])
+    async getEventTicketsReviews(@Arg('event_id') event_id: string) {
         let event = await models.Events.findOne({ where: { id: event_id } });
 
-        if ( !event ) return new Utils.CustomError("Event not found");
+        if (!event) return new Utils.CustomError("Event not found");
 
-        let eventTicketCarts = await models.EventTicketCart.find({ where: { eventId: event_id, reviewCompleted: true, completed: true }, relations: [ 'review' ] });
+        let eventTicketCarts = await models.EventTicketCart.find({ where: { eventId: event_id, reviewCompleted: true, completed: true }, relations: ['review'] });
 
-        return eventTicketCarts.map( carts => ({
+        return eventTicketCarts.map(carts => ({
             photo: carts.review.photo || event?.banner,
             name: carts.review.name,
             rating: carts.review.rating,
             description: carts.review.description,
             dateCompleted: carts.review.dateReviewCompleted
-        }) )
+        }))
     }
 
-    @Query( () => models.EventTicketReview )
-    async getTicketReview( @Arg('cart_id') cart_id: string ) {
+    @Query(() => models.EventTicketReview)
+    async getTicketReview(@Arg('cart_id') cart_id: string) {
 
         let eventTicketCart = await models.EventTicketCart.findOne({
             where: {
                 id: cart_id
             },
-            relations: [ 'review' ]
+            relations: ['review']
         });
 
 
-        if ( !eventTicketCart ) return new Utils.CustomError("Ticket Cart not found");
+        if (!eventTicketCart) return new Utils.CustomError("Ticket Cart not found");
 
         let event = await models.Events.findOne({ where: { id: eventTicketCart.eventId } });
 
-        if ( !event ) return new Utils.CustomError('Couldn\'t find event find event');
-        
+        if (!event) return new Utils.CustomError('Couldn\'t find event find event');
+
         let review: models.EventTicketCartReview;
 
-        if ( eventTicketCart.review ) review = eventTicketCart.review;
+        if (eventTicketCart.review) review = eventTicketCart.review;
         else {
             eventTicketCart.review = models.EventTicketCartReview.create({
                 name: eventTicketCart.name,
@@ -590,7 +589,7 @@ export class EventResolver {
 
         await review.save();
         await eventTicketCart.save();
-        
+
         return {
             eventId: event.id,
             eventBanner: event.banner,
@@ -606,22 +605,22 @@ export class EventResolver {
         }
     }
 
-    @Mutation( () => String )
-    async submitTicketReview( @Arg('cart_id') cart_id: string, @Arg('args', () => models.EventTicketReviewInput ) args: models.EventTicketReviewInput ) {
+    @Mutation(() => String)
+    async submitTicketReview(@Arg('cart_id') cart_id: string, @Arg('args', () => models.EventTicketReviewInput) args: models.EventTicketReviewInput) {
         let eventTicketCart = await models.EventTicketCart.findOne({
             where: {
                 id: cart_id
             },
-            relations: [ 'review' ]
+            relations: ['review']
         });
 
-        if ( !eventTicketCart ) return new Utils.CustomError("Ticket Cart not found");
+        if (!eventTicketCart) return new Utils.CustomError("Ticket Cart not found");
 
         eventTicketCart.name = args.name;
 
         let review: models.EventTicketCartReview;
 
-        if ( eventTicketCart.review ) {
+        if (eventTicketCart.review) {
             review = eventTicketCart.review;
 
             review.name = eventTicketCart.name;
@@ -651,15 +650,15 @@ export class EventResolver {
         return "Saved Successfully";
     }
 
-    @Query( () => models.EventTicket )
-    async getTicketBuy( @Arg('cart_id') cart_id: string ) {
-        let cart = await models.EventTicketCart.findOne({ where: { id: cart_id }, relations: [ 'tickets' ] });
+    @Query(() => models.EventTicket)
+    async getTicketBuy(@Arg('cart_id') cart_id: string) {
+        let cart = await models.EventTicketCart.findOne({ where: { id: cart_id }, relations: ['tickets'] });
 
-        if ( !cart ) return new Utils.CustomError("Couldn't find purchase");
+        if (!cart) return new Utils.CustomError("Couldn't find purchase");
 
         let event = await models.Events.findOne({ where: { id: cart?.eventId } });
 
-        if ( !event ) return new Utils.CustomError('Couldn\'t find event find event');
+        if (!event) return new Utils.CustomError('Couldn\'t find event find event');
 
         return {
             id: event.id,
@@ -669,17 +668,17 @@ export class EventResolver {
             buyer: {
                 name: cart.name ? cart.name : "GUEST",
                 email: cart.email ? cart.email : "GUEST_EMAIL",
-                admitCount: cart.tickets.reduce( (a, b) => a + b.quantity, 0)
+                admitCount: cart.tickets.reduce((a, b) => a + b.quantity, 0)
             },
             cart_id: cart_id
         }
     }
 
-    @Mutation( () => String ) 
-    async confirmTicketCheckIn( @Arg('cart_id') cart_id: string ) {
+    @Mutation(() => String)
+    async confirmTicketCheckIn(@Arg('cart_id') cart_id: string) {
         let cart = await models.EventTicketCart.findOne({ where: { id: cart_id }, relations: ['tickets'] });
 
-        if ( !cart ) return new Utils.CustomError("Tickets not found.");
+        if (!cart) return new Utils.CustomError("Tickets not found.");
 
         cart.checkIn = true;
         cart.dateCheckIn = new Date();
@@ -687,23 +686,42 @@ export class EventResolver {
         return "Checked in successfully.";
     }
 
-    @Mutation( () => models.CreateTicketSellClientSecretResponse )
-    async createTicketSellClientSecret( @Arg('eventId') eventId: string,  @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] } ) prices: models.TicketBuyClientSecretUpdate[], @Arg('userToken', { nullable: true } ) userToken?: string ) {
+    @Mutation(() => models.CreateTicketSellClientSecretResponse)
+    async createCYOPClientSecret(@Arg('eventId') eventId: string, @Arg('price') price: number, @Arg('userToken', { nullable: true }) userToken?: string) {
         let user: models.Users | null = null;
 
         try {
-            user = await Utils.getUserFromJsWebToken( userToken || "" );
-        }catch (e) { console.log(e); }
+            user = await Utils.getUserFromJsWebToken(userToken || "");
+        } catch (e) { console.log(e); }
 
-        let event = await models.Events.findOne({ where: { id: eventId }, relations: [ 'organizer', 'prices' ] });
+        let event = await models.Events.findOne({ where: { id: eventId }, relations: ['organizer'] });
 
-        if ( !event ) return new Utils.CustomError("Event not found.");
+        if (!event) return new Utils.CustomError("Event not found.");
 
-        if ( !event.visible ) return new Utils.CustomError("Event not found.");
+        if (!event.visible) return new Utils.CustomError("Event not found.");
 
-        let items = event.prices.filter( price => prices.find( p => p.id === price.priceId ) );
+        if (event.type !== models.EventType.CYOP) return new Utils.CustomError("Wrong type of Event.");
 
-        if ( items.reduce( ( prev, curr ) => prev + curr.amount, 0 ) === 0 ) {
+        let cyopTicket = await models.EventTickets.findOne({ where: { id: event.cyop_id } });
+
+        if (!cyopTicket) return new Utils.CustomError("Event not found.");
+
+        // Case 1: This is a FREE CYOP ticket (configured with 0,0)
+        if (cyopTicket.minPrice === 0 && cyopTicket.maxPrice === 0) {
+            // The only acceptable price for a free ticket is 0.
+            if (price !== 0) {
+                return new Utils.CustomError("This is a free event. The price must be $0.");
+            }
+        }
+        // Case 2: This is a PAID CYOP ticket (configured with a positive range)
+        else {
+            // Now, and only now, check if the price is within the paid range.
+            if (price < cyopTicket.minPrice || price > cyopTicket.maxPrice) {
+                return new Utils.CustomError("Price out of range.");
+            }
+        }
+
+        if (price === 0) {
             let cart = await models.EventTicketCart.create({
                 completed: false,
                 eventId: event.id
@@ -714,75 +732,122 @@ export class EventResolver {
                 cartId: cart.id
             }
         } // We don't need to create a payment intent for free events
-        else if ( !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found."); // organizer not verified means no money being paid either
+        else if (!event.organizer.stripeAccountVerified) return new Utils.CustomError("Event not found."); // organizer not verified means no money being paid either
 
-        for ( let price of prices ) {
-            let ticket = await models.EventTickets.findOneBy({ priceId: price.id });
-
-            if ( !ticket ) return new Utils.CustomError('Ticket not found');
-
-            let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { id: ticket.id }, cart: { completed: true } });
-
-            if ( ticketSold + price.quantity > ticket.totalTicketAvailable ) return new Utils.CustomError('Ticket not available for sale.');
-        }
-
-        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId, event.id, prices, user ? user.stripeCustomerId : undefined ) )
+        return (await stripeHandler.createPaymentIntent(event.organizer.stripeConnectId, event.id, price * 100, user ? user.stripeCustomerId : undefined, event.type))
     }
 
-    @Mutation( ( ) => String )
-    async updateTicketSellClientSecret( @Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] } ) prices: models.TicketBuyClientSecretUpdate[] ) {
-        const event = await models.Events.findOne({ where: { id : eventId }, relations: [ 'organizer' ] });
+    @Mutation(() => models.CreateTicketSellClientSecretResponse)
+    async createPaidTicketClientSecret(@Arg('eventId') eventId: string, @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] }) prices: models.TicketBuyClientSecretUpdate[], @Arg('userToken', { nullable: true }) userToken?: string) {
+        let user: models.Users | null = null;
 
-        if ( !event ) return new Utils.CustomError("Event not found.");
+        try {
+            user = await Utils.getUserFromJsWebToken(userToken || "");
+        } catch (e) { console.log(e); }
 
-        if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
-        
-        for ( let price of prices ) {
+        let event = await models.Events.findOne({ where: { id: eventId }, relations: ['organizer', 'prices'] });
+
+        if (!event) return new Utils.CustomError("Event not found.");
+
+        if (!event.visible) return new Utils.CustomError("Event not found.");
+
+        if (event.type !== models.EventType.PAID_TICKET) return new Utils.CustomError("Wrong type of Event.")
+
+        let items = event.prices.filter(price => prices.find(p => p.id === price.priceId));
+
+        if (items.reduce((prev, curr) => prev + curr.amount, 0) === 0) {
+            let cart = await models.EventTicketCart.create({
+                completed: false,
+                eventId: event.id
+            }).save();
+
+            return {
+                client_secret: '',
+                cartId: cart.id
+            }
+        } // We don't need to create a payment intent for free events
+        else if (!event.organizer.stripeAccountVerified) return new Utils.CustomError("Event not found."); // organizer not verified means no money being paid either
+
+        for (let price of prices) {
             let ticket = await models.EventTickets.findOneBy({ priceId: price.id });
 
-            if ( !ticket ) return new Utils.CustomError('Ticket not found');
+            if (!ticket) return new Utils.CustomError('Ticket not found');
 
             let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { id: ticket.id }, cart: { completed: true } });
 
-            if ( ticketSold + price.quantity > ticket.totalTicketAvailable ) return new Utils.CustomError('Ticket not available for sale.');
+            if (ticketSold + price.quantity > ticket.totalTicketAvailable) return new Utils.CustomError('Ticket not available for sale.');
         }
-        
-        const intent = await stripeHandler.updatePaymentIntent( id, prices, event.organizer.stripeConnectId );
+
+        return (await stripeHandler.createPaymentIntent(event.organizer.stripeConnectId, event.id, prices, user ? user.stripeCustomerId : undefined, event.type))
+    }
+
+    @Mutation(() => String)
+    async updatePaidTicketClientSecret(@Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] }) prices: models.TicketBuyClientSecretUpdate[]) {
+        const event = await models.Events.findOne({ where: { id: eventId }, relations: ['organizer'] });
+
+        if (!event) return new Utils.CustomError("Event not found.");
+
+        if (!event.visible || !event.organizer.stripeAccountVerified) return new Utils.CustomError("Event not found.");
+
+        if (event.type !== models.EventType.PAID_TICKET) return new Utils.CustomError("Wrong type of Event.")
+
+        const intent = await stripeHandler.updatePaymentIntent(id, prices, event.organizer.stripeConnectId, event.type);
 
         return intent.status;
     }
 
-    @Mutation( () => String )
-    async registerFreeEventTickets( @Arg('args') args: models.RegisterFreeEventInput ) {
-        
-        let event = await models.Events.findOne({ where: { id: args.eventId }, relations: [ 'organizer', "prices" ] });
+    @Mutation(() => String)
+    async updateCYOPClientSecret(@Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('price') price: number) {
+        const event = await models.Events.findOne({ where: { id: eventId }, relations: ['organizer'] });
 
-        if ( !event ) return new Utils.CustomError("Event not found");
+        if (!event) return new Utils.CustomError("Event not found.");
 
-        let cart = await models.EventTicketCart.findOne({ where: { id: args.cartId }, relations: [ 'tickets' ] });
+        if (!event.visible || !event.organizer.stripeAccountVerified) return new Utils.CustomError("Event not found.");
 
-        if ( !cart ) {
+        if (event.type !== models.EventType.CYOP) return new Utils.CustomError("Wrong type of Event.");
+
+        let cyopTicket = await models.EventTickets.findOne({ where: { id: event.cyop_id } });
+
+        if (!cyopTicket) return new Utils.CustomError("Event not found.");
+
+        if (price < cyopTicket.minPrice || price > cyopTicket.maxPrice) return new Utils.CustomError("Price out of range.");
+
+        const intent = await stripeHandler.updatePaymentIntent(id, price * 100, event.organizer.stripeConnectId, event.type);
+
+        return intent.status;
+    }
+
+    @Mutation(() => String)
+    async registerFreeEventTickets(@Arg('args') args: models.RegisterFreeEventInput) {
+
+        let event = await models.Events.findOne({ where: { id: args.eventId }, relations: ['organizer', "prices"] });
+
+        if (!event) return new Utils.CustomError("Event not found");
+
+        let cart = await models.EventTicketCart.findOne({ where: { id: args.cartId }, relations: ['tickets'] });
+
+        if (!cart) {
             cart = await models.EventTicketCart.create({
                 completed: false,
                 eventId: event.id
             }).save()
         };
 
-        if ( cart.completed ) return new Utils.CustomError("Cart already completed");
+        if (cart.completed) return new Utils.CustomError("Cart already completed");
 
-        let user : models.Users | null = null;
+        let user: models.Users | null = null;
         try {
-            user = await Utils.getUserFromJsWebToken( args.userToken || "" );
-        }catch{ user = null }
+            user = await Utils.getUserFromJsWebToken(args.userToken || "");
+        } catch { user = null }
 
-        for ( let i = 0; i < args.tickets.length; i++ ) {
-            let ticket = args.tickets[ i ];
+        for (let i = 0; i < args.tickets.length; i++) {
+            let ticket = args.tickets[i];
 
-            let eventTicket = await models.EventTickets.findOne({ where: { priceId: ticket.id }});
+            let eventTicket = await models.EventTickets.findOne({ where: { priceId: ticket.id } });
 
-            if ( !eventTicket ) return new Utils.CustomError("Ticket not found");
+            if (!eventTicket) return new Utils.CustomError("Ticket not found");
 
-            if ( eventTicket.amount !== 0 ) return new Utils.CustomError("Ticket not free");
+            if (eventTicket.amount !== 0) return new Utils.CustomError("Ticket not free");
 
             let ticketBuy = models.EventTicketBuys.create({
                 type: user ? 'guest' : "user",
@@ -793,7 +858,7 @@ export class EventResolver {
                 eventTicket,
                 cart
             });
-            
+
             await ticketBuy.save(); // Ensure ticket buy is saved
 
             if (!cart.tickets) cart.tickets = [];
@@ -809,7 +874,7 @@ export class EventResolver {
 
         await cart.save();
 
-        if ( args.email ) Utils.Mailer.sendTicketBuyConfirmation({ name: args.name, eventName: event.title, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?cart_id=${cart.id}`, qrCode: cart.qrCode, email: args.email });
+        if (args.email) Utils.Mailer.sendTicketBuyConfirmation({ name: args.name, eventName: event.title, ticketLink: `${Utils.getCravingsWebUrl()}/events/${event.id}/ticket?cart_id=${cart.id}`, qrCode: cart.qrCode, email: args.email });
 
         return "Registered For Event Successfully"
     }

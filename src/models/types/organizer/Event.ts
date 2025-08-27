@@ -266,8 +266,6 @@ export class EventsPage {
 
     @Field() endEventDate: Date;
 
-    @Field() ticketType: string;
-
     @Field() ticketAvailable: number;
 
     @Field( () => [ PhotoGallery ] ) photoGallery: PhotoGallery[];

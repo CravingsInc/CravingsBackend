@@ -555,6 +555,51 @@ export class OrganizerResolver {
 
         event.productId = stripeEvent.id;
 
+        let eventTicket: models.EventTickets;
+        let amount = 0;
+
+        if ( event.type === models.EventType.CYOP ) {
+
+            eventTicket = await models.EventTickets.create({
+                title: "Choose Your Own Price",
+                description: "Donation Ticket",
+                event,
+                minPrice: 0,
+                maxPrice: 10000,
+                currency: 'usd'
+            }).save();
+        }else if ( event.type === models.EventType.REGISTRATION ) {
+            eventTicket = await models.EventTickets.create({
+                title: "General Admission",
+                description: "General Admission Ticket",
+                event,
+                amount: 0,
+                currency: 'usd'
+            }).save();
+        }
+
+        if ( event.type === models.EventType.CYOP || event.type === models.EventType.REGISTRATION ) {
+            try {
+                let stripeTicket = await stripeHandler.createEventPrice(org.stripeConnectId, org.id, event.id, event.productId, amount, 'usd');
+    
+                eventTicket!.priceId = stripeTicket.id;
+    
+                await eventTicket!.save();
+
+                event.type === models.EventType.CYOP ? 
+                    event.cyop_id = eventTicket!.id : 
+                    event.registration_id = eventTicket!.id;
+
+            } catch (err) {
+    
+                console.log(err);
+    
+                await eventTicket!.remove(); // want to self clean database
+    
+                return new Utils.CustomError("Problem creating event ticket")
+            }
+        }
+
         await event.save();
 
         return event;
@@ -572,10 +617,19 @@ export class OrganizerResolver {
             title: parentEvent.title,
             description: parentEvent.description,
             banner: parentEvent.banner,
+
             latitude: parentEvent.latitude,
             longitude: parentEvent.longitude,
+
             location: parentEvent.location,
-            ticketType: parentEvent.ticketType,
+
+            photoGallery: parentEvent.photoGallery,
+            prices: parentEvent.prices,
+
+            type: parentEvent.type,
+            is_public: parentEvent.is_public,
+            is_monetized: parentEvent.is_monetized,
+
             organizer: { id: org.id },
             // If event alread has a parent we will use that parent, else we will make that event the parent.
             parent: { id: parentEvent.parent ? parentEvent.parent.id : parentEvent.id },
@@ -782,7 +836,7 @@ export class OrganizerResolver {
 
         let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: org.id } } });
 
-        if (!event) return new Utils.CustomError("Event does not exist");
+        if (!event || event === null) return new Utils.CustomError("Event does not exist");
 
         let tickets = await models.EventTickets.find({ where: { event: { id: eventId } } });
 
@@ -834,7 +888,7 @@ export class OrganizerResolver {
                     },
                     tickets: cart.tickets.map(ticket => ({
                         id: ticket.id,
-                        title: ticket.eventTicket.title,
+                        title: ticket.eventTicket,
                         description: ticket.eventTicket.description,
                         quantity: ticket.quantity,
                         price: ticket.eventTicket.amount
