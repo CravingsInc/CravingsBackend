@@ -538,17 +538,20 @@ export class OrganizerResolver {
     }
 
     @Mutation(() => models.Events)
-    async createEvent(@Arg('token') token: string, @Arg('title') title: string, @Arg('description') description: string) {
+    async createEvent(@Arg('token') token: string, @Arg('args', () => models.CreateEventInput ) args: models.CreateEventInput ) {
         let org = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true);
 
         let event = await models.Events.create({
-            title,
-            description,
+            title: args.title,
+            description: args.description,
+            type: args.type,
+            is_public: args.is_public,
+            is_monetized: args.is_monetized,
             banner: "",
             organizer: { id: org.id }
         }).save();
 
-        let stripeEvent = await stripeHandler.createEvent(org.stripeConnectId, org.id, event.id, title);
+        let stripeEvent = await stripeHandler.createEvent(org.stripeConnectId, org.id, event.id, args.title, { ...args });
 
         event.productId = stripeEvent.id;
 
