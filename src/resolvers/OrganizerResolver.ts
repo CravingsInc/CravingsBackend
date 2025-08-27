@@ -565,7 +565,7 @@ export class OrganizerResolver {
                 description: "Donation Ticket",
                 event,
                 minPrice: 0,
-                maxPrice: 0,
+                maxPrice: 10000,
                 currency: 'usd'
             }).save();
         }else if ( event.type === models.EventType.REGISTRATION ) {
@@ -888,9 +888,7 @@ export class OrganizerResolver {
                     },
                     tickets: cart.tickets.map(ticket => ({
                         id: ticket.id,
-                        title: ticket.eventTicket ? ticket.eventTicket.title : 
-                            event?.type
-                        ,
+                        title: ticket.eventTicket,
                         description: ticket.eventTicket.description,
                         quantity: ticket.quantity,
                         price: ticket.eventTicket.amount

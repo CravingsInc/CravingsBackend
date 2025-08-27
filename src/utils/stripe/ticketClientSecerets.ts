@@ -27,7 +27,9 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
     }) );
   
     totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
-  }else totalPrice = prices;
+  }else {
+    totalPrice = prices
+  };
   
   const paymentIntent = await stripe.paymentIntents.create({
     amount: totalPrice > 0.5 ? totalPrice : 0.5,
