@@ -24,8 +24,16 @@ export class EventTickets extends BaseEntity {
     priceId: string;
 
     @Field()
-    @Column({ type: 'float' })
+    @Column({ type: 'float', default: 0 })
     amount: number;
+
+    @Field()
+    @Column({ type: 'float', default: 0 })
+    minPrice: number;
+
+    @Field()
+    @Column({ type: 'float', default: 0 })
+    maxPrice: number;
 
     @Field()
     @Column({ default: 'usd' })

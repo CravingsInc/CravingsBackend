@@ -492,9 +492,7 @@ export class EventResolver {
         let ticketAvailable = 0;
         let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { event: { id: event.id } }, cart: { completed: true } });
 
-        if ( event.ticketType === 'limited' ) {
-            for ( let price of event.prices ) ticketAvailable += price.totalTicketAvailable;
-        }
+        for ( let price of event.prices ) ticketAvailable += price.totalTicketAvailable;
 
         let queryEventId = event.parent ? event.parent.id : event.id;
 
@@ -513,7 +511,8 @@ export class EventResolver {
             banner: event.banner,
             eventDate: new Date( event.eventDate ),
             endEventDate: new Date( event.endEventDate ),
-            ticketType: event.ticketType,
+            type: event.type,
+            is_monetized: event.is_monetized,
             ticketAvailable: ticketAvailable - ticketSold,
             userFollowing: ( await models.OrganizersFollowers.findOne({ where: { user: { id: user?.id }, organizer: { id: event.organizer.id } }}) ) ? true : false,
             costRange: prices.length > 1 ? `$${min}-$${max}` : `$${min}`,
@@ -688,7 +687,45 @@ export class EventResolver {
     }
 
     @Mutation( () => models.CreateTicketSellClientSecretResponse )
-    async createTicketSellClientSecret( @Arg('eventId') eventId: string,  @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] } ) prices: models.TicketBuyClientSecretUpdate[], @Arg('userToken', { nullable: true } ) userToken?: string ) {
+    async createCYOPClientSecret( @Arg('eventId') eventId: string, @Arg('price') price: number, @Arg('userToken', { nullable: true } ) userToken?: string ) {
+        let user: models.Users | null = null;
+
+        try {
+            user = await Utils.getUserFromJsWebToken( userToken || "" );
+        }catch (e) { console.log(e); }
+
+        let event = await models.Events.findOne({ where: { id: eventId }, relations: [ 'organizer' ] });
+
+        if ( !event ) return new Utils.CustomError("Event not found.");
+
+        if ( !event.visible ) return new Utils.CustomError("Event not found.");
+
+        if ( event.type !== models.EventType.CYOP ) return new Utils.CustomError("Wrong type of Event.");
+
+        let cyopTicket = await models.EventTickets.findOne({ where: { id: event.cyop_id }});
+
+        if ( !cyopTicket ) return new Utils.CustomError("Event not found.");
+
+        if ( price < cyopTicket.minPrice || price > cyopTicket.maxPrice ) return new Utils.CustomError("Price out of range.");
+
+        if ( price === 0 ) {
+            let cart = await models.EventTicketCart.create({
+                completed: false,
+                eventId: event.id
+            }).save();
+
+            return {
+                client_secret: '',
+                cartId: cart.id
+            }
+        } // We don't need to create a payment intent for free events
+        else if ( !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found."); // organizer not verified means no money being paid either
+
+        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId, event.id, price * 100, user ? user.stripeCustomerId : undefined, event.type ) )
+    }
+
+    @Mutation( () => models.CreateTicketSellClientSecretResponse )
+    async createPaidTicketClientSecret( @Arg('eventId') eventId: string, @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] } ) prices: models.TicketBuyClientSecretUpdate[], @Arg('userToken', { nullable: true } ) userToken?: string ) {
         let user: models.Users | null = null;
 
         try {
@@ -700,6 +737,8 @@ export class EventResolver {
         if ( !event ) return new Utils.CustomError("Event not found.");
 
         if ( !event.visible ) return new Utils.CustomError("Event not found.");
+
+        if ( event.type !== models.EventType.PAID_TICKET ) return new Utils.CustomError("Wrong type of Event.")
 
         let items = event.prices.filter( price => prices.find( p => p.id === price.priceId ) );
 
@@ -726,28 +765,41 @@ export class EventResolver {
             if ( ticketSold + price.quantity > ticket.totalTicketAvailable ) return new Utils.CustomError('Ticket not available for sale.');
         }
 
-        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId, event.id, prices, user ? user.stripeCustomerId : undefined ) )
+        return ( await stripeHandler.createPaymentIntent( event.organizer.stripeConnectId, event.id, prices, user ? user.stripeCustomerId : undefined, event.type ) )
     }
 
     @Mutation( ( ) => String )
-    async updateTicketSellClientSecret( @Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] } ) prices: models.TicketBuyClientSecretUpdate[] ) {
+    async updatePaidTicketClientSecret( @Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('prices', () => [models.TicketBuyClientSecretUpdate], { defaultValue: [] } ) prices: models.TicketBuyClientSecretUpdate[] ) {
         const event = await models.Events.findOne({ where: { id : eventId }, relations: [ 'organizer' ] });
 
         if ( !event ) return new Utils.CustomError("Event not found.");
 
         if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
         
-        for ( let price of prices ) {
-            let ticket = await models.EventTickets.findOneBy({ priceId: price.id });
-
-            if ( !ticket ) return new Utils.CustomError('Ticket not found');
-
-            let ticketSold = await models.EventTicketBuys.countBy({ eventTicket: { id: ticket.id }, cart: { completed: true } });
-
-            if ( ticketSold + price.quantity > ticket.totalTicketAvailable ) return new Utils.CustomError('Ticket not available for sale.');
-        }
+        if ( event.type !== models.EventType.PAID_TICKET ) return new Utils.CustomError("Wrong type of Event.")
         
-        const intent = await stripeHandler.updatePaymentIntent( id, prices, event.organizer.stripeConnectId );
+        const intent = await stripeHandler.updatePaymentIntent( id, prices, event.organizer.stripeConnectId, event.type );
+
+        return intent.status;
+    }
+
+    @Mutation( () => String )
+    async updateCYOPClientSecret( @Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('price') price: number ) {
+        const event = await models.Events.findOne({ where: { id : eventId }, relations: [ 'organizer' ] });
+
+        if ( !event ) return new Utils.CustomError("Event not found.");
+
+        if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError("Event not found.");
+        
+        if ( event.type !== models.EventType.CYOP ) return new Utils.CustomError("Wrong type of Event.");
+
+        let cyopTicket = await models.EventTickets.findOne({ where: { id: event.cyop_id }});
+
+        if ( !cyopTicket ) return new Utils.CustomError("Event not found.");
+
+        if ( price < cyopTicket.minPrice || price > cyopTicket.maxPrice ) return new Utils.CustomError("Price out of range.");
+
+        const intent = await stripeHandler.updatePaymentIntent( id, price * 100, event.organizer.stripeConnectId, event.type );
 
         return intent.status;
     }

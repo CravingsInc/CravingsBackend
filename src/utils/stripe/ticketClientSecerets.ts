@@ -7,19 +7,27 @@ export enum PAYMENT_INTENT_TYPE {
   TICKET = "TICKET"
 }
 
-export const createPaymentIntent = async ( stripeAccount: string, eventId: string, prices: models.TicketBuyClientSecretUpdate[], customer?: string ) => {
+export const createPaymentIntent = async ( stripeAccount: string, eventId: string, prices: models.TicketBuyClientSecretUpdate[] | number, customer?: string, eventType?: models.EventType ) => {
   const cart = await models.EventTicketCart.create({
     completed: false,
     eventId
   }).save();
 
-  let priceList = await Promise.all( prices.map( async ( price ) => {
-    const p = await stripe.prices.retrieve( price.id, { stripeAccount } );
+  let totalPrice: number;
 
-    return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
-  }) );
+  let priceList : { amount: number | null, quantity: number, id: string }[] = !Array.isArray(prices) ? [ 
+    { amount: prices, quantity: 1, id: eventType || models.EventType.PAID_TICKET }
+  ] : []
 
-  const totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
+  if ( Array.isArray( prices ) ) {
+    priceList = await Promise.all( prices.map( async ( price ) => {
+      const p = await stripe.prices.retrieve( price.id, { stripeAccount } );
+  
+      return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
+    }) );
+  
+    totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
+  }else totalPrice = prices;
   
   const paymentIntent = await stripe.paymentIntents.create({
     amount: totalPrice > 0.5 ? totalPrice : 0.5,
@@ -37,6 +45,7 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
     metadata: {
       customer: customer || null,
       type: PAYMENT_INTENT_TYPE.TICKET,
+      eventType: eventType || models.EventType.PAID_TICKET,
       eventId,
       cart: cart.id,
       priceList: JSON.stringify( priceList )
@@ -52,16 +61,21 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
   };
 }
 
-export const updatePaymentIntent = async ( id: string, prices: models.TicketBuyClientSecretUpdate[], stripeAccount: string ) => {
+export const updatePaymentIntent = async ( id: string, prices: models.TicketBuyClientSecretUpdate[] | number, stripeAccount: string, eventType?: models.EventType ) => {
   const paymentIntent = await stripe.paymentIntents.retrieve(id);
 
-  let priceList = await Promise.all( prices.map( async ( price ) => {
-    const p = await stripe.prices.retrieve( price.id, { stripeAccount } );
+  let totalPrice: number;
 
-    return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
-  }) );
+  let priceList = Array.isArray( prices ) ? 
+    (
+      await Promise.all( prices.map( async ( price ) => {
+        const p = await stripe.prices.retrieve( price.id, { stripeAccount } );
+    
+        return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
+      }) )
+    ) : [ { amount: prices, quantity: 1, id: eventType || models.EventType.PAID_TICKET } ]
 
-  const totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
+  totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
 
   const intent = await stripe.paymentIntents.update(
     paymentIntent.id,

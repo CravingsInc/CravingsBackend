@@ -52,12 +52,12 @@ export class Events extends BaseEntity {
     is_public: boolean; // If this event is public or private, private events are only accessible via direct link, meaning this event won't show up on app, and it won't be searchable
 
     @Field()
-    @Column({ default: 0 })
-    minPrice: number; // Only in use in CYOP events;
+    @Column()
+    cyop_id: string; // ID for the choose your own price ticket
 
     @Field()
-    @Column({ default: 0 })
-    maxPrice: number; // Only in use in CYOP events;
+    @Column()
+    registration_id: string; // ID for the registration ticket
 
     @Field()
     @Column({ default: "" })
@@ -74,10 +74,6 @@ export class Events extends BaseEntity {
     @Field()
     @Column({ default: '' })
     location: string;
-
-    @Field()
-    @Column({ default: 'limited' })
-    ticketType: 'infinite' | 'limited';
 
     @Field()
     @Column({ default: "America/New_York" })
