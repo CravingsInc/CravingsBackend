@@ -35,7 +35,7 @@ export class Events extends BaseEntity {
 
     @Field()
     @Column({ default: true })
-    is_monetized: boolean; // If this event is monetized or not, this is useful for if event is registration only but your taking payment
+    is_monetized: boolean; // If this event is monetized or not, this is useful for if event is registration only but you're taking payment
 
     @Field()
     @Column({ default: true })
