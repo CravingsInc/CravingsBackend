@@ -27,7 +27,19 @@ export class Events extends BaseEntity {
 
     @Field()
     @Column({ default: false })
-    visible: boolean;
+    visible: boolean; // If this event is available for people to start viewing and buying tickets for
+
+    @Field()
+    @Column({ default: "PAID_TICKET" })
+    type: "PAID_TICKET" | "CYOP" | "REGISTRATION"; // Type of event it is
+
+    @Field()
+    @Column({ default: true })
+    is_monetized: boolean; // If this event is monetized or not, this is useful for if event is registration only but your taking payment
+
+    @Field()
+    @Column({ default: true })
+    is_public: boolean; // If this event is public or private, private events are only accessible via direct link, meaning this event wont show up on app, and it won't be searchable
 
     @Field()
     @Column({ default: "" })
