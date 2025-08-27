@@ -9,7 +9,7 @@ export const createEvent = async ( orgId: string, event: typeof migrationData.ev
     let is_monetized: boolean;
     let is_public = Math.floor( Math.random() * 2 ) === 0 ? true : false;
 
-    let randomType = Math.floor( Math.random() * 2 );
+    let randomType = Math.floor( Math.random() * 3 );
 
     switch ( randomType ) {
         case 0:
