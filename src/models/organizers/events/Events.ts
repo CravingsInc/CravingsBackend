@@ -39,7 +39,7 @@ export class Events extends BaseEntity {
 
     @Field()
     @Column({ default: true })
-    is_public: boolean; // If this event is public or private, private events are only accessible via direct link, meaning this event wont show up on app, and it won't be searchable
+    is_public: boolean; // If this event is public or private, private events are only accessible via direct link, meaning this event won't show up on app, and it won't be searchable
 
     @Field()
     @Column({ default: "" })
