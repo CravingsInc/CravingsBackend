@@ -6,6 +6,12 @@ import { EventsPageVisit } from "../../analysis";
 import { Utils } from "../../../utils";
 import { EventPhotos } from "./EventPhotos";
 
+export enum EventType {
+    PAID_TICKET = 'PAID_TICKET',
+    CYOP = 'CYOP',
+    REGISTRATION = 'REGISTRATION'
+}  
+
 @Entity()
 @ObjectType()
 export class Events extends BaseEntity {
@@ -29,9 +35,13 @@ export class Events extends BaseEntity {
     @Column({ default: false })
     visible: boolean; // If this event is available for people to start viewing and buying tickets for
 
-    @Field()
-    @Column({ default: "PAID_TICKET" })
-    type: "PAID_TICKET" | "CYOP" | "REGISTRATION"; // Type of event it is
+    @Field(() => EventType)
+    @Column({ 
+      type: 'enum',
+      enum: EventType,
+      default: EventType.PAID_TICKET
+    })
+    type: EventType; // Type of event it is
 
     @Field()
     @Column({ default: true })
