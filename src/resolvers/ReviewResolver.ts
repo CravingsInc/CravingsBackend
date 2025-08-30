@@ -110,6 +110,33 @@ export class ReviewResolver {
         return campaign;
     }
 
+    @Mutation(() => ReviewCampaign)
+    @UseMiddleware(isAuth)
+    async modifyReviewCampaign(
+        @Arg("campaignId") campaignId: string,
+        @Arg("newTitle") newTitle: string,
+        @Arg("newDescription") newDescription: string,
+        @Arg("newFor") newFor: "all" | "ticket_type"
+    ) {
+        // Find the campaign with the given ID
+        const campaignToModify = await ReviewCampaign.findOne({ where: { id: campaignId } });
+
+        if (!campaignToModify) {
+            throw new Error("Review campaign not found");
+        }
+
+        // Update the title, description, and for of the campaign
+        campaignToModify.title = newTitle;
+        campaignToModify.description = newDescription;
+        campaignToModify.for = newFor;
+
+        await campaignToModify.save();
+
+        console.log(`Review campaign with ID ${campaignId} has been modified.`);
+
+        return campaignToModify;
+    }
+
     @Mutation(() => Boolean)
     @UseMiddleware(isAuth)
     async deleteReviewCampaign(@Arg("id") id: string) {
