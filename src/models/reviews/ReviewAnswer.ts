@@ -27,11 +27,11 @@ export class ReviewAnswer extends BaseEntity {
     })
     questionType: "text" | "range" | "dropdown";
 
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Column({ nullable: true })
     textAnswer: string;
 
-    @Field({ nullable: true })
+    @Field(() => Number, { nullable: true })
     @Column({ nullable: true, type: "int" })
     rangeAnswer: number;
 

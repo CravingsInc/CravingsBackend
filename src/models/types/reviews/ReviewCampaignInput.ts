@@ -1,4 +1,11 @@
-import { InputType, Field, ID } from "type-graphql";
+import { InputType, Field, ID, ObjectType } from "type-graphql";
+import { ReviewCampaign } from "../../reviews/ReviewCampaign";
+
+@ObjectType()
+export class CreateReviewCampaignPayload {
+    @Field(() => ReviewCampaign, { nullable: true })
+    reviewCampaign: ReviewCampaign;
+}
 
 @InputType()
 export class DropDownInput {
@@ -30,10 +37,16 @@ export class ReviewQuestionInput {
 @InputType()
 export class CreateReviewCampaignInput {
     @Field()
-    name: string;
+    title: string;
 
-    @Field()
-    description: string;
+    @Field({ nullable: true })
+    description?: string;
+
+    @Field({ nullable: true })
+    startDate?: string;
+
+    @Field({ nullable: true })
+    endDate?: string;
 
     @Field()
     eventId: string;
@@ -54,10 +67,16 @@ export class UpdateReviewCampaignInput {
     id: string;
 
     @Field({ nullable: true })
-    name?: string;
+    title?: string;
 
     @Field({ nullable: true })
     description?: string;
+
+    @Field({ nullable: true })
+    startDate?: string;
+
+    @Field({ nullable: true })
+    endDate?: string;
 
     @Field({ nullable: true })
     for?: "all" | "ticket_type";

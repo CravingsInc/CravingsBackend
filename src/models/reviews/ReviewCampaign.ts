@@ -2,7 +2,6 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { ObjectType, Field, ID } from "type-graphql";
 import { Events } from "../organizers/events/Events";
 import { ReviewQuestion } from "./ReviewQuestion";
-import { Review } from "./Review";
 
 @Entity()
 @ObjectType()
@@ -13,16 +12,24 @@ export class ReviewCampaign extends BaseEntity {
 
     @Field()
     @Column()
-    name: string;
+    title: string;
 
-    @Field()
-    @Column({ type: "text" })
-    description: string;
+    @Field(() => String, { nullable: true })
+    @Column({ type: "text", nullable: true })
+    description: string | null;
 
     @Field(() => Events)
     @ManyToOne(() => Events, { onDelete: "CASCADE" })
     @JoinColumn()
     eventId: Events;
+
+    @Field(() => Date, { nullable: true })
+    @Column({ nullable: true, type: "datetime" })
+    startDate: Date | null;
+
+    @Field(() => Date, { nullable: true })
+    @Column({ nullable: true, type: "datetime" })
+    endDate: Date | null;
 
     @Field(() => [ReviewQuestion])
     @OneToMany(() => ReviewQuestion, question => question.reviewCampaign, { cascade: true })
@@ -47,7 +54,5 @@ export class ReviewCampaign extends BaseEntity {
     @Field()
     dateModified: Date;
 
-    @Field(() => [Review])
-    @OneToMany(() => Review, review => review.reviewCampaign, { cascade: true })
-    reviews: Review[];
+
 }

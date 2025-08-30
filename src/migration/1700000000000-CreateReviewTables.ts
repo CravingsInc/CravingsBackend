@@ -16,19 +16,29 @@ export class CreateReviewTables1700000000000 implements MigrationInterface {
                         generationStrategy: "uuid"
                     },
                     {
-                        name: "name",
+                        name: "title",
                         type: "varchar",
                         isNullable: false
                     },
                     {
                         name: "description",
                         type: "text",
-                        isNullable: false
+                        isNullable: true
                     },
                     {
                         name: "eventId",
                         type: "varchar",
                         isNullable: false
+                    },
+                    {
+                        name: "startDate",
+                        type: "datetime",
+                        isNullable: true
+                    },
+                    {
+                        name: "endDate",
+                        type: "datetime",
+                        isNullable: true
                     },
                     {
                         name: "for",

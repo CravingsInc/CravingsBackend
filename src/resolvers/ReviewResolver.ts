@@ -1,6 +1,6 @@
 import { Resolver, Query, Mutation, Arg, Ctx, UseMiddleware } from "type-graphql";
 import { ReviewCampaign, ReviewQuestion, Review, ReviewAnswer, DropDown } from "../models/reviews";
-import { CreateReviewCampaignInput, UpdateReviewCampaignInput, AddQuestionToCampaignInput, UpdateQuestionInput, SubmitReviewInput, UpdateReviewInput } from "../models/types/reviews";
+import { CreateReviewCampaignInput, UpdateReviewCampaignInput, AddQuestionToCampaignInput, UpdateQuestionInput, SubmitReviewInput, UpdateReviewInput, CreateReviewCampaignPayload } from "../models/types/reviews";
 import { Events } from "../models/organizers/events/Events";
 import { isAuth } from "../middleware/isAuth";
 
@@ -41,7 +41,7 @@ export class ReviewResolver {
     }
 
     // Review Campaign Mutations
-    @Mutation(() => ReviewCampaign)
+    @Mutation(() => CreateReviewCampaignPayload)
     @UseMiddleware(isAuth)
     async createReviewCampaign(@Arg("input") input: CreateReviewCampaignInput, @Ctx() { req }: any) {
         const event = await Events.findOne({ where: { id: input.eventId } });
@@ -49,45 +49,46 @@ export class ReviewResolver {
             throw new Error("Event not found");
         }
 
-        const campaign = ReviewCampaign.create({
-            name: input.name,
-            description: input.description,
-            eventId: event,
-            for: input.for,
-            for_id: input.for_id
-        });
+        const campaign = new ReviewCampaign();
+        campaign.title = input.title;
+        campaign.description = input.description || null;
+        campaign.startDate = input.startDate ? new Date(input.startDate) : new Date();
+        campaign.endDate = input.endDate ? new Date(input.endDate) : new Date();
+        campaign.eventId = event;
+        campaign.for = input.for;
+        campaign.for_id = input.for_id || null;
 
         await campaign.save();
 
         // Create questions
         for (const questionInput of input.questions) {
-            const question = ReviewQuestion.create({
-                question: questionInput.question,
-                questionType: questionInput.questionType,
-                rangeMin: questionInput.rangeMin,
-                rangeMax: questionInput.rangeMax,
-                reviewCampaign: campaign
-            });
+            const question = new ReviewQuestion();
+            question.question = questionInput.question;
+            question.questionType = questionInput.questionType;
+            question.rangeMin = questionInput.rangeMin || null;
+            question.rangeMax = questionInput.rangeMax || null;
+            question.reviewCampaign = campaign;
 
             await question.save();
 
             // Create dropdown options if needed
             if (questionInput.dropDown && questionInput.questionType === "dropdown") {
                 for (const dropDownInput of questionInput.dropDown) {
-                    const dropDown = DropDown.create({
-                        text: dropDownInput.text,
-                        value: dropDownInput.value,
-                        reviewQuestion: question
-                    });
+                    const dropDown = new DropDown();
+                    dropDown.text = dropDownInput.text;
+                    dropDown.value = dropDownInput.value;
+                    dropDown.reviewQuestion = question;
                     await dropDown.save();
                 }
             }
         }
 
-        return await ReviewCampaign.findOne({
+        const result = await ReviewCampaign.findOne({
             where: { id: campaign.id },
             relations: ["questions", "questions.dropDown"]
         });
+
+        return { reviewCampaign: result };
     }
 
     @Mutation(() => ReviewCampaign)
@@ -98,8 +99,10 @@ export class ReviewResolver {
             throw new Error("Review campaign not found");
         }
 
-        if (input.name !== undefined) campaign.name = input.name;
+        if (input.title !== undefined) campaign.title = input.title;
         if (input.description !== undefined) campaign.description = input.description;
+        if (input.startDate !== undefined) campaign.startDate = input.startDate ? new Date(input.startDate) : null;
+        if (input.endDate !== undefined) campaign.endDate = input.endDate ? new Date(input.endDate) : null;
         if (input.for !== undefined) campaign.for = input.for;
         if (input.for_id !== undefined) campaign.for_id = input.for_id;
 

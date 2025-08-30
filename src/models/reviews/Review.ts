@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, ManyToOne, OneToMany, JoinColumn } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
-import { ReviewCampaign } from "./ReviewCampaign";
 import { ReviewAnswer } from "./ReviewAnswer";
 
 @Entity()
@@ -10,16 +9,15 @@ export class Review extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Field(() => ReviewCampaign)
-    @ManyToOne(() => ReviewCampaign, reviewCampaign => reviewCampaign.reviews, { onDelete: "CASCADE" })
+    @ManyToOne("ReviewCampaign", (reviewCampaign: any) => reviewCampaign.reviews, { onDelete: "CASCADE" })
     @JoinColumn()
-    reviewCampaign: ReviewCampaign;
+    reviewCampaign: any;
 
     @Field(() => [ReviewAnswer])
     @OneToMany(() => ReviewAnswer, answer => answer.review, { cascade: true })
     answers: ReviewAnswer[];
 
-    @Field({ nullable: true })
+    @Field(() => Date, { nullable: true })
     @Column({ nullable: true })
     dateReviewCompleted: Date;
 
