@@ -39,7 +39,7 @@ export class EventRegistrationList extends BaseEntity {
     status: RegistrationStatus;
 
     @Field()
-    @Column()
+    @Column({ type: 'timestamp' })
     registrationDate: Date;
 
     @Field()
