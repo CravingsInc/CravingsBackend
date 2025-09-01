@@ -52,7 +52,7 @@ export class EventRegistrationList extends BaseEntity {
 
     @Field( () => [EventRegistrationListActivity] )
     @OneToMany( () => EventRegistrationListActivity, e => e.registrationList, { onDelete: "CASCADE" })
-    activities: EventRegistrationListActivity;
+    activities: EventRegistrationListActivity[];
 
     @Field( () => Events )
     @ManyToOne( () => Events, e => e.registrationsList, { onDelete: "CASCADE" })
