@@ -32,7 +32,9 @@ export class EventDiscountsCodesRuleset extends BaseEntity {
 
     // Helper method to get ticket IDs
     getTicketIds(): string[] {
-        return this.applicableTickets?.map(dat => dat.ticket.id) || [];
+        return this.applicableTickets
+            ?.map(dat => dat?.ticket?.id)
+            .filter((id): id is string => !!id) || [];
     }
 
     @Field(() => EventDiscountsCodes)

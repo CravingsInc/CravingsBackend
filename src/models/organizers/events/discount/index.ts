@@ -10,7 +10,7 @@ export class EventDiscountsCodes extends BaseEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
+    @Column({ unique: true })
     code: string;
 
     @Field()
