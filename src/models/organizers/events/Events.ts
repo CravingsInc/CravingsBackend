@@ -5,6 +5,7 @@ import { EventTickets } from "./eventTickets";
 import { EventsPageVisit } from "../../analysis";
 import { Utils } from "../../../utils";
 import { EventPhotos } from "./EventPhotos";
+import { EventRegistrationList } from "./registration";
 
 export enum EventType {
     PAID_TICKET = 'PAID_TICKET',
@@ -98,6 +99,10 @@ export class Events extends BaseEntity {
     @Field( () => Organizers )
     @ManyToOne( () => Organizers, o => o.events, { onDelete: "CASCADE" })
     organizer: Organizers;
+
+    @Field( () => [EventRegistrationList] )
+    @OneToMany( () => EventRegistrationList, e => e.event, { onDelete: "CASCADE" })
+    registrationsList: EventRegistrationList[];
 
     /**
      * @description main event, or starting event that creates all other "repeats events"
