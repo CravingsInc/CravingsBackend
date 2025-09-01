@@ -3,6 +3,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { Events } from "./Events";
 import { EventTicketBuys } from "./EventTicketBuys";
 import { Utils } from "../../../utils";
+import { DiscountApplicableTickets } from "./discount/applicableTickets";
 
 @Entity()
 @ObjectType()
@@ -58,5 +59,9 @@ export class EventTickets extends BaseEntity {
     @UpdateDateColumn()
     @Field()
     updatedAt: Date;
+
+    @Field(() => [DiscountApplicableTickets])
+    @OneToMany(() => DiscountApplicableTickets, dat => dat.ticket)
+    applicableDiscounts: DiscountApplicableTickets[];
 
 }

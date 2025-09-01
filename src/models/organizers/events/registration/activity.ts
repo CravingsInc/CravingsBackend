@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, BaseEntity, ManyToOne, UpdateDateColumn } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
-import { Events } from "../Events";
 import { EventRegistrationList } from ".";
 
 export enum ActivityType {

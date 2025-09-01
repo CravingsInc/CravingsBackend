@@ -6,6 +6,7 @@ import { EventsPageVisit } from "../../analysis";
 import { Utils } from "../../../utils";
 import { EventPhotos } from "./EventPhotos";
 import { EventRegistrationList } from "./registration";
+import { EventDiscountsCodes } from "./discount";
 
 export enum EventType {
     PAID_TICKET = 'PAID_TICKET',
@@ -119,7 +120,11 @@ export class Events extends BaseEntity {
     @Field( () => EventPhotos )
     @OneToMany( () => EventPhotos, e => e.event )
     photoGallery: EventPhotos[];
-    
+
+    @Field(() => [EventDiscountsCodes])
+    @OneToMany(() => EventDiscountsCodes, e => e.event)
+    discounts: EventDiscountsCodes[];
+
     @CreateDateColumn()
     @Field()
     createdAt: Date;
