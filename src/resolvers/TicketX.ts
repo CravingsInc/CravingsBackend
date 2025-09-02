@@ -157,7 +157,7 @@ export class TicketX {
     }
 
     @Mutation( () => String )
-    async deleteDiscountCodeRuleSet( @Arg('token') token: string, @Arg('discountId') discountId: string, @Arg('rulesetId') rulesetId: string ) {
+    async deleteDiscountCodeRuleSet( @Arg('token') token: string, @Arg('discountId') discountId: string, @Arg('rulesetId') rulesetId: string ): Promise<string> {
         const organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true ); // Needs to be an admin to delete discount ruleset.
 
         if (!organizer) throw new Utils.CustomError("Invalid token");
