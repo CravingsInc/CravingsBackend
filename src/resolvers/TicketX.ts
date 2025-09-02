@@ -29,9 +29,6 @@ export class TicketX {
             isActive: true,
             usageCount: 0,
             event: event
-        }).save()
-
-        await discount.save();
 
         return discount;
 
