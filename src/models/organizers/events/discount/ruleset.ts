@@ -24,7 +24,7 @@ export class EventDiscountsCodesRuleset extends BaseEntity {
 
     @Field()
     @Column({ type: 'timestamp', nullable: true })
-    timedValue: Date;
+    timedValue: Date | null;
 
     @Field(() => [DiscountApplicableTickets])
     @OneToMany(() => DiscountApplicableTickets, dat => dat.ruleset)
