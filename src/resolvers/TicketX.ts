@@ -132,7 +132,7 @@ export class TicketX {
     }
 
     @Mutation( () => models.EventDiscountsCodesRuleset )
-    async modifyDiscountCodeRuleSet( @Arg('token') token: string, @Arg('discountId') discountId: string, @Arg('rulesetId') rulesetId: string, @Arg('newDate') newDate: Date ) {
+    async modifyDiscountCodeRuleSet( @Arg('token') token: string, @Arg('discountId') discountId: string, @Arg('rulesetId') rulesetId: string, @Arg('newDate') newDate: Date ): Promise<models.EventDiscountsCodesRuleset> {
         const organizer = await Utils.getOrgFromOrgOrMemberJsWebToken( token, [], true ); // Needs to be an admin to modify discount ruleset.
 
         if (!organizer) throw new Utils.CustomError("Invalid token");
