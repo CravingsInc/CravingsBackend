@@ -29,9 +29,9 @@ export class TicketX {
             isActive: true,
             usageCount: 0,
             event: event
+        });
 
         return discount;
-
     }
 
     @Query( () => [models.EventDiscountsCodes] )
