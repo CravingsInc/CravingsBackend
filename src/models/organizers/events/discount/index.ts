@@ -3,6 +3,14 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { EventDiscountsCodesRuleset } from "./ruleset";
 import { Events } from "../Events";
 
+export * from './ruleset';
+export * from './applicableTickets';
+
+export enum DiscountType {
+    PERCENTAGE = "percentage",
+    FIXED = "fixed"
+}
+
 @Entity()
 @ObjectType()
 export class EventDiscountsCodes extends BaseEntity {
@@ -13,16 +21,16 @@ export class EventDiscountsCodes extends BaseEntity {
     @Column({ unique: true })
     code: string;
 
-    @Field()
+    @Field( () => DiscountType )
     @Column()
-    discountType: "percentage" | "fixed";
+    discountType: DiscountType;
 
     @Field()
     @Column({ type: 'decimal', precision: 10, scale: 2 })
     value: number;
 
     @Field()
-    @Column({ default: true })
+    @Column({ default: false })
     isActive: boolean;
 
     @Field()
@@ -31,7 +39,7 @@ export class EventDiscountsCodes extends BaseEntity {
 
     @Field({ nullable: true })
     @Column({ nullable: true })
-    maxUsage: number;
+    maxUsage: number | null;
 
     @Field(() => [EventDiscountsCodesRuleset])
     @OneToMany(() => EventDiscountsCodesRuleset, e => e.discount)

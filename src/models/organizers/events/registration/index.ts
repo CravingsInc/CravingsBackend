@@ -3,6 +3,8 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { Events } from "../Events";
 import { EventRegistrationListActivity } from "./activity";
 
+export * from './activity';
+
 export enum RegistrationStatus {
     ACCEPTED = "ACCEPTED",
     DECLINED = "DECLINED",
