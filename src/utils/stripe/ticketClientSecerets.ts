@@ -7,7 +7,7 @@ export enum PAYMENT_INTENT_TYPE {
   TICKET = "TICKET"
 }
 
-export const createPaymentIntent = async ( stripeAccount: string, eventId: string, prices: models.TicketBuyClientSecretUpdate[] | number, customer?: string, eventType?: models.EventType ) => {
+export const createPaymentIntent = async (stripeAccount: string, eventId: string, prices: models.TicketBuyClientSecretUpdate[] | number, customer?: string, eventType?: models.EventType) => {
   const cart = await models.EventTicketCart.create({
     completed: false,
     eventId
@@ -15,22 +15,22 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
 
   let totalPrice: number;
 
-  let priceList : { amount: number | null, quantity: number, id: string }[] = !Array.isArray(prices) ? [ 
+  let priceList: { amount: number | null, quantity: number, id: string }[] = !Array.isArray(prices) ? [
     { amount: prices, quantity: 1, id: eventType || models.EventType.PAID_TICKET }
   ] : []
 
-  if ( Array.isArray( prices ) ) {
-    priceList = await Promise.all( prices.map( async ( price ) => {
-      const p = await stripe.prices.retrieve( price.id, { stripeAccount } );
-  
+  if (Array.isArray(prices)) {
+    priceList = await Promise.all(prices.map(async (price) => {
+      const p = await stripe.prices.retrieve(price.id, { stripeAccount });
+
       return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
-    }) );
-  
-    totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
-  }else {
+    }));
+
+    totalPrice = priceList.reduce((prev, curr) => prev + ((curr.amount || 0) * curr.quantity), 0);
+  } else {
     totalPrice = prices
   };
-  
+
   const paymentIntent = await stripe.paymentIntents.create({
     amount: totalPrice > 0.5 ? totalPrice : 0.5,
     currency: 'usd',
@@ -50,7 +50,7 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
       eventType: eventType || models.EventType.PAID_TICKET,
       eventId,
       cart: cart.id,
-      priceList: JSON.stringify( priceList )
+      priceList: JSON.stringify(priceList)
     }
   });
 
@@ -63,30 +63,86 @@ export const createPaymentIntent = async ( stripeAccount: string, eventId: strin
   };
 }
 
-export const updatePaymentIntent = async ( id: string, prices: models.TicketBuyClientSecretUpdate[] | number, stripeAccount: string, eventType?: models.EventType ) => {
+export const updatePaymentIntent = async (id: string, prices: models.TicketBuyClientSecretUpdate[] | number, stripeAccount: string, eventType?: models.EventType) => {
   const paymentIntent = await stripe.paymentIntents.retrieve(id);
 
   let totalPrice: number;
 
-  let priceList = Array.isArray( prices ) ? 
+  let priceList = Array.isArray(prices) ?
     (
-      await Promise.all( prices.map( async ( price ) => {
-        const p = await stripe.prices.retrieve( price.id, { stripeAccount } );
-    
-        return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
-      }) )
-    ) : [ { amount: prices, quantity: 1, id: eventType || models.EventType.PAID_TICKET } ]
+      await Promise.all(prices.map(async (price) => {
+        const p = await stripe.prices.retrieve(price.id, { stripeAccount });
 
-  totalPrice = priceList.reduce( ( prev, curr ) => prev + ( ( curr.amount || 0 ) * curr.quantity ), 0 );
+        return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
+      }))
+    ) : [{ amount: prices, quantity: 1, id: eventType || models.EventType.PAID_TICKET }]
+
+  totalPrice = priceList.reduce((prev, curr) => prev + ((curr.amount || 0) * curr.quantity), 0);
 
   const intent = await stripe.paymentIntents.update(
     paymentIntent.id,
-    { 
+    {
       amount: totalPrice,
       application_fee_amount: totalPrice * Utils.APPLICATION_TICKET_FEE,
-      metadata: { priceList: JSON.stringify( priceList ) }
+      metadata: { priceList: JSON.stringify(priceList) }
     }
   );
 
   return intent;
+}
+
+export const addCouponToPaymentIntent = async (id: string, couponCode: string, stripeAccount: string, eventType?: models.EventType) => {
+  const paymentIntent = await stripe.paymentIntents.retrieve(id);
+
+  if (!paymentIntent.metadata.eventId) throw new Utils.CustomError("Payment Intent is missing event ID");
+
+  const discount = await models.EventDiscountsCodes.findOne({ where: { code: couponCode, event: { id: paymentIntent.metadata.eventId } }, relations: ['event', 'rulesets', 'rulesets.applicableTickets', 'rulesets.applicableTickets.ticket'] });
+
+  if (!discount) throw new Utils.CustomError("Invalid coupon code");
+
+  let priceList: { amount: number | null, quantity: number, id: string }[] = [];
+
+  if (paymentIntent.metadata.priceList) {
+    try {
+      priceList = JSON.parse(paymentIntent.metadata.priceList);
+    } catch (e) {
+      priceList = [];
+    }
+  }
+
+  if (priceList.length === 0) {
+    priceList = [{ amount: paymentIntent.amount, quantity: 1, id: eventType || models.EventType.PAID_TICKET }]
+  }
+
+  let discountAmount: { id: string; ticketId?: string; amount: number }[] = [];
+
+  if (discount.isValid()) {
+    for (const rule of discount.rules) {
+      if (rule.ruleset === models.DiscountRuleset.TIMED_DISCOUNT) {
+        // Apply to all tickets in the price list
+        for (const priceItem of priceList) {
+          const amount = discount.discountType === models.DiscountType.PERCENTAGE ?
+            Math.round((priceItem.amount || 0) * (discount.value / 100)) :
+            Math.round(discount.value);
+
+          discountAmount.push({ id: priceItem.id, amount });
+        }
+      } else if (rule.ruleset === models.DiscountRuleset.TICKET_DISCOUNT) {
+        // Apply only to applicable tickets
+        for (const applicable of rule.applicableTickets) {
+          for (const priceItem of priceList) {
+            if (applicable.ticket.stripePriceId === priceItem.id) {
+              const amount = discount.discountType === models.DiscountType.PERCENTAGE ?
+                Math.round((priceItem.amount || 0) * (discount.value / 100)) :
+                Math.round(discount.value);
+
+              discountAmount.push({ id: priceItem.id, ticketId: applicable.ticket.id, amount });
+            }
+          }
+        }
+      }
+    }
+  } else {
+    throw new Utils.CustomError("Coupon code is not valid");
+  }
 }

@@ -796,6 +796,21 @@ export class EventResolver {
         return intent.status;
     }
 
+    @Mutation( () => String )
+    async addDiscountToPaidTicket( @Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('couponCode') couponCode: string ) {
+        const event = await models.Events.findOne( { where: { id: eventId }, relations: ['organizer'] } );
+
+        if ( !event ) return new Utils.CustomError( "Event not found." );
+
+        if ( !event.visible || !event.organizer.stripeAccountVerified ) return new Utils.CustomError( "Event not found." );
+
+        if ( event.type !== models.EventType.PAID_TICKET ) return new Utils.CustomError( "Wrong type of Event." )
+
+        const intent = await stripeHandler.addCouponToPaymentIntent( id, couponCode, event.organizer.stripeConnectId, event.type );
+
+        return intent.status;
+    }
+
     @Mutation(() => String)
     async updateCYOPClientSecret(@Arg('id') id: string, @Arg('eventId') eventId: string, @Arg('price') price: number) {
         const event = await models.Events.findOne({ where: { id: eventId }, relations: ['organizer'] });
