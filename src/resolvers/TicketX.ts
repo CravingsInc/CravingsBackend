@@ -595,7 +595,7 @@ export class TicketX {
             if (eventTicket.amount !== 0) return new Utils.CustomError("Ticket not free");
 
             let ticketBuy = models.EventTicketBuys.create({
-                type: user ? 'guest' : "user",
+                type: user ? 'user' : "guest",
                 name: args.name,
                 email: args.email,
                 quantity: ticket.quantity,
