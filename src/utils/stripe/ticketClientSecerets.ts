@@ -194,7 +194,7 @@ export const updatePaymentIntent = async (
   const updatedIntent = await stripe.paymentIntents.update(
     id,
     {
-      amount: totalPrice > 0.5 ? Math.round(totalPrice * 100) : 50,
+      amount: Math.max(Math.round(totalPrice * 100), 50),
       application_fee_amount: Math.round(
         totalPrice * Utils.APPLICATION_TICKET_FEE
       ),
