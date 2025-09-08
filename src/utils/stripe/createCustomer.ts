@@ -1,15 +1,17 @@
 import { stripe } from "./stripe";
 
-export const createCustomer = async ( email: string, userId : string ) => {
+export const createCustomer = async ( email: string, userId : string, phone: string, type: string = 'user', stripeAccount?: string, metadata?: any ) => {
     return await stripe.customers.create({
         name: userId,
         email: email,
-        description: `${userId} is a customer on Cravings. Email: ${email}`,
+        phone: phone,
+        description: `${userId} is a customer on Eventrix. Email: ${email}`,
         metadata: {
             userId,
             email,
-            type: 'user',
-            dateJoined: ( new Date() ).getTime()
+            type,
+            dateJoined: ( new Date() ).getTime(),
+            ...metadata
         }
-    });
+    }, stripeAccount ? { stripeAccount } : undefined );
 }

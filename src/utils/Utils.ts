@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { Mailer } from "./Emails";
 import { RadarMapsUtils } from "./RadarMapsUtils";
 import { AppConfig } from "./Config";
+import { DiscountService } from "./service/discountService";
 
 export class Utils {
 
@@ -13,6 +14,8 @@ export class Utils {
     static AppConfig = AppConfig;
 
     static SECRET_KEY = Utils.AppConfig.BasicConfig.SeceretKey;
+
+    static DISCOUNT_SERVICE = DiscountService;
 
     // Sets Application Ticket Fee as 3%, which is what Eventrix takes from all tickets
     static APPLICATION_TICKET_FEE = 0.03;

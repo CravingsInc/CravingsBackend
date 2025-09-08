@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, ManyToOne } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, ManyToOne, OneToMany } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql";
 import { EventTickets } from "./eventTickets";
 import { Users } from "../../users";
 import { EventTicketCart } from "./EventTicketCart";
+import { EventAppliedDiscountCodes } from "./discount";
 
 @Entity()
 @ObjectType()
@@ -37,6 +38,23 @@ export class EventTicketBuys extends BaseEntity {
     @Field( () => EventTickets )
     @ManyToOne( () => EventTickets, eT => eT.buyers, { onDelete: 'CASCADE' })
     eventTicket: EventTickets;
+
+    @Field(() => [EventAppliedDiscountCodes])
+    @OneToMany(() => EventAppliedDiscountCodes, eADC => eADC.ticketBuy)
+    appliedDiscountCodes: EventAppliedDiscountCodes[];
+
+    // Ticket-level pricing
+    @Field()
+    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    unitPrice: number;
+
+    @Field()
+    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    totalPrice: number;
+
+    @Field()
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    discountAmount: number;
 
     @Field()
     @CreateDateColumn()

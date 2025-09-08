@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, M
 import { EventTicketBuys } from "./EventTicketBuys";
 import { Users } from "../../users";
 import { EventTicketCartReview } from "./EventTicketCartReview";
+import { EventAppliedDiscountCodes } from "./discount";
 
 @Entity()
 export class EventTicketCart extends BaseEntity {
@@ -43,6 +44,19 @@ export class EventTicketCart extends BaseEntity {
 
     @OneToMany( () => EventTicketBuys, eTB => eTB.cart )
     tickets: EventTicketBuys[];
+
+    @OneToMany(() => EventAppliedDiscountCodes, eADC => eADC.cart)
+    appliedDiscountCodes: EventAppliedDiscountCodes[];
+
+    // Cart-level discount calculations
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    totalDiscount: number;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    subtotal: number;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    total: number;
 
     @CreateDateColumn()
     created: Date;

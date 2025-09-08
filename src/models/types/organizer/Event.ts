@@ -490,6 +490,69 @@ export class CreateTicketSellClientSecretResponse {
     @Field() cartId: string;
 }
 
+@ObjectType()
+export class UpdatePaymentIntentResponse {
+    @Field({ nullable: true })
+    client_secret?: string;
+
+    @Field()
+    cartId: string;
+
+    @Field()
+    subtotal: number;
+
+    @Field()
+    totalDiscount: number;
+
+    @Field()
+    total: number;
+
+    @Field(() => [String], { nullable: true })
+    appliedDiscounts?: string[];
+}
+
+@ObjectType()
+export class CartDetails {
+    @Field()
+    id: string;
+
+    @Field()
+    subtotal: number;
+
+    @Field()
+    totalDiscount: number;
+
+    @Field()
+    total: number;
+
+    @Field(() => [String])
+    appliedDiscounts: string[];
+
+    @Field(() => [CartItem])
+    items: CartItem[];
+}
+
+@ObjectType()
+export class CartItem {
+    @Field()
+    ticketId: string;
+
+    @Field()
+    name: string;
+
+    @Field()
+    quantity: number;
+
+    @Field()
+    unitPrice: number;
+
+    @Field()
+    totalPrice: number;
+
+    @Field()
+    discountAmount: number;
+}
+
 @InputType()
 export class EventTicketReviewInput {
     @Field() rating: number;
