@@ -102,7 +102,7 @@ export const createPaymentIntent = async (
     // Create new payment intent
     paymentIntent = await stripe.paymentIntents.create(
       {
-        amount: totalPrice > 0.5 ? Math.round(totalPrice * 100) : 50,
+        amount: totalPrice > 50 ? Math.round(totalPrice) : 50,
         currency: "usd",
         automatic_payment_methods: {
           enabled: true,
