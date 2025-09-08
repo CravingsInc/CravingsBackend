@@ -82,7 +82,7 @@ export const createPaymentIntent = async (
     paymentIntent = await stripe.paymentIntents.update(
       cart.stripeTransactionId,
       {
-        amount: totalPrice > 0.5 ? Math.round(totalPrice * 100) : 50,
+        amount: Math.max(Math.round(totalPrice * 100), 50),
         currency: "usd",
         application_fee_amount: Math.round(
           totalPrice * Utils.APPLICATION_TICKET_FEE
