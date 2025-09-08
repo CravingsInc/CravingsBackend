@@ -27,7 +27,7 @@ export class UserResolver {
 
         if ( user ) {
             try {
-                user.stripeCustomerId = ( await stripeHandler.createCustomer(email, user.id) ).id;
+                user.stripeCustomerId = ( await stripeHandler.createCustomer(email, user.id, '') ).id;
                 await user.save();
 
             }catch(e) {

@@ -1,148 +1,253 @@
 import { stripe } from "./stripe";
-import * as models from '../../models';
+import * as models from "../../models";
 import { Utils } from "../Utils";
 import Stripe from "stripe";
+import { DiscountResult } from "../service/discountService";
 
 export enum PAYMENT_INTENT_TYPE {
-  TICKET = "TICKET"
+  TICKET = "TICKET",
 }
 
-export const createPaymentIntent = async (stripeAccount: string, eventId: string, prices: models.TicketBuyClientSecretUpdate[] | number, customer?: string, eventType?: models.EventType) => {
-  const cart = await models.EventTicketCart.create({
-    completed: false,
-    eventId
-  }).save();
-
+export const createPaymentIntent = async (
+  stripeAccount: string,
+  eventId: string,
+  prices: models.TicketBuyClientSecretUpdate[] | number,
+  customer?: string,
+  eventType?: models.EventType,
+  discountResult?: DiscountResult,
+  existingCartId?: string // Add this parameter for existing carts
+) => {
+  let cart: models.EventTicketCart | null;
   let totalPrice: number;
+  let priceList: { amount: number | null; quantity: number; id: string }[] = [];
 
-  let priceList: { amount: number | null, quantity: number, id: string }[] = !Array.isArray(prices) ? [
-    { amount: prices, quantity: 1, id: eventType || models.EventType.PAID_TICKET }
-  ] : []
-
-  if (Array.isArray(prices)) {
-    priceList = await Promise.all(prices.map(async (price) => {
-      const p = await stripe.prices.retrieve(price.id, { stripeAccount });
-
-      return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
-    }));
-
-    totalPrice = priceList.reduce((prev, curr) => prev + ((curr.amount || 0) * curr.quantity), 0);
+  // Use existing cart or create new one
+  if (existingCartId) {
+    cart = await models.EventTicketCart.findOne({
+      where: { id: existingCartId },
+    });
+    if (!cart) throw new Error("Cart not found");
   } else {
-    totalPrice = prices
-  };
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: totalPrice > 0.5 ? totalPrice : 0.5,
-    currency: 'usd',
-    automatic_payment_methods: {
-      enabled: true,
-    },
-    customer: customer,
-    setup_future_usage: customer ? "off_session" : "on_session",
-    transfer_data: {
-      destination: stripeAccount
-    },
-    application_fee_amount: totalPrice * Utils.APPLICATION_TICKET_FEE,
-
-    metadata: {
-      customer: customer || null,
-      type: PAYMENT_INTENT_TYPE.TICKET,
-      eventType: eventType || models.EventType.PAID_TICKET,
+    cart = await models.EventTicketCart.create({
+      completed: false,
       eventId,
-      cart: cart.id,
-      priceList: JSON.stringify(priceList)
-    }
-  });
+      subtotal: 0,
+      totalDiscount: discountResult?.totalDiscount || 0,
+      total: 0,
+    }).save();
+  }
 
-  cart.stripeTransactionId = paymentIntent.id;
-  cart.save();
+  // Calculate prices
+  if (Array.isArray(prices)) {
+    priceList = await Promise.all(
+      prices.map(async (price) => {
+        const p = await stripe.prices.retrieve(price.id, { stripeAccount });
+        return {
+          amount: p.unit_amount,
+          quantity: price.quantity,
+          id: price.id,
+        };
+      })
+    );
+    totalPrice = priceList.reduce(
+      (prev, curr) => prev + (curr.amount || 0) * curr.quantity,
+      0
+    );
+  } else {
+    totalPrice = prices;
+    priceList = [
+      {
+        amount: prices,
+        quantity: 1,
+        id: eventType || models.EventType.PAID_TICKET,
+      },
+    ];
+  }
+
+  // Apply discount if provided
+  const subtotal = totalPrice;
+  if (discountResult) {
+    totalPrice = Math.max(0, totalPrice - discountResult.totalDiscount);
+  }
+
+  // Update cart with current values
+  cart.subtotal = subtotal;
+  cart.totalDiscount = discountResult?.totalDiscount || 0;
+  cart.total = totalPrice;
+
+  let paymentIntent: Stripe.PaymentIntent;
+
+  if (cart.stripeTransactionId) {
+    // Update existing payment intent
+    paymentIntent = await stripe.paymentIntents.update(
+      cart.stripeTransactionId,
+      {
+        amount: totalPrice > 0.5 ? Math.round(totalPrice * 100) : 50,
+        currency: "usd",
+        application_fee_amount: Math.round(
+          totalPrice * Utils.APPLICATION_TICKET_FEE
+        ),
+        metadata: {
+          priceList: JSON.stringify(priceList),
+          discountApplied: discountResult ? "true" : "false",
+          discountAmount: discountResult?.totalDiscount || 0,
+          discountCodes: discountResult?.appliedCodes?.join(",") || "",
+          subtotal: subtotal,
+          total: totalPrice,
+        },
+      },
+      { stripeAccount }
+    );
+  } else {
+    // Create new payment intent
+    paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: totalPrice > 0.5 ? Math.round(totalPrice * 100) : 50,
+        currency: "usd",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+        customer: customer,
+        setup_future_usage: customer ? "off_session" : "on_session",
+        transfer_data: {
+          destination: stripeAccount,
+        },
+        application_fee_amount: Math.round(
+          totalPrice * Utils.APPLICATION_TICKET_FEE
+        ),
+
+        metadata: {
+          customer: customer || null,
+          type: PAYMENT_INTENT_TYPE.TICKET,
+          eventType: eventType || models.EventType.PAID_TICKET,
+          eventId,
+          cart: cart.id,
+          priceList: JSON.stringify(priceList),
+          discountApplied: discountResult ? "true" : "false",
+          discountAmount: discountResult?.totalDiscount || 0,
+          discountCodes: discountResult?.appliedCodes?.join(",") || "",
+          subtotal: subtotal,
+          total: totalPrice,
+        },
+      },
+      { stripeAccount }
+    );
+
+    cart.stripeTransactionId = paymentIntent.id;
+  }
+
+  await cart.save();
 
   return {
     client_secret: paymentIntent.client_secret,
-    cartId: cart.id
+    cartId: cart.id,
+    paymentIntentId: paymentIntent.id,
+    amount: paymentIntent.amount,
+    appliedDiscounts: discountResult?.appliedCodes || [],
   };
-}
+};
 
-export const updatePaymentIntent = async (id: string, prices: models.TicketBuyClientSecretUpdate[] | number, stripeAccount: string, eventType?: models.EventType) => {
+export const updatePaymentIntent = async (
+  id: string,
+  prices: models.TicketBuyClientSecretUpdate[] | number,
+  stripeAccount: string,
+  eventType?: models.EventType,
+  discountResult?: any
+) => {
   const paymentIntent = await stripe.paymentIntents.retrieve(id);
 
   let totalPrice: number;
+  let priceList: { amount: number | null; quantity: number; id: string }[] = [];
 
-  let priceList = Array.isArray(prices) ?
-    (
-      await Promise.all(prices.map(async (price) => {
+  if (Array.isArray(prices)) {
+    priceList = await Promise.all(
+      prices.map(async (price) => {
         const p = await stripe.prices.retrieve(price.id, { stripeAccount });
+        return {
+          amount: p.unit_amount,
+          quantity: price.quantity,
+          id: price.id,
+        };
+      })
+    );
+    totalPrice = priceList.reduce(
+      (prev, curr) => prev + (curr.amount || 0) * curr.quantity,
+      0
+    );
+  } else {
+    totalPrice = prices;
+    priceList = [
+      {
+        amount: prices,
+        quantity: 1,
+        id: eventType || models.EventType.PAID_TICKET,
+      },
+    ];
+  }
 
-        return { amount: p.unit_amount, quantity: price.quantity, id: price.id };
-      }))
-    ) : [{ amount: prices, quantity: 1, id: eventType || models.EventType.PAID_TICKET }]
+  // Apply discount if provided
+  const subtotal = totalPrice;
+  if (discountResult) {
+    totalPrice = Math.max(0, totalPrice - discountResult.totalDiscount);
+  }
 
-  totalPrice = priceList.reduce((prev, curr) => prev + ((curr.amount || 0) * curr.quantity), 0);
-
-  const intent = await stripe.paymentIntents.update(
-    paymentIntent.id,
+  const updatedIntent = await stripe.paymentIntents.update(
+    id,
     {
-      amount: totalPrice,
-      application_fee_amount: totalPrice * Utils.APPLICATION_TICKET_FEE,
-      metadata: { priceList: JSON.stringify(priceList) }
-    }
+      amount: totalPrice > 0.5 ? Math.round(totalPrice * 100) : 50,
+      application_fee_amount: Math.round(
+        totalPrice * Utils.APPLICATION_TICKET_FEE
+      ),
+      metadata: {
+        ...paymentIntent.metadata,
+        priceList: JSON.stringify(priceList),
+        discountApplied: discountResult ? "true" : "false",
+        discountAmount: discountResult?.totalDiscount || 0,
+        discountCodes: discountResult?.appliedCodes?.join(",") || "",
+        subtotal: subtotal,
+        total: totalPrice,
+      },
+    },
+    { stripeAccount }
   );
 
-  return intent;
-}
+  return {
+    client_secret: updatedIntent.client_secret,
+    paymentIntentId: updatedIntent.id,
+    amount: updatedIntent.amount,
+    appliedDiscounts: discountResult?.appliedCodes || [],
+    status: updatedIntent.status,
+  };
+};
 
-export const addCouponToPaymentIntent = async (id: string, couponCode: string, stripeAccount: string, eventType?: models.EventType) => {
-  const paymentIntent = await stripe.paymentIntents.retrieve(id);
+// New function to add customer to payment intent
+export const addCustomerToPaymentIntent = async (
+  paymentIntentId: string,
+  customerId: string,
+  stripeAccount: string,
+  customerInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  }
+) => {
+  const updateData: any = {
+    customer: customerId,
+  };
 
-  if (!paymentIntent.metadata.eventId) throw new Utils.CustomError("Payment Intent is missing event ID");
-
-  const discount = await models.EventDiscountsCodes.findOne({ where: { code: couponCode, event: { id: paymentIntent.metadata.eventId } }, relations: ['event', 'rulesets', 'rulesets.applicableTickets', 'rulesets.applicableTickets.ticket'] });
-
-  if (!discount) throw new Utils.CustomError("Invalid coupon code");
-
-  let priceList: { amount: number | null, quantity: number, id: string }[] = [];
-
-  if (paymentIntent.metadata.priceList) {
-    try {
-      priceList = JSON.parse(paymentIntent.metadata.priceList);
-    } catch (e) {
-      priceList = [];
-    }
+  if (customerInfo) {
+    updateData.metadata = {
+      customerName: customerInfo.name || "",
+      customerEmail: customerInfo.email || "",
+      customerPhone: customerInfo.phone || "",
+    };
   }
 
-  if (priceList.length === 0) {
-    priceList = [{ amount: paymentIntent.amount, quantity: 1, id: eventType || models.EventType.PAID_TICKET }]
-  }
+  const paymentIntent = await stripe.paymentIntents.update(
+    paymentIntentId,
+    updateData,
+    { stripeAccount }
+  );
 
-  let discountAmount: { id: string; ticketId?: string; amount: number }[] = [];
-
-  if (discount.isValid()) {
-    for (const rule of discount.rules) {
-      if (rule.ruleset === models.DiscountRuleset.TIMED_DISCOUNT) {
-        // Apply to all tickets in the price list
-        for (const priceItem of priceList) {
-          const amount = discount.discountType === models.DiscountType.PERCENTAGE ?
-            Math.round((priceItem.amount || 0) * (discount.value / 100)) :
-            Math.round(discount.value);
-
-          discountAmount.push({ id: priceItem.id, amount });
-        }
-      } else if (rule.ruleset === models.DiscountRuleset.TICKET_DISCOUNT) {
-        // Apply only to applicable tickets
-        for (const applicable of rule.applicableTickets) {
-          for (const priceItem of priceList) {
-            if (applicable.ticket.stripePriceId === priceItem.id) {
-              const amount = discount.discountType === models.DiscountType.PERCENTAGE ?
-                Math.round((priceItem.amount || 0) * (discount.value / 100)) :
-                Math.round(discount.value);
-
-              discountAmount.push({ id: priceItem.id, ticketId: applicable.ticket.id, amount });
-            }
-          }
-        }
-      }
-    }
-  } else {
-    throw new Utils.CustomError("Coupon code is not valid");
-  }
-}
+  return paymentIntent;
+};
