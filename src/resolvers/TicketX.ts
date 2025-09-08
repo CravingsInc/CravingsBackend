@@ -471,7 +471,16 @@ export class TicketX {
                     stripeCustomerId = user.stripeCustomerId;
                 } else {
                     // Create new Stripe customer
-                    const customer = await stripeHandler.createCustomer(email, user ? (user.firstName + user.lastName) : name, phone || '', 'user', event.organizer.stripeConnectId, { cartId: cart.id, eventId: cart.eventId });
+                    const customer = await stripeHandler.createCustomer(
+                        email,
+                        user && user.firstName && user.lastName
+                            ? `${user.firstName} ${user.lastName}`
+                            : name,
+                        phone || '',
+                        'user',
+                        event.organizer.stripeConnectId,
+                        { cartId: cart.id, eventId: cart.eventId }
+                    );
                     stripeCustomerId = customer.id;
 
                     // Save to user if logged in
