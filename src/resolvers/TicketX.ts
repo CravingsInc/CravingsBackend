@@ -716,7 +716,7 @@ export class TicketX {
             if ( !reg ) throw new Utils.CustomError("Registration not found");
 
             if ( reg.status === models.RegistrationStatus.ACCEPTED ) throw new Utils.CustomError(`Registration already accepted: ${reg.name} - ${reg.email}`);
-            if ( reg.status === models.RegistrationStatus.CANCELLED ) throw new Utils.CustomError(`Registration cancelled: ${reg.name} - ${reg.email}`);
+            if ( reg.status === models.RegistrationStatus.CANCELLED ) throw new Utils.CustomError(`Cannot send invite to cancelled registration: ${reg.name} - ${reg.email}`);
 
             let link_to_open = `${Utils.getCravingsWebUrl()}/events/${event.id}/register?reg_id=${reg.id}`;
 
