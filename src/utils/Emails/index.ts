@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { Utils } from "../Utils";
-import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps, TeamMemberInviteProps, teamMemberInvite } from "./email-templates";
+import { reservation, ReservationProps, contact, ContactProps, passwordChange, PasswordChangeProps, TeamMemberInviteProps, teamMemberInvite, EventRegistrationInviteProps, eventRegistrationInvite } from "./email-templates";
 import { TicketBuyProps, ticketBuy } from "./email-templates/ticketBuy";
 import { waitList, WaitlistProps } from './email-templates/waitlist';
 
@@ -10,10 +10,11 @@ export enum EmailTemplates {
     WAITLIST,
     PASSWORD_CHANGE,
     TICKET_BUY,
-    TEAM_MEMBER_INVITE
+    TEAM_MEMBER_INVITE,
+    EVENT_REGISTRATION_INVITE
 }
 
-type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps | WaitlistProps | TeamMemberInviteProps;
+type EmailTemplatesOpt = ReservationProps | ContactProps | PasswordChangeProps | TicketBuyProps | WaitlistProps | TeamMemberInviteProps | EventRegistrationInviteProps;
 
 const formatMail = (mail: string, opt: { [key: string]: string | number }) => {
     for (let key in opt) mail = mail.replaceAll(`{{${key}}}`, opt[key] + "")
@@ -34,6 +35,8 @@ const getEmailTemplates = (template: EmailTemplates, opt: EmailTemplatesOpt) => 
             return ticketBuy(opt as TicketBuyProps);
         case EmailTemplates.TEAM_MEMBER_INVITE:
             return formatMail(teamMemberInvite, opt);
+        case EmailTemplates.EVENT_REGISTRATION_INVITE:
+            return formatMail(eventRegistrationInvite, opt);
 
         // Add more cases as needed for other email templates
         default: return "";
@@ -123,6 +126,15 @@ export class Mailer {
             `${opt.email}`,
             `Eventrix: ${opt.eventName} Ticket Confirmation`,
             getEmailTemplates(EmailTemplates.TICKET_BUY, opt)
+        )
+    }
+
+    async sendEventRegistrationInviteEmail(opt: EventRegistrationInviteProps) {
+        return await this.sendEmail(
+            'Eventrix <dont-reply@eventrix.ai>',
+            `${opt.email}`,
+            `Eventrix: ${opt.eventName} Registration Invite`,
+            getEmailTemplates(EmailTemplates.EVENT_REGISTRATION_INVITE, {...opt, message: opt.customMessage || `${opt.orgName} invites you to RSVP for their upcoming event: ${opt.eventName}'s`})
         )
     }
 }

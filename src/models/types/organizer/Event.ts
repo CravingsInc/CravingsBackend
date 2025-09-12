@@ -1,6 +1,6 @@
 import { ObjectType, InputType, Field, ID } from "type-graphql";
 import { Location } from "../Location";
-import { EventType } from "../../organizers";
+import { EventType, RegistrationStatus } from "../../organizers";
 
 @InputType()
 export class CreateEventInput {
@@ -559,4 +559,26 @@ export class EventTicketReviewInput {
     @Field() name: string;
     @Field() photo: string;
     @Field() description: string;
+}
+
+@InputType()
+export class EventRegistrationListInput {
+    @Field() name: string;
+
+    @Field() email: string;
+
+    @Field() phoneNumber: string;
+}
+
+@ObjectType()
+export class EventRegistrationListResponse {
+    @Field( () => ID ) id: string;
+
+    @Field() name: string;
+
+    @Field() email: string;
+
+    @Field() phoneNumber: string;
+
+    @Field( () => RegistrationStatus ) status: RegistrationStatus;
 }
