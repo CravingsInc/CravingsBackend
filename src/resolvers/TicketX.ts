@@ -632,4 +632,99 @@ export class TicketX {
 
         return "Registered For Event Successfully"
     }
+
+    @Mutation(() => [models.EventRegistrationListResponse])
+    async addToEventRegistration(@Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('registrationList', () => [ models.EventRegistrationListInput ] ) registrationList: models.EventRegistrationListInput[] ) {
+        let organizer = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true); // Needs to be an admin to create discount code.
+
+        if (!organizer) throw new Utils.CustomError("Invalid token");
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: organizer.id } } });
+        if (!event) throw new Utils.CustomError("Event not found");
+
+        if ( 
+            !(
+                event.type === models.EventType.REGISTRATION || !event.is_public
+            )
+        ) throw new Utils.CustomError("Event is not a registration or private event.");
+
+        let newRegs: models.EventRegistrationListResponse[] = [];
+
+        for ( let i = 0; i < registrationList.length; i++ ) {
+            let reg = registrationList[i];
+
+            let existingReg = await models.EventRegistrationList.findOne({ where: { email: reg.email, name: reg.name, phoneNumber: reg.phoneNumber, event: { id: event.id } } });
+            if ( existingReg ) continue; // Don't add duplicates
+
+            let newReg = await models.EventRegistrationList.create({
+                name: reg.name,
+                email: reg.email,
+                phoneNumber: reg.phoneNumber,
+                status: models.RegistrationStatus.NOT_SENT,
+                registrationDate: new Date(),
+                event
+            }).save();
+
+            newRegs.push({ id: newReg.id, name: newReg.name, email: newReg.email, phoneNumber: newReg.phoneNumber, status: models.RegistrationStatus.NOT_SENT });
+        }
+
+        return newRegs;
+    }
+
+    @Mutation( () => String )
+    async removeFromEventRegistration( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('registrationId') registrationId: string ) {
+        let organizer = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true); // Needs to be an admin to create discount code.
+
+        if (!organizer) throw new Utils.CustomError("Invalid token");
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: organizer.id } } });
+
+        if (!event) throw new Utils.CustomError("Event not found");
+
+        if (
+            !(
+                event.type === models.EventType.REGISTRATION || !event.is_public
+            )
+        ) throw new Utils.CustomError("Event is not a registration or private event.");
+
+        let reg = await models.EventRegistrationList.findOne({ where: { id: registrationId, event: { id: event.id } }, relations: ['event', 'event.organizer'] });
+
+        if ( !reg ) throw new Utils.CustomError("Registration not found");
+
+        await reg.remove();
+
+        return "Registration removed successfully";
+    }
+
+    @Mutation( () => String )
+    async sendRegistrationInviteEmail( @Arg('token') token: string, @Arg('eventId') eventId: string, @Arg('registrationIds') registrationIds: string[], @Arg('customMessage', { nullable: true }) customMessage?: string ) {
+        let organizer = await Utils.getOrgFromOrgOrMemberJsWebToken(token, [], true); // Needs to be an admin to create discount code.
+        if (!organizer) throw new Utils.CustomError("Invalid token");
+
+        let event = await models.Events.findOne({ where: { id: eventId, organizer: { id: organizer.id } } });
+        if (!event) throw new Utils.CustomError("Event not found");
+
+        if (
+            !(
+                event.type === models.EventType.REGISTRATION || !event.is_public
+            )
+        ) throw new Utils.CustomError("Event is not a registration or private event.");
+
+        for ( let registrationId of registrationIds ) {
+            let reg = await models.EventRegistrationList.findOne({ where: { id: registrationId, event: { id: event.id } }, relations: ['event', 'event.organizer'] });
+
+            if ( !reg ) throw new Utils.CustomError("Registration not found");
+
+            if ( reg.status === models.RegistrationStatus.ACCEPTED ) throw new Utils.CustomError(`Registration already accepted: ${reg.name} - ${reg.email}`);
+            if ( reg.status === models.RegistrationStatus.CANCELLED ) throw new Utils.CustomError(`Cannot send invite to cancelled registration: ${reg.name} - ${reg.email}`);
+
+            let link_to_open = `${Utils.getCravingsWebUrl()}/events/${event.id}/register?reg_id=${reg.id}`;
+
+            Utils.Mailer.sendEventRegistrationInviteEmail({ name: reg.name, eventName: event.title, orgName: organizer.orgName, link_to_open, customMessage, email: reg.email });
+            reg.status = models.RegistrationStatus.WAITING;
+            await reg.save();
+        }
+
+        return "Registration invite sent successfully";
+    }
 }
