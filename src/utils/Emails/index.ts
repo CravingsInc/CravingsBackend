@@ -134,7 +134,7 @@ export class Mailer {
             'Eventrix <dont-reply@eventrix.ai>',
             `${opt.email}`,
             `Eventrix: ${opt.eventName} Registration Invite`,
-            getEmailTemplates(EmailTemplates.EVENT_REGISTRATION_INVITE, {...opt, message: opt.customMessage || `${opt.orgName} invites you to RSVP for their upcoming event: ${opt.eventName}'s`})
+            getEmailTemplates(EmailTemplates.EVENT_REGISTRATION_INVITE, {...opt, message: opt.customMessage || `${opt.orgName} invites you to RSVP for their upcoming event: ${opt.eventName}`})
         )
     }
 }
