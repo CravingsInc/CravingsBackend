@@ -47,7 +47,7 @@ export const eventRegistrationInvite = `
 
 <body>
   <div class="cec">
-    <h1>{{name}} - Your Invited To {{eventName}}</h1>
+    <h1>{{name}} - You're Invited To {{eventName}}</h1>
 
     <div class='form'>
       <div class='notify'>
