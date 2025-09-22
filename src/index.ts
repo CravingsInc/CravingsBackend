@@ -81,7 +81,13 @@ async function main() {
   });
 
   await server.start();
-  server.applyMiddleware({ app });
+  server.applyMiddleware({
+    app,
+    cors: {
+      origin: "*",
+      credentials: true
+    }
+  });
   IoServer.attach(httpServer, {
     cors: {
       origin: "*"
